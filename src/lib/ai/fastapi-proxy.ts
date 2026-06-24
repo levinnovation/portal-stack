@@ -1,6 +1,8 @@
 import "server-only";
+import { cookies } from "next/headers";
 import type { UIMessage } from "ai";
 import type { Payload } from "payload";
+import { getAuthCookieName } from "../auth/cookie-name";
 import type { SessionUser } from "../auth/provider";
 import type { TenantConfig } from "../tenant";
 import type { FastAPIChatRequest } from "./fastapi-types";
@@ -43,20 +45,32 @@ export function buildFastAPIChatBody(args: FastAPIProxyArgs & { sessionToken?: s
   };
 }
 
-export async function proxyFastAPIChat(args: FastAPIProxyArgs): Promise<Response> {
+export function validateFastAPIConfig():
+  | { ok: true; url: string; secret: string }
+  | { ok: false; error: string } {
   const url = process.env.FASTAPI_AGENT_URL?.trim();
   const secret = process.env.FASTAPI_AGENT_SECRET?.trim();
-  if (!url || !secret) {
-    return Response.json(
-      { error: "FastAPI agent not configured (FASTAPI_AGENT_URL / FASTAPI_AGENT_SECRET)" },
-      { status: 503 },
-    );
+  if (!url) return { ok: false, error: "FASTAPI_AGENT_URL is not set" };
+  if (!secret) return { ok: false, error: "FASTAPI_AGENT_SECRET is not set" };
+  return { ok: true, url, secret };
+}
+
+/** payload-token cookie value for FastAPI session validation */
+export async function getSessionToken(): Promise<string | null> {
+  return (await cookies()).get(getAuthCookieName())?.value ?? null;
+}
+
+export async function proxyFastAPIChat(args: FastAPIProxyArgs): Promise<Response> {
+  const config = validateFastAPIConfig();
+  if (!config.ok) {
+    return Response.json({ error: config.error }, { status: 503 });
   }
 
-  const upstream = await fetch(buildFastAPIChatUrl(url), {
+  const sessionToken = await getSessionToken();
+  const upstream = await fetch(buildFastAPIChatUrl(config.url), {
     method: "POST",
-    headers: buildFastAPIProxyHeaders(secret),
-    body: JSON.stringify(buildFastAPIChatBody(args)),
+    headers: buildFastAPIProxyHeaders(config.secret),
+    body: JSON.stringify(buildFastAPIChatBody({ ...args, sessionToken })),
   });
 
   if (!upstream.ok || !upstream.body) {
