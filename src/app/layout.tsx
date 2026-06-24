@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { getTenant } from "@/lib/tenant";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/strings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getTenant();
@@ -12,13 +14,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const tenant = await getTenant();
+  const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;
+  const htmlLang: Locale =
+    cookieLocale && (SUPPORTED_LOCALES as readonly string[]).includes(cookieLocale)
+      ? (cookieLocale as Locale)
+      : DEFAULT_LOCALE;
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang={htmlLang} suppressHydrationWarning>
       <body
         className="min-h-screen bg-background text-foreground antialiased"
         style={
           {
-            // expose brand color for inline use
             ["--tenant-brand" as any]: tenant.theme.brand,
           } as React.CSSProperties
         }

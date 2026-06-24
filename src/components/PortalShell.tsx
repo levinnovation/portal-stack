@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { TenantConfig, TenantNavItem, TenantRole } from "@/lib/tenant";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 export interface PortalShellProps {
   user: { id: string; email: string; name: string; role: string };
@@ -138,6 +139,7 @@ export function PortalShell({ user, tenant, role, title, action, children, unrea
                 </span>
               )}
             </Link>
+            <LocaleSwitcher />
             {action}
           </div>
         </header>
