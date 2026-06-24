@@ -111,13 +111,7 @@ async function applyUserScope(where: any, ctx?: { user?: { id: string; role: str
   return where ? { and: [where, { user: { equals: ctx.user.id } }] } : { user: { equals: ctx.user.id } };
 }
 
-type Handler = (payload: Payload, ctx?: { user?: { id: string; role: string } }) => Promise<DatasetResult>;
-
-async function loadHandler(name: string): Promise<Handler | null> {
-  try {
-    const mod = await import(`./handlers/${name}.js`);
-    return (mod as any).default ?? (mod as any).handler ?? null;
-  } catch {
-    return null;
-  }
-}
+// ponytail: `kind: "custom"` is dead code until a tenant ships a custom
+// dataset handler. Removed instead of commented to keep webpack happy and
+// the file small. Re-add when needed: see git history for the original
+// loadHandler() implementation.
