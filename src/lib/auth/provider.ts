@@ -10,6 +10,7 @@
  */
 
 import type { Payload } from "payload";
+import { getAuthCookieName, parseAuthCookie } from "./cookie-name";
 
 export interface AuthSession {
   token: string;
@@ -37,11 +38,12 @@ export class LocalPayloadAuthProvider implements AuthProvider {
 
   async getSession(req: Request): Promise<SessionUser | null> {
     const cookieHeader = req.headers.get("cookie") ?? "";
-    const m = cookieHeader.match(/payload-token=([^;]+)/);
-    if (!m) return null;
+    const cookieName = getAuthCookieName();
+    const token = parseAuthCookie(cookieHeader, cookieName);
+    if (!token) return null;
     try {
       const result = await this.payload.auth({
-        headers: new Headers({ cookie: `payload-token=${m[1]}` }),
+        headers: new Headers({ cookie: `${cookieName}=${token}` }),
       });
       if (!result.user) return null;
       return {
