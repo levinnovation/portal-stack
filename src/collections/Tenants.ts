@@ -10,7 +10,7 @@ export const Tenants: CollectionConfig = {
   slug: "tenants",
   admin: { useAsTitle: "id", group: "Platform" },
   access: {
-    read: () => true,
+    read: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     create: ({ req }) => req.user?.role === "superadmin",
     update: ({ req }) => req.user?.role === "superadmin",
     delete: ({ req }) => req.user?.role === "superadmin",

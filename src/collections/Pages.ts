@@ -15,7 +15,7 @@ export const Pages: CollectionConfig = {
   admin: { useAsTitle: "title", group: "Content" },
   versions: { drafts: { autosave: true }, maxPerDoc: 50 },
   access: {
-    read: () => true, // public read; access control is per-block + per-page role restriction at render time
+    read: ({ req }) => !!req.user,
     create: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     delete: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",

@@ -9,7 +9,7 @@ export const Dashboards: CollectionConfig = {
   slug: "dashboards",
   admin: { useAsTitle: "title", group: "Content" },
   access: {
-    read: () => true,
+    read: ({ req }) => !!req.user,
     create: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     delete: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
