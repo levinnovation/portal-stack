@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Customers: CollectionConfig = {
   slug: "customers",
   admin: { useAsTitle: "fullName" },
+  versions: { maxPerDoc: 20 },
   access: {
     read: ({ req }) => {
       if (req.user?.role === "admin") return true;
@@ -14,6 +15,7 @@ export const Customers: CollectionConfig = {
     create: ({ req }) => req.user?.role === "admin",
     update: ({ req }) => req.user?.role === "admin",
     delete: ({ req }) => req.user?.role === "admin",
+    readVersions: ({ req }) => req.user?.role === "admin",
   },
   fields: [
     {
