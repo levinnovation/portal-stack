@@ -3,6 +3,8 @@ import { fileURLToPath } from "url";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { buildConfig, type CollectionConfig } from "payload";
+import { en } from "@payloadcms/translations/languages/en";
+import { es } from "@payloadcms/translations/languages/es";
 import sharp from "sharp";
 
 import { Users } from "./collections/Users";
@@ -59,6 +61,15 @@ export default buildConfig({
     meta: {
       titleSuffix: " · Portal Stack",
     },
+  },
+  i18n: {
+    // Admin panel ships en + es out of the box. The portal frontend reads
+    // the locale from the URL prefix (`/es/...`) instead of this config.
+    // ponytail: reuse Payload's built-in en/es dictionaries; no custom keys
+    // are needed yet. Add `translations: customTranslations` here when a
+    // tenant requires vocabulary overrides.
+    supportedLanguages: { en, es },
+    fallbackLanguage: "es",
   },
   collections: buildCollections(),
   editor: lexicalEditor(),
