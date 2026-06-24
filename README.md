@@ -283,6 +283,17 @@ Current implementation (`LocalPayloadAuthProvider`) issues a JWT cookie via Payl
 
 The rest of the app (server components, AI agent scoping, access control) is provider-agnostic.
 
+### Portal security (phase 1)
+
+- **Middleware** (`src/middleware.ts`): unauthenticated `/portal/*` requests redirect to `/portal/auth` (cookie presence only; JWT validated server-side).
+- **Route prefix guards** (`src/lib/auth/portal-access.ts`): e.g. `customer` users cannot render `/portal/admin/*` pages (redirect to their `homePath`).
+- **Payload REST**: `pages`, `datasets`, `media`, `dashboards` require auth; `tenants` is admin-only read.
+- **AI tools**: role-scoped queries in `src/lib/ai/scoping.ts` (admins see all; investors/customers see own data).
+- **Admin portal switcher**: sidebar links to other role portals are UI convenience; data access is enforced by route guards + Payload ACL.
+- **Self-checks**: `pnpm self-check` runs assert-based checks (no test framework).
+
+Custom auth cookie names: set `AUTH_COOKIE_NAME` env to match `tenants/<id>/config.ts → auth.cookieName` so middleware and login stay in sync.
+
 ## Deploy to Railway (one per tenant)
 
 1. Push to GitHub.
