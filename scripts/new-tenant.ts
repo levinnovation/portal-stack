@@ -31,12 +31,15 @@ if (fs.existsSync(root)) {
   process.exit(1);
 }
 
+const adminOverviewSlug = `${id}-admin-overview`;
+
 fs.mkdirSync(path.join(root, "ai"), { recursive: true });
 fs.mkdirSync(path.join(root, "domain"), { recursive: true });
 
 fs.writeFileSync(
   path.join(root, "config.ts"),
   `import type { TenantConfig } from "@/lib/tenant";
+import { ${id}Collections } from "./domain";
 
 export const ${id}Tenant: TenantConfig = {
   id: "${id}",
@@ -74,8 +77,18 @@ export const ${id}Tenant: TenantConfig = {
   },
   auth: { provider: "local", cookieName: "payload-token", sessionDays: 7 },
   roles: [
-    { key: "admin", label: "Admin", homePath: "/portal/admin", nav: [] },
+    {
+      key: "admin",
+      label: "Admin",
+      homePath: "/portal/admin",
+      defaultLandingPageSlug: "${adminOverviewSlug}",
+      nav: [
+        { to: "/portal/admin", label: "Resumen", icon: "LayoutDashboard", end: true },
+        { to: "/portal/profile", label: "Perfil", icon: "User" },
+      ],
+    },
   ],
+  payloadCollections: ${id}Collections,
 };
 `,
 );
@@ -90,12 +103,47 @@ export const agentGreeting = "Hola, ¿en qué puedo ayudarte?";
 );
 
 fs.writeFileSync(path.join(root, "domain/index.ts"), `// Add vertical collections here.\nexport const ${id}Collections: any[] = [];\n`);
-fs.writeFileSync(path.join(root, "pages.ts"), `// Add seed pages here.\nimport type { Page } from "@/collections/Pages";\nexport const corePages: Page[] = [];\n`);
+
+fs.writeFileSync(
+  path.join(root, "pages.ts"),
+  `// Seed pages — slugs must match config.roles[].defaultLandingPageSlug and nav routes.
+import type { Page } from "@/collections/Pages";
+
+export const ${id}Pages: Page[] = [
+  {
+    title: "Panel de administración",
+    slug: "${adminOverviewSlug}",
+    description: "Vista general de ${name}",
+    allowedRoles: ["admin"],
+    layout: [
+      {
+        blockType: "kpi-grid",
+        title: "Indicadores",
+        cards: [
+          { label: "Usuarios", dataset: "count:users", format: "number", icon: "Users" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Mi perfil",
+    slug: "profile",
+    allowedRoles: ["admin", "member"],
+    layout: [
+      { blockType: "markdown", title: "Información personal", body: {} },
+    ],
+  },
+];
+`,
+);
 
 console.log(`✔ Tenant "${id}" created at tenants/${id}/`);
-console.log("  Next:");
-console.log(`    1. Edit tenants/${id}/config.ts (theme, features, roles, vertical collections)`);
-console.log(`    2. Edit tenants/${id}/ai/prompts.ts (agent persona)`);
-console.log(`    3. Add collections to tenants/${id}/domain/index.ts`);
-console.log(`    4. Register in src/lib/tenant.ts TENANT_REGISTRY as { ${id}: ${id}Tenant }`);
-console.log(`    5. Add a TENANT_ID=${id} branch in src/payload.config.ts buildCollections() if the tenant ships its own collections`);
+console.log("");
+console.log("Next — register in src/lib/tenant.ts:");
+console.log(`  import { ${id}Tenant } from "../../tenants/${id}/config";`);
+console.log(`  // inside TENANT_REGISTRY:`);
+console.log(`  ${id}: ${id}Tenant,`);
+console.log("");
+console.log("Then:");
+console.log(`  TENANT_ID=${id} pnpm seed`);
+console.log(`  Deploy with TENANT_ID=${id} (collections come from config.payloadCollections)`);
