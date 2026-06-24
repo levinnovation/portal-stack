@@ -46,15 +46,16 @@ export async function resolveLanguageModel(): Promise<{ model: LanguageModel; pr
 export async function resolveSystemPrompt(agentId: string, user: SessionUser): Promise<string> {
   const tenant = await getTenant();
   const tenantId = tenant.id === "_default" ? "_default" : tenant.id;
-  let base: string;
-  try {
-    const path = `../../../tenants/${tenantId}/ai/prompts`;
-    const mod = await import(/* @vite-ignore */ path);
-    base = (mod as any).systemPrompt || "Eres un asistente del portal.";
-  } catch {
-    const fallback = await import("../../../tenants/_default/ai/prompts");
-    base = (fallback as any).systemPrompt || "Eres un asistente del portal.";
-  }
+  // ponytail: static imports keyed off TENANT_ID at build time. No dynamic
+  // import() — webpack can't statically analyse a runtime string, and the
+  // dynamic import forced a `new Function` workaround that broke
+  // server-rendered routes. Add new tenants to the map below.
+  const prompts: Record<string, { systemPrompt?: string }> = {
+    _default: await import("../../../tenants/_default/ai/prompts"),
+    core: await import("../../../tenants/core/ai/prompts"),
+    finu: await import("../../../tenants/finu/ai/prompts"),
+  };
+  const base = prompts[tenantId]?.systemPrompt ?? prompts._default?.systemPrompt ?? "Eres un asistente del portal.";
   const userCtx = `\n\nEl usuario actual es: ${user.role} (id: ${user.id}, email: ${user.email}). Adapta tus respuestas.`;
   return base + userCtx;
 }

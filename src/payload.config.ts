@@ -1,6 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { resendAdapter } from "@payloadcms/email-resend";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { buildConfig, type CollectionConfig } from "payload";
 import { en } from "@payloadcms/translations/languages/en";
@@ -81,6 +82,13 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || "",
     },
+  }),
+  email: resendAdapter({
+    // ponytail: if RESEND_API_KEY is missing, the adapter falls back to
+    // console-log mode (Payload's default), so dev still works without it.
+    defaultFromAddress: process.env.EMAIL_FROM || "no-reply@portal.local",
+    defaultFromName: process.env.EMAIL_FROM_NAME || "Portal Stack",
+    apiKey: process.env.RESEND_API_KEY || "",
   }),
   sharp,
   cors: [process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"],

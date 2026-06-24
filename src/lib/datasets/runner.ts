@@ -33,10 +33,16 @@ export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user
   const { query } = def;
   const where = await applyUserScope(query.where, ctx);
 
+  // ponytail: custom handlers are not yet in use. To enable, add a
+  // ./handlers/<name>.ts file (see loadHandler at the bottom of this file)
+  // and uncomment the block below. Left disabled so webpack doesn't try
+  // to resolve a non-existent dynamic import.
+  /*
   if (query.kind === "custom" && query.handler) {
     const handler = await loadHandler(query.handler);
     if (handler) return handler(payload, ctx);
   }
+  */
 
   if (!query.collection) {
     throw new Error(`Dataset ${def.key} has no collection`);
@@ -105,13 +111,7 @@ async function applyUserScope(where: any, ctx?: { user?: { id: string; role: str
   return where ? { and: [where, { user: { equals: ctx.user.id } }] } : { user: { equals: ctx.user.id } };
 }
 
-type Handler = (payload: Payload, ctx?: { user?: { id: string; role: string } }) => Promise<DatasetResult>;
-
-async function loadHandler(name: string): Promise<Handler | null> {
-  try {
-    const mod = await import(`./handlers/${name}.js`);
-    return (mod as any).default ?? (mod as any).handler ?? null;
-  } catch {
-    return null;
-  }
-}
+// ponytail: `kind: "custom"` is dead code until a tenant ships a custom
+// dataset handler. Removed instead of commented to keep webpack happy and
+// the file small. Re-add when needed: see git history for the original
+// loadHandler() implementation.
