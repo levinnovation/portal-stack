@@ -33,10 +33,16 @@ export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user
   const { query } = def;
   const where = await applyUserScope(query.where, ctx);
 
+  // ponytail: custom handlers are not yet in use. To enable, add a
+  // ./handlers/<name>.ts file (see loadHandler at the bottom of this file)
+  // and uncomment the block below. Left disabled so webpack doesn't try
+  // to resolve a non-existent dynamic import.
+  /*
   if (query.kind === "custom" && query.handler) {
     const handler = await loadHandler(query.handler);
     if (handler) return handler(payload, ctx);
   }
+  */
 
   if (!query.collection) {
     throw new Error(`Dataset ${def.key} has no collection`);
