@@ -21,6 +21,7 @@ import "server-only";
 import { cache } from "react";
 import { defaultTenant } from "../../tenants/_default/config";
 import { coreTenant } from "../../tenants/core/config";
+import { finuTenant } from "../../tenants/finu/config";
 import type { CollectionConfig } from "payload";
 
 export type Vertical = "realestate" | "fintech" | "generic";
@@ -112,6 +113,7 @@ export interface TenantConfig {
 
 const TENANT_REGISTRY: Record<string, TenantConfig> = {
   core: coreTenant,
+  finu: finuTenant,
   _default: defaultTenant,
 };
 
