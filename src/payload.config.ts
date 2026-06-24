@@ -12,6 +12,11 @@ import { Notifications } from "./collections/Notifications";
 import { AuditLogs } from "./collections/AuditLogs";
 import { Tenants } from "./collections/Tenants";
 import { Webhooks } from "./collections/Webhooks";
+import { Pages } from "./collections/Pages";
+import { Datasets } from "./collections/Datasets";
+import { Dashboards } from "./collections/Dashboards";
+import { AIChats } from "./collections/AIChats";
+import { AIMessages } from "./collections/AIMessages";
 
 import { getTenant } from "./lib/tenant";
 
@@ -34,6 +39,11 @@ function buildCollections(): CollectionConfig[] {
     AuditLogs,
     Tenants,
     Webhooks,
+    Pages,
+    Datasets,
+    Dashboards,
+    AIChats,
+    AIMessages,
   ];
   if (tenantId === "core") {
     // eslint-disable-next-line @typescript-eslint/no-var-requires

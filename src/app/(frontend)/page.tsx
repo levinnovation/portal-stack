@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { getTenant } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function LandingPage() {
   const tenant = await getTenant();
