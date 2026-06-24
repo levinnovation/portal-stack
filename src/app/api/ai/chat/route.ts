@@ -4,7 +4,7 @@ import { getTenant, resolveAIBackend } from "@/lib/tenant";
 import { getPayloadClient } from "@/lib/payload";
 import { ensureChat, persistUserMessage } from "@/lib/ai/chat-persistence";
 import { streamLocalChat } from "@/lib/ai/local-chat";
-import { proxyFastAPIChat } from "@/lib/ai/fastapi-proxy";
+import { proxyFastAPIChat, isFastAPIUnavailable } from "@/lib/ai/fastapi-proxy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -44,7 +44,13 @@ export async function POST(req: Request) {
   };
 
   if (resolveAIBackend(tenant.ai) === "fastapi") {
-    return proxyFastAPIChat(chatArgs);
+    const res = await proxyFastAPIChat(chatArgs);
+    // ponytail: opt-in only — set AI_BACKEND_FALLBACK=local to retry with in-process AI SDK
+    if (isFastAPIUnavailable(res.status) && process.env.AI_BACKEND_FALLBACK?.trim() === "local") {
+      console.warn("[ai] FastAPI unavailable, falling back to local (AI_BACKEND_FALLBACK=local)");
+      return streamLocalChat(chatArgs);
+    }
+    return res;
   }
 
   return streamLocalChat(chatArgs);

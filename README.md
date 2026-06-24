@@ -311,6 +311,8 @@ Response: text/event-stream (AI SDK UIMessage stream, passthrough to client)
 
 Next.js still persists chats and messages in Payload for both backends. Types live in `src/lib/ai/fastapi-types.ts`.
 
+On network/config failure the proxy returns **503** (no silent fallback). Set `AI_BACKEND_FALLBACK=local` to opt into retrying with the in-process AI SDK.
+
 ## Auth: local today, Agentyx-ready
 
 Current implementation (`LocalPayloadAuthProvider`) issues a JWT cookie via Payload's built-in auth. To plug in the Lev Innovation Agentyx stack:

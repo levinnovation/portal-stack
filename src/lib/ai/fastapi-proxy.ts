@@ -1,16 +1,32 @@
 import "server-only";
 import { cookies } from "next/headers";
-import type { UIMessage } from "ai";
 import type { Payload } from "payload";
+import type { UIMessage } from "ai";
 import { getAuthCookieName } from "../auth/cookie-name";
 import type { SessionUser } from "../auth/provider";
 import type { TenantConfig } from "../tenant";
-import type { FastAPIChatRequest } from "./fastapi-types";
+import {
+  buildFastAPIChatBody,
+  buildFastAPIChatUrl,
+  buildFastAPIProxyHeaders,
+  getFastAPITimeoutMs,
+  logFastAPIProxy,
+  validateFastAPIConfig,
+} from "./fastapi-client";
 import {
   extractTextFromUIMessageStream,
   persistAssistantMessage,
   teeStreamForPersistence,
 } from "./chat-persistence";
+
+export {
+  buildFastAPIChatBody,
+  buildFastAPIChatUrl,
+  buildFastAPIProxyHeaders,
+  getFastAPITimeoutMs,
+  isFastAPIUnavailable,
+  validateFastAPIConfig,
+} from "./fastapi-client";
 
 export interface FastAPIProxyArgs {
   user: SessionUser;
@@ -21,57 +37,46 @@ export interface FastAPIProxyArgs {
   payload: Payload;
 }
 
-export function buildFastAPIChatUrl(baseUrl: string): string {
-  return `${baseUrl.replace(/\/+$/, "")}/v1/chat`;
-}
-
-export function buildFastAPIProxyHeaders(secret: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${secret}`,
-    "Content-Type": "application/json",
-  };
-}
-
-export function buildFastAPIChatBody(args: FastAPIProxyArgs & { sessionToken?: string | null }): FastAPIChatRequest {
-  const { user, tenant, messages, agentId, aiChatId, sessionToken } = args;
-  return {
-    tenantId: tenant.id,
-    userId: user.id,
-    role: user.role,
-    agentId,
-    chatId: aiChatId,
-    messages,
-    ...(sessionToken ? { sessionToken } : {}),
-  };
-}
-
-export function validateFastAPIConfig():
-  | { ok: true; url: string; secret: string }
-  | { ok: false; error: string } {
-  const url = process.env.FASTAPI_AGENT_URL?.trim();
-  const secret = process.env.FASTAPI_AGENT_SECRET?.trim();
-  if (!url) return { ok: false, error: "FASTAPI_AGENT_URL is not set" };
-  if (!secret) return { ok: false, error: "FASTAPI_AGENT_SECRET is not set" };
-  return { ok: true, url, secret };
-}
-
 /** payload-token cookie value for FastAPI session validation */
 export async function getSessionToken(): Promise<string | null> {
   return (await cookies()).get(getAuthCookieName())?.value ?? null;
 }
 
 export async function proxyFastAPIChat(args: FastAPIProxyArgs): Promise<Response> {
+  const { tenant } = args;
+  const start = Date.now();
   const config = validateFastAPIConfig();
   if (!config.ok) {
+    logFastAPIProxy(tenant.id, Date.now() - start, 503);
     return Response.json({ error: config.error }, { status: 503 });
   }
 
   const sessionToken = await getSessionToken();
-  const upstream = await fetch(buildFastAPIChatUrl(config.url), {
-    method: "POST",
-    headers: buildFastAPIProxyHeaders(config.secret),
-    body: JSON.stringify(buildFastAPIChatBody({ ...args, sessionToken })),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(buildFastAPIChatUrl(config.url), {
+      method: "POST",
+      headers: buildFastAPIProxyHeaders(config.secret),
+      body: JSON.stringify(
+        buildFastAPIChatBody({
+          tenantId: tenant.id,
+          userId: args.user.id,
+          role: args.user.role,
+          agentId: args.agentId,
+          chatId: args.aiChatId,
+          messages: args.messages,
+          sessionToken,
+        }),
+      ),
+      signal: AbortSignal.timeout(getFastAPITimeoutMs()),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "FastAPI agent unreachable";
+    logFastAPIProxy(tenant.id, Date.now() - start, 503);
+    return Response.json({ error: "FastAPI agent unreachable", detail: message }, { status: 503 });
+  }
+
+  logFastAPIProxy(tenant.id, Date.now() - start, upstream.status);
 
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => "");
