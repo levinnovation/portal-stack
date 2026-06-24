@@ -156,10 +156,10 @@ Open:
 After creating your first admin user:
 
 ```bash
-pnpm seed
+TENANT_ID=core pnpm seed   # or omit TENANT_ID (defaults to core)
 ```
 
-This inserts 14 Pages into the `pages` collection (admin, investor, customer + shared). Re-run anytime to update them.
+This reads `tenants/<id>/pages.ts` and upserts Pages into Payload. Re-run anytime to update them.
 
 ## Multi-tenant workflow
 
@@ -179,32 +179,55 @@ tenants/core/
 
 ### Adding a new tenant
 
+See **[Nuevo cliente en 10 minutos](#nuevo-cliente-en-10-minutos)** below for the full checklist.
+
 ```bash
 pnpm tenant:new -- --id=finu --name="Finu" --vertical=fintech
 ```
 
-This scaffolds `tenants/finu/`. Then:
+This scaffolds `tenants/finu/` with `config.ts`, stub `pages.ts` (`finuPages`), and `domain/index.ts` (`finuCollections`). Then:
 
 1. Edit `tenants/finu/config.ts` (theme, roles, features, AI model)
 2. Edit `tenants/finu/ai/prompts.ts` (persona)
-3. Add collections to `tenants/finu/domain/collections/`
-4. Register in `src/lib/tenant.ts` `TENANT_REGISTRY`:
-   ```ts
-   import { finuTenant } from "../tenants/finu/config";
-   const TENANT_REGISTRY: Record<string, TenantConfig> = {
-     core: coreTenant,
-     finu: finuTenant,
-     _default: defaultTenant,
-   };
-   ```
-5. If the tenant ships its own vertical collections, add a branch in `src/payload.config.ts` `buildCollections()`:
-   ```ts
-   if (tenantId === "finu") {
-     const { fintechCollections } = require("../tenants/finu/domain/collections");
-     return [...baseCollections, ...fintechCollections];
-   }
-   ```
-6. Deploy a new Railway service with `TENANT_ID=finu` and a separate Postgres plugin.
+3. Add collections to `tenants/finu/domain/index.ts` and wire `payloadCollections` in config
+4. Register in `src/lib/tenant.ts` `TENANT_REGISTRY` (the CLI prints the exact diff)
+5. Run `pnpm self-check` — fails if a `tenants/<id>/` folder is not registered
+6. Seed pages: `TENANT_ID=finu pnpm seed`
+7. Deploy a new Railway service with `TENANT_ID=finu` and a separate Postgres plugin
+
+Vertical collections are resolved automatically from `TenantConfig.payloadCollections` at boot — no manual branch in `payload.config.ts`.
+
+### Nuevo cliente en 10 minutos
+
+Flujo repetible para un deploy aislado por cliente:
+
+| Paso | Comando / archivo | ~min |
+|---|---|---|
+| 1 | `pnpm tenant:new -- --id=<id> --name="<Nombre>" --vertical=<realestate\|fintech\|generic>` | 1 |
+| 2 | Editar `tenants/<id>/config.ts` — theme, features, roles, `payloadCollections` | 3 |
+| 3 | Editar `tenants/<id>/pages.ts` — slugs alineados con nav y `defaultLandingPageSlug` | 2 |
+| 4 | Registrar en `src/lib/tenant.ts` (el CLI imprime el diff exacto) | 1 |
+| 5 | `pnpm self-check` | 1 |
+| 6 | Crear superadmin en `/admin`, luego `TENANT_ID=<id> pnpm seed` | 1 |
+| 7 | Railway: nuevo servicio + Postgres, `TENANT_ID=<id>` | 1 |
+
+**Sincronía roles ↔ páginas:** cada rol con layout builder necesita un `defaultLandingPageSlug` que exista en `tenants/<id>/pages.ts`. Los ítems de `nav` con `end: true` apuntan al home del rol; el resto son sub-rutas bajo `/portal/<role>/…`.
+
+| Tenant | Rol | `defaultLandingPageSlug` | Nav home (`end: true`) | Otros nav → slug esperado |
+|---|---|---|---|---|
+| **core** | admin | `admin-overview` | `/portal/admin` | `/portal/admin/projects` → page slug `projects` (cuando exista) |
+| **core** | investor | `investor-portfolio` | `/portal/investor` | `/portal/investor/distributions` → `distributions` |
+| **core** | customer | `customer-overview` | `/portal/customer` | `/portal/customer/payments` → `payments` |
+| **core** | *(todos)* | — | `/portal/profile` | slug compartido `profile` |
+| **finu** | admin | `finu-admin-overview` | `/portal/admin` | `/portal/admin/loans` → `loans` (stub futuro) |
+| **finu** | customer | `finu-customer-overview` | `/portal/customer` | `/portal/customer/payments` → `payments` |
+| **\<nuevo\>** | admin | `<id>-admin-overview` | `/portal/admin` | `/portal/profile` → `profile` (generado por `tenant:new`) |
+
+Convención de exports:
+
+- `tenants/<id>/pages.ts` → `export const <id>Pages`
+- `tenants/<id>/domain/index.ts` → `export const <id>Collections`
+- `tenants/<id>/config.ts` → `export const <id>Tenant` con `payloadCollections: <id>Collections`
 
 ### DB-driven overrides
 
@@ -320,8 +343,9 @@ For a second tenant, repeat steps 1-5 with a different `TENANT_ID`, a separate R
 | `pnpm start` | Start the production server |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint |
-| `pnpm seed` | Insert/update seed Pages for the active tenant |
+| `pnpm seed` | Insert/update seed Pages for the active tenant (`TENANT_ID`, default `core`) |
 | `pnpm tenant:new` | Scaffold a new tenant under `tenants/` |
+| `pnpm self-check` | Run ponytail assert checks (auth, scoping, tenant registry, seed resolver) |
 
 ## Roadmap
 
