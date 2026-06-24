@@ -7,10 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { useLocale } from "@/lib/i18n/useLocale";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLocale();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -26,7 +29,7 @@ export default function AuthPage() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        toast({ tone: "error", title: "No se pudo iniciar sesión", description: j.error || "Credenciales inválidas" });
+        toast({ tone: "error", title: t("auth.signIn.error"), description: j.error || "Credenciales inválidas" });
         return;
       }
       const data = await res.json();
@@ -39,17 +42,20 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-hero flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-hero flex items-center justify-center px-4 py-12 relative">
+      <div className="absolute top-4 right-4">
+        <LocaleSwitcher />
+      </div>
       <Card className="w-full max-w-md bg-card">
         <CardHeader className="text-center">
           <Link href="/" className="font-display text-3xl text-accent tracking-tight">PORTAL</Link>
-          <CardTitle className="mt-3">Acceder al portal</CardTitle>
-          <CardDescription>Ingresa con tu cuenta</CardDescription>
+          <CardTitle className="mt-3">{t("auth.signIn.title")}</CardTitle>
+          <CardDescription>{t("auth.signIn.help")} info@core.example</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.field.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -60,7 +66,7 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t("auth.field.password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -71,7 +77,7 @@ export default function AuthPage() {
               />
             </div>
             <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={loading}>
-              {loading ? "Ingresando…" : "Iniciar sesión"}
+              {loading ? t("auth.signIn.signingIn") : t("auth.signIn.submit")}
             </Button>
           </form>
         </CardContent>
