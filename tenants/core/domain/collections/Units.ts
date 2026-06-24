@@ -3,11 +3,13 @@ import type { CollectionConfig } from "payload";
 export const Units: CollectionConfig = {
   slug: "units",
   admin: { useAsTitle: "unitNumber" },
+  versions: { maxPerDoc: 20 },
   access: {
     read: () => true,
     create: ({ req }) => req.user?.role === "admin",
     update: ({ req }) => req.user?.role === "admin",
     delete: ({ req }) => req.user?.role === "admin",
+    readVersions: ({ req }) => req.user?.role === "admin",
   },
   fields: [
     {
