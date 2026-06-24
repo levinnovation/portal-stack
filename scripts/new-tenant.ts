@@ -147,3 +147,5 @@ console.log("");
 console.log("Then:");
 console.log(`  TENANT_ID=${id} pnpm seed`);
 console.log(`  Deploy with TENANT_ID=${id} (collections come from config.payloadCollections)`);
+console.log("");
+console.log("Run pnpm self-check — tenant-registry.self-check fails if registration is missing.");
