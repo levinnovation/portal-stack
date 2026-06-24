@@ -7,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { getPayloadClient } from "@/lib/payload";
 import { getTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
+import { canAccessPortalPrefix } from "@/lib/auth/portal-access";
 import { resolvePageDatasets } from "@/lib/datasets/resolve";
 import { BlockRenderer } from "@/lib/blocks/renderer";
 import { PortalShell } from "@/components/PortalShell";
@@ -14,14 +15,19 @@ import { PortalShell } from "@/components/PortalShell";
 export interface RenderPageArgs {
   slugPath: string;          // "overview" or "projects/123"
   pageTitle?: string;        // override the shell title
+  portalPrefix?: string;     // "/portal/admin" — enforces route prefix vs role
 }
 
-export async function renderPage({ slugPath, pageTitle }: RenderPageArgs) {
+export async function renderPage({ slugPath, pageTitle, portalPrefix }: RenderPageArgs) {
   const user = await getSession();
   if (!user) redirect("/portal/auth");
   const tenant = await getTenant();
   const role = tenant.roles.find((r) => r.key === user.role);
   if (!role) redirect("/portal/auth");
+
+  if (portalPrefix && !canAccessPortalPrefix(portalPrefix, user.role)) {
+    redirect(role.homePath);
+  }
 
   const payload = await getPayloadClient();
   const slug = slugPath.replace(/^\/+/, "");
