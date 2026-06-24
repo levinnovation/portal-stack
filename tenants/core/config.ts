@@ -53,6 +53,7 @@ export const coreTenant: TenantConfig = {
     systemPromptFile: "tenants/core/ai/prompts.ts",
     maxStepsPerTurn: 6,
     temperature: 0.3,
+    backend: "local",
   },
   auth: {
     provider: "local",

@@ -51,6 +51,7 @@ export const finuTenant: TenantConfig = {
     systemPromptFile: "tenants/finu/ai/prompts.ts",
     maxStepsPerTurn: 5,
     temperature: 0.2,
+    backend: "local",
   },
   auth: {
     provider: "local",

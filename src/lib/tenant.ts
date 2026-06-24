@@ -23,6 +23,9 @@ import { defaultTenant } from "../../tenants/_default/config";
 import { coreTenant } from "../../tenants/core/config";
 import { finuTenant } from "../../tenants/finu/config";
 import type { CollectionConfig } from "payload";
+import type { AIBackend } from "./ai/backend";
+
+export type { AIBackend } from "./ai/backend";
 
 export type Vertical = "realestate" | "fintech" | "generic";
 
@@ -71,6 +74,8 @@ export interface TenantAIConfig {
   systemPromptFile: string;     // relative to tenants/<id>/ai/
   maxStepsPerTurn: number;
   temperature: number;
+  /** "local" = AI SDK in Next.js; "fastapi" = proxy to external agent. Default "local". */
+  backend?: AIBackend;
 }
 
 export interface TenantAuthConfig {
@@ -191,3 +196,5 @@ function mergeTenant(base: TenantConfig, override: any): TenantConfig {
 export function listRegisteredTenants(): string[] {
   return Object.keys(TENANT_REGISTRY).filter((k) => k !== "_default");
 }
+
+export { resolveAIBackend } from "./ai/backend";
