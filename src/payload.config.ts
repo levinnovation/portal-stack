@@ -21,7 +21,7 @@ import { Dashboards } from "./collections/Dashboards";
 import { AIChats } from "./collections/AIChats";
 import { AIMessages } from "./collections/AIMessages";
 
-import { getTenant } from "./lib/tenant";
+import { getTenantCollectionsSync, getTenantId } from "./lib/tenant";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -33,7 +33,6 @@ const dirname = path.dirname(filename);
  * but collections themselves are fixed at boot.
  */
 function buildCollections(): CollectionConfig[] {
-  const tenantId = process.env.TENANT_ID || "core";
   const baseCollections: CollectionConfig[] = [
     Users,
     Media,
@@ -48,12 +47,9 @@ function buildCollections(): CollectionConfig[] {
     AIChats,
     AIMessages,
   ];
-  if (tenantId === "core") {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { realestateCollections } = require("../tenants/core/domain/collections");
-    return [...baseCollections, ...realestateCollections];
-  }
-  return baseCollections;
+  const tenantId = getTenantId();
+  const verticalCollections = getTenantCollectionsSync(tenantId);
+  return [...baseCollections, ...verticalCollections];
 }
 
 export default buildConfig({

@@ -7,6 +7,7 @@ const checks = [
   "src/lib/auth/cookie-name.self-check.ts",
   "src/lib/auth/portal-access.self-check.ts",
   "src/lib/ai/scoping.self-check.ts",
+  "src/lib/tenant-collections.self-check.ts",
   "scripts/load-tenant-pages.self-check.ts",
 ];
 

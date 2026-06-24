@@ -121,6 +121,12 @@ export function getTenantId(): string {
   return process.env.TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID || "core";
 }
 
+/** Sync resolver for payload.config.ts at boot — reads registry payloadCollections. */
+export function getTenantCollectionsSync(tenantId = getTenantId()): CollectionConfig[] {
+  const config = TENANT_REGISTRY[tenantId] ?? TENANT_REGISTRY._default;
+  return config.payloadCollections ?? [];
+}
+
 export const getTenant = cache(async (): Promise<TenantConfig> => {
   const id = getTenantId();
   const fromRegistry = TENANT_REGISTRY[id] ?? TENANT_REGISTRY._default;

@@ -1,4 +1,5 @@
 import type { TenantConfig } from "@/lib/tenant";
+import { finuCollections } from "./domain";
 
 /**
  * Finu — fintech / lending vertical.
@@ -83,5 +84,5 @@ export const finuTenant: TenantConfig = {
       ],
     },
   ],
-  payloadCollections: [],
+  payloadCollections: finuCollections,
 };
