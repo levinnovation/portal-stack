@@ -296,6 +296,21 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 Set the model in `tenants/<id>/config.ts → ai.model`. Common values: `gpt-4o-mini`, `gpt-4o`, `claude-3-5-sonnet-latest`.
 
+### FastAPI backend (optional)
+
+Tenants can route chat to an external FastAPI agent instead of the in-process AI SDK. Set `ai.backend = "fastapi"` in `tenants/<id>/config.ts`, or `AI_BACKEND=fastapi` globally.
+
+Contract:
+
+```
+POST {FASTAPI_AGENT_URL}/v1/chat
+Headers: Authorization: Bearer <FASTAPI_AGENT_SECRET>, Content-Type: application/json
+Body: { tenantId, userId, role, agentId, chatId, messages, sessionToken? }
+Response: text/event-stream (AI SDK UIMessage stream, passthrough to client)
+```
+
+Next.js still persists chats and messages in Payload for both backends. Types live in `src/lib/ai/fastapi-types.ts`.
+
 ## Auth: local today, Agentyx-ready
 
 Current implementation (`LocalPayloadAuthProvider`) issues a JWT cookie via Payload's built-in auth. To plug in the Lev Innovation Agentyx stack:
