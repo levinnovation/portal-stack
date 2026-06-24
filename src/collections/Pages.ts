@@ -6,15 +6,20 @@ import { BLOCK_FIELDS } from "./_blocks";
  * Each Page has a slug, optional role restrictions, and an array of blocks.
  * The frontend catch-all route (app/(frontend)/(portal)/[...slug]/page.tsx)
  * reads a Page by slug and renders its blocks via the BlockRenderer.
+ *
+ * versions + drafts + autosave: edits are autosaved as drafts, can be
+ * previewed, then published. The frontend always reads the published version.
  */
 export const Pages: CollectionConfig = {
   slug: "pages",
   admin: { useAsTitle: "title", group: "Content" },
+  versions: { drafts: { autosave: true }, maxPerDoc: 50 },
   access: {
     read: () => true, // public read; access control is per-block + per-page role restriction at render time
     create: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     delete: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
+    readVersions: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
   },
   fields: [
     { name: "title", type: "text", required: true },
