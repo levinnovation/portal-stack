@@ -98,6 +98,7 @@ export async function proxyFastAPIChat(args: FastAPIProxyArgs): Promise<Response
       "Content-Type": upstream.headers.get("Content-Type") ?? "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
+      "X-Chat-Id": aiChatId,
     },
   });
 }

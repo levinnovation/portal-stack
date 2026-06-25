@@ -5,7 +5,7 @@ export type { AIBackend } from "./ai/backend";
 
 export type Vertical = "realestate" | "fintech" | "generic";
 export type AuthProviderKind = "local" | "agentyx";
-export type TenantNavKind = "page" | "custom";
+export type TenantNavKind = "page" | "custom" | "group";
 
 export interface TenantTheme {
   brand: string;

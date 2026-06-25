@@ -23,4 +23,4 @@ export const fmtDateTime = (d: string | Date | null | undefined) => {
   return date.toLocaleString("es-CO", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 };
 
-export type AppRole = string; // roles are tenant-defined
+export type AppRole = string;
