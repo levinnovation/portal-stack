@@ -104,4 +104,7 @@ export const coreTenant: TenantConfig = {
     },
   ],
   payloadCollections: realestateCollections,
+  integrations: [
+    { source: "quickbase", enabled: true, secretRef: "quickbase" },
+  ],
 };
