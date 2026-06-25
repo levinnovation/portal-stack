@@ -81,3 +81,17 @@ export const Pages: CollectionConfig = {
     },
   ],
 };
+
+/** Seed shape for tenants/<id>/pages.ts consumed by pnpm seed */
+export type SeedPage = {
+  title: string;
+  slug: string;
+  description?: string;
+  allowedRoles?: string[];
+  showInNav?: boolean;
+  navLabel?: string;
+  navIcon?: string;
+  navOrder?: number;
+  navPath?: string;
+  layout?: unknown[];
+};

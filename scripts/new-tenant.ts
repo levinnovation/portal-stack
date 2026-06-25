@@ -137,9 +137,9 @@ fs.writeFileSync(path.join(root, "domain/index.ts"), `export const ${id}Collecti
 
 fs.writeFileSync(
   path.join(root, "pages.ts"),
-  `import type { Page } from "@/collections/Pages";
+  `import type { SeedPage } from "@/collections/Pages";
 
-export const ${exportName}: Page[] = [
+export const ${exportName}: SeedPage[] = [
   {
     title: "Panel de administración",
     slug: "${adminOverviewSlug}",

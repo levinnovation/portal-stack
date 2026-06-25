@@ -2,13 +2,13 @@
  * Resolve seed pages for a tenant from tenants/<id>/pages.ts.
  * Convention: export `${id}Pages` (e.g. corePages, finuPages).
  */
-import type { Page } from "@/collections/Pages";
+import type { SeedPage } from "@/collections/Pages";
 
 export function tenantPagesExportName(tenantId: string): string {
   return `${tenantId}Pages`;
 }
 
-export async function loadTenantPages(tenantId: string): Promise<Page[]> {
+export async function loadTenantPages(tenantId: string): Promise<SeedPage[]> {
   const exportName = tenantPagesExportName(tenantId);
   let mod: Record<string, unknown>;
   try {
@@ -21,7 +21,7 @@ export async function loadTenantPages(tenantId: string): Promise<Page[]> {
   const pages = mod[exportName];
   if (!Array.isArray(pages)) {
     throw new Error(
-      `[seed] tenants/${tenantId}/pages.ts must export \`${exportName}\` as a Page[] array`,
+      `[seed] tenants/${tenantId}/pages.ts must export \`${exportName}\` as a SeedPage[] array`,
     );
   }
   if (pages.length === 0) {
@@ -29,5 +29,5 @@ export async function loadTenantPages(tenantId: string): Promise<Page[]> {
       `[seed] tenants/${tenantId}/pages.ts exports empty \`${exportName}\` — add at least one page stub`,
     );
   }
-  return pages as Page[];
+  return pages as SeedPage[];
 }

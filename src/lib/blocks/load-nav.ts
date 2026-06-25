@@ -1,4 +1,3 @@
-"use server";
 import type { Payload } from "payload";
 import type { TenantNavItem, TenantRole } from "@/lib/tenant";
 

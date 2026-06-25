@@ -36,7 +36,7 @@ export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user
   if (query.kind === "custom" && query.handler) {
     const handler = getDatasetHandler(query.handler);
     if (!handler) throw new Error(`Unknown dataset handler: ${query.handler}`);
-    return handler(payload, ctx, query as Record<string, unknown>);
+    return handler(payload, ctx, query as unknown as Record<string, unknown>);
   }
 
   if (query.kind === "http") {
