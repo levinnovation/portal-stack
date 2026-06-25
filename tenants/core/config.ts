@@ -69,7 +69,11 @@ export const coreTenant: TenantConfig = {
       defaultLandingPageSlug: "admin-overview",
       nav: [
         { to: "/portal/admin", label: "Resumen", icon: "LayoutDashboard", end: true },
-        { to: "/portal/admin/agents", label: "Agentes IA", icon: "MessageCircle", kind: "custom" },
+        { to: "/portal/admin/agents", label: "Agentes · Resumen", icon: "MessageCircle", kind: "custom" },
+        { to: "/portal/admin/agents/leah", label: "Leah · Mercadeo", icon: "BarChart3", kind: "custom" },
+        { to: "/portal/admin/agents/leah/contratos", label: "Leah · Contratos", icon: "FileSpreadsheet", kind: "custom" },
+        { to: "/portal/admin/agents/qara", label: "Qara · Analítica", icon: "Users", kind: "custom" },
+        { to: "/portal/admin/agents/qara/control", label: "Qara · Control", icon: "RefreshCw", kind: "custom" },
         { to: "/portal/admin/projects", label: "Proyectos", icon: "Building2" },
         { to: "/portal/admin/investors", label: "Inversionistas", icon: "Users" },
         { to: "/portal/admin/customers", label: "Clientes", icon: "ShoppingBag" },

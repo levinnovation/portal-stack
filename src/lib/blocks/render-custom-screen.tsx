@@ -15,9 +15,10 @@ export interface RenderCustomScreenArgs {
   portalPrefix: string;
   roles: string[];
   children: ReactNode;
+  action?: ReactNode;
 }
 
-export async function renderCustomScreen({ title, portalPrefix, roles, children }: RenderCustomScreenArgs) {
+export async function renderCustomScreen({ title, portalPrefix, roles, children, action }: RenderCustomScreenArgs) {
   const user = await getSession();
   if (!user) redirect("/portal/auth");
 
@@ -38,7 +39,7 @@ export async function renderCustomScreen({ title, portalPrefix, roles, children 
   }
 
   return (
-    <PortalShell user={user} tenant={toPortalShellTenant(tenant)} role={role} title={title} navOverride={navOverride}>
+    <PortalShell user={user} tenant={toPortalShellTenant(tenant)} role={role} title={title} action={action} navOverride={navOverride}>
       {children}
     </PortalShell>
   );

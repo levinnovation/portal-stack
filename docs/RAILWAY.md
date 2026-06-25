@@ -275,3 +275,24 @@ curl -s -o /dev/null -w "%{http_code}\n" https://<url>/api/pages # → 403 sin J
 | Portal redirect loop | Cookie `payload-token` no se setea; revisa `secure` + HTTPS |
 | AI 503 | `FASTAPI_AGENT_URL` / `SECRET` faltantes o agente caído |
 | Tenant equivocado | `TENANT_ID` no registrado en `tenants/registry.ts` → falla `pnpm self-check` |
+| Agent dashboards vacíos | Faltan credenciales QuickBase/HubSpot/Qara/Langfuse (ver abajo) |
+
+---
+
+## Agent dashboards (CORE)
+
+Rutas en `/portal/admin/agents/*` (Leah + Qara). Variables en el servicio **portal-stack**:
+
+| Variable | Origen Railway (client-core-agentyx) |
+|----------|--------------------------------------|
+| `INTEGRATION_CORE_QUICKBASE_TOKEN` | Token QuickBase |
+| `QUICKBASE_REALM` | Realm hostname |
+| `CORE_QB_CONTRATOS_TABLE_ID` / `QUICKBASE_CONTRACTS_TABLE` | Tabla contratos |
+| `CORE_QB_CONVERSION_TABLE_ID` | Tabla conversión |
+| `INTEGRATION_CORE_HUBSPOT_TOKEN` | `${{agent-9-core-koren-customer-service.HUBSPOT_ACCESS_TOKEN}}` |
+| `HUBSPOT_PORTAL_ID` | Portal HubSpot (links a deals) |
+| `QARA_API_URL` | URL pública o privada del worker Qara |
+| `QARA_API_KEY` | `${{agent-9-core-koren-customer-service.API_KEY}}` |
+| `LANGFUSE_*` | Mismas keys que en el worker Qara |
+
+Sin credenciales las pantallas muestran **EmptyState/ErrorState** — no crashean.

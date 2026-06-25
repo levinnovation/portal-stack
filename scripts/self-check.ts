@@ -19,6 +19,7 @@ const checks = [
   "src/lib/datasets/parse-inline.self-check.ts",
   "src/lib/integrations/credentials.self-check.ts",
   "scripts/nav-slugs.self-check.ts",
+  "tenants/core/agents-nav.self-check.ts",
 ];
 
 for (const file of checks) {
