@@ -12,6 +12,11 @@ const checks = [
   "src/lib/tenant-collections.self-check.ts",
   "src/lib/tenant-registry.self-check.ts",
   "scripts/load-tenant-pages.self-check.ts",
+  "src/lib/blocks/page-slug.self-check.ts",
+  "src/lib/blocks/normalize-layout.self-check.ts",
+  "src/lib/datasets/parse-inline.self-check.ts",
+  "src/lib/integrations/credentials.self-check.ts",
+  "scripts/nav-slugs.self-check.ts",
 ];
 
 for (const file of checks) {

@@ -1,6 +1,5 @@
 /**
- * Higher-order helper that renders a Page (layout builder) inside a
- * portal shell, resolving datasets and applying the page's allowedRoles.
+ * Higher-order helper that renders a Page (layout builder) inside a portal shell.
  */
 import "server-only";
 import { notFound, redirect } from "next/navigation";
@@ -11,17 +10,35 @@ import { canAccessPortalPrefix } from "@/lib/auth/portal-access";
 import { resolvePageDatasets } from "@/lib/datasets/resolve";
 import { BlockRenderer } from "@/lib/blocks/renderer";
 import { PortalShell } from "@/components/PortalShell";
+import { resolvePageSlugCandidates } from "@/lib/blocks/page-slug";
+import { normalizeLayout } from "@/lib/blocks/normalize-layout";
+import { loadNavFromPages } from "@/lib/blocks/load-nav";
 
 export interface RenderPageArgs {
-  slugPath: string;          // "overview" or "projects/123"
-  pageTitle?: string;        // override the shell title
-  portalPrefix?: string;     // "/portal/admin" — enforces route prefix vs role
+  slugPath: string;
+  pageTitle?: string;
+  portalPrefix?: string;
+  draft?: boolean;
 }
 
-export async function renderPage({ slugPath, pageTitle, portalPrefix }: RenderPageArgs) {
+async function findPage(payload: Awaited<ReturnType<typeof getPayloadClient>>, slug: string, draft: boolean) {
+  const result = await payload.find({
+    collection: "pages",
+    where: { slug: { equals: slug } },
+    limit: 1,
+    depth: 1,
+    overrideAccess: true,
+    draft,
+  });
+  return result.docs[0] as any;
+}
+
+export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = false }: RenderPageArgs) {
   const user = await getSession();
   if (!user) redirect("/portal/auth");
   const tenant = await getTenant();
+  if (!tenant.features.layoutBuilder) notFound();
+
   const role = tenant.roles.find((r) => r.key === user.role);
   if (!role) redirect("/portal/auth");
 
@@ -29,28 +46,32 @@ export async function renderPage({ slugPath, pageTitle, portalPrefix }: RenderPa
     redirect(role.homePath);
   }
 
+  if (draft && user.role !== "admin" && user.role !== "superadmin") {
+    notFound();
+  }
+
   const payload = await getPayloadClient();
-  const slug = slugPath.replace(/^\/+/, "");
-  const { docs } = await payload.find({
-    collection: "pages",
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
-  const page = docs[0] as any;
+  const candidates = resolvePageSlugCandidates(slugPath, portalPrefix);
+  let page: any;
+  for (const slug of candidates) {
+    page = await findPage(payload, slug, draft);
+    if (page) break;
+  }
   if (!page) notFound();
 
-  // Access check
   if (page.allowedRoles && Array.isArray(page.allowedRoles) && !page.allowedRoles.includes(user.role)) {
     notFound();
   }
 
-  const data = await resolvePageDatasets(payload, page.layout || [], { user: { id: user.id, role: user.role } });
+  const layout = normalizeLayout(page.layout || []);
+  const data = await resolvePageDatasets(payload, layout as any[], { user: { id: user.id, role: user.role } });
+
+  const navOverride =
+    tenant.features.navFromDb ? await loadNavFromPages(payload, role) : undefined;
 
   return (
-    <PortalShell user={user} tenant={tenant} role={role} title={pageTitle ?? page.title}>
-      <BlockRenderer layout={page.layout || []} data={data} />
+    <PortalShell user={user} tenant={tenant} role={role} title={pageTitle ?? page.title} navOverride={navOverride}>
+      <BlockRenderer layout={layout} data={data} />
     </PortalShell>
   );
 }
