@@ -58,7 +58,17 @@ const chartBlock: Block = {
   fields: [
     { name: "title", type: "text" },
     { name: "subtitle", type: "text" },
-    { name: "dataset", type: "text", required: true },
+    {
+      name: "datasetRelation",
+      type: "relationship",
+      relationTo: "datasets",
+      admin: { description: "Pick a named dataset from the library" },
+    },
+    {
+      name: "dataset",
+      type: "text",
+      admin: { description: "Inline key (count:projects) — used when datasetRelation is empty" },
+    },
     {
       name: "kind",
       type: "select",
@@ -79,7 +89,17 @@ const tableBlock: Block = {
   labels: { singular: "Table", plural: "Tables" },
   fields: [
     { name: "title", type: "text" },
-    { name: "dataset", type: "text", required: true },
+    {
+      name: "datasetRelation",
+      type: "relationship",
+      relationTo: "datasets",
+      admin: { description: "Pick a named dataset from the library" },
+    },
+    {
+      name: "dataset",
+      type: "text",
+      admin: { description: "Inline key (list:projects) — used when datasetRelation is empty" },
+    },
     {
       name: "columns",
       type: "array",

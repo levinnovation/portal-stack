@@ -44,7 +44,7 @@ export const corePages = [
         dataset: "list:projects",
         columns: [
           { key: "name", label: "Proyecto" },
-          { key: "status", label: "Estado", format: "status" },
+          { key: "projectStatus", label: "Estado", format: "status" },
           { key: "location", label: "Ubicación" },
           { key: "totalUnits", label: "Unidades", format: "number" },
         ],
@@ -74,7 +74,7 @@ export const corePages = [
         dataset: "list:projects",
         columns: [
           { key: "name", label: "Proyecto" },
-          { key: "status", label: "Estado", format: "status" },
+          { key: "projectStatus", label: "Estado", format: "status" },
           { key: "location", label: "Ubicación" },
           { key: "totalUnits", label: "Unidades", format: "number" },
           { key: "budgetTotal", label: "Presupuesto", format: "usd" },
@@ -223,7 +223,7 @@ export const corePages = [
     layout: [
       { blockType: "table", title: "Proyectos vinculados", dataset: "list:projects", columns: [
         { key: "name", label: "Proyecto" },
-        { key: "status", label: "Estado", format: "status" },
+        { key: "projectStatus", label: "Estado", format: "status" },
         { key: "location", label: "Ubicación" },
       ]},
     ],
@@ -279,7 +279,7 @@ export const corePages = [
         columns: [
           { key: "dueDate", label: "Vencimiento", format: "date" },
           { key: "amount", label: "Monto", format: "usd" },
-          { key: "status", label: "Estado", format: "status" },
+          { key: "projectStatus", label: "Estado", format: "status" },
         ],
         pageSize: 10,
       },
@@ -302,7 +302,7 @@ export const corePages = [
         { key: "sqft", label: "m²" },
         { key: "bedrooms", label: "Habitaciones" },
         { key: "priceTotal", label: "Precio", format: "usd" },
-        { key: "status", label: "Estado", format: "status" },
+        { key: "projectStatus", label: "Estado", format: "status" },
       ]},
     ],
   },
@@ -322,7 +322,7 @@ export const corePages = [
       { blockType: "table", title: "Cuotas", dataset: "list:payments", columns: [
         { key: "dueDate", label: "Vencimiento", format: "date" },
         { key: "amount", label: "Monto", format: "usd" },
-        { key: "status", label: "Estado", format: "status" },
+        { key: "projectStatus", label: "Estado", format: "status" },
       ]},
     ],
   },

@@ -12,7 +12,7 @@ import { BlockRenderer } from "@/lib/blocks/renderer";
 import { PortalShell } from "@/components/PortalShell";
 import { resolvePageSlugCandidates } from "@/lib/blocks/page-slug";
 import { normalizeLayout } from "@/lib/blocks/normalize-layout";
-import { loadNavFromPages } from "@/lib/blocks/load-nav";
+import { loadNavFromPages, mergeNavWithCustom } from "@/lib/blocks/load-nav";
 
 export interface RenderPageArgs {
   slugPath: string;
@@ -67,7 +67,9 @@ export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = fa
   const data = await resolvePageDatasets(payload, layout as any[], { user: { id: user.id, role: user.role } });
 
   const navOverride =
-    tenant.features.navFromDb ? await loadNavFromPages(payload, role) : undefined;
+    tenant.features.navFromDb
+      ? mergeNavWithCustom(await loadNavFromPages(payload, role), role)
+      : undefined;
 
   return (
     <PortalShell user={user} tenant={tenant} role={role} title={pageTitle ?? page.title} navOverride={navOverride}>

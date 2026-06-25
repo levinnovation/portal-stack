@@ -179,7 +179,9 @@ tenants/core/
 
 ### Adding a new tenant
 
-See **[Nuevo cliente en 10 minutos](#nuevo-cliente-en-10-minutos)** below for the full checklist.
+See **[docs/FORK.md](docs/FORK.md)** for the full fork checklist (docker-compose, custom screens, deploy).
+
+See **[Nuevo cliente en 10 minutos](#nuevo-cliente-en-10-minutos)** below for the quick reference.
 
 ```bash
 pnpm tenant:new -- --id=finu --name="Finu" --vertical=fintech
@@ -206,7 +208,7 @@ Flujo repetible para un deploy aislado por cliente:
 | 1 | `pnpm tenant:new -- --id=<id> --name="<Nombre>" --vertical=<realestate\|fintech\|generic>` | 1 |
 | 2 | Editar `tenants/<id>/config.ts` — theme, features, roles, `payloadCollections` | 3 |
 | 3 | Editar `tenants/<id>/pages.ts` — slugs alineados con nav y `defaultLandingPageSlug` | 2 |
-| 4 | Registrar en `src/lib/tenant.ts` (el CLI imprime el diff exacto) | 1 |
+| 4 | `pnpm tenant:new` registra en `tenants/registry.ts` automáticamente | 0 |
 | 5 | `pnpm self-check` | 1 |
 | 6 | Crear superadmin en `/admin`, luego `TENANT_ID=<id> pnpm seed` | 1 |
 | 7 | Railway: nuevo servicio + Postgres, `TENANT_ID=<id>` | 1 |
@@ -321,7 +323,7 @@ Set the model in `tenants/<id>/config.ts → ai.model`. Common values: `gpt-4o-m
 
 ### FastAPI backend (optional)
 
-Tenants can route chat to an external FastAPI agent instead of the in-process AI SDK. Set `ai.backend = "fastapi"` in `tenants/<id>/config.ts`, or `AI_BACKEND=fastapi` globally.
+Tenants can route chat to an external FastAPI agent instead of the in-process AI SDK. Set `ai.backend = "fastapi"` in `tenants/<id>/config.ts`, or `AI_BACKEND=fastapi` globally. Full contract and curl examples: **[docs/API_INTEGRATION.md](docs/API_INTEGRATION.md)**.
 
 Contract:
 
@@ -358,6 +360,8 @@ The rest of the app (server components, AI agent scoping, access control) is pro
 Custom auth cookie names: set `AUTH_COOKIE_NAME` env to match `tenants/<id>/config.ts → auth.cookieName` so middleware and login stay in sync.
 
 ## Deploy to Railway (one per tenant)
+
+Guía detallada: **[docs/RAILWAY.md](docs/RAILWAY.md)**. Integraciones FastAPI y REST: **[docs/API_INTEGRATION.md](docs/API_INTEGRATION.md)**.
 
 1. Push to GitHub.
 2. Railway → **New Project → Deploy from GitHub** → select `levinnovation/portal-stack`.

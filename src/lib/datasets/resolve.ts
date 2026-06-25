@@ -13,12 +13,26 @@ interface BlockLike {
   [k: string]: any;
 }
 
+function datasetKeyFromField(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null) {
+    const o = value as { key?: string; id?: unknown };
+    if (o.key) return o.key;
+  }
+  return null;
+}
+
 function collectDatasetKeysFromBlock(block: BlockLike): string[] {
   const keys: string[] = [];
-  if (block.dataset) keys.push(typeof block.dataset === "object" ? block.dataset.key || block.dataset : block.dataset);
+  const rel = datasetKeyFromField(block.datasetRelation);
+  if (rel) keys.push(rel);
+  const inline = datasetKeyFromField(block.dataset);
+  if (inline) keys.push(inline);
   if (Array.isArray(block.cards)) {
     block.cards.forEach((c: any) => {
-      if (c.dataset) keys.push(typeof c.dataset === "object" ? c.dataset.key || c.dataset : c.dataset);
+      const k = datasetKeyFromField(c.dataset);
+      if (k) keys.push(k);
     });
   }
   return keys.filter(Boolean);

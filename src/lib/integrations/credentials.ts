@@ -1,4 +1,4 @@
-import { getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant-registry";
 
 /**
  * Resolve integration tokens from env.

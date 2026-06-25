@@ -43,6 +43,7 @@ export const coreTenant: TenantConfig = {
     documents: true,
     aiAgent: true,
     layoutBuilder: true,
+    navFromDb: true,
     auditLog: true,
     impersonation: true,
   },
@@ -68,6 +69,7 @@ export const coreTenant: TenantConfig = {
       defaultLandingPageSlug: "admin-overview",
       nav: [
         { to: "/portal/admin", label: "Resumen", icon: "LayoutDashboard", end: true },
+        { to: "/portal/admin/agents", label: "Agentes IA", icon: "MessageCircle", kind: "custom" },
         { to: "/portal/admin/projects", label: "Proyectos", icon: "Building2" },
         { to: "/portal/admin/investors", label: "Inversionistas", icon: "Users" },
         { to: "/portal/admin/customers", label: "Clientes", icon: "ShoppingBag" },

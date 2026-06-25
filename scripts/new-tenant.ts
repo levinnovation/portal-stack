@@ -7,12 +7,31 @@ import path from "path";
 
 function parseArgs() {
   const args: Record<string, string> = {};
-  const argv = process.argv.slice(2);
-  for (const a of argv) {
+  for (const a of process.argv.slice(2)) {
     const m = a.match(/^--([^=]+)=(.+)$/);
     if (m) args[m[1]] = m[2];
   }
   return args;
+}
+
+function registerTenantInRegistry(id: string) {
+  const registryPath = path.resolve("tenants/registry.ts");
+  let src = fs.readFileSync(registryPath, "utf8");
+  const importLine = `import { ${id}Tenant } from "./${id}/config";`;
+  if (!src.includes(importLine)) {
+    src = src.replace(
+      'import { finuTenant } from "./finu/config";',
+      `import { finuTenant } from "./finu/config";\n${importLine}`,
+    );
+  }
+  const entry = `  ${id}: ${id}Tenant,`;
+  if (!src.includes(entry)) {
+    src = src.replace(
+      "  finu: finuTenant,",
+      `  finu: finuTenant,\n${entry}`,
+    );
+  }
+  fs.writeFileSync(registryPath, src);
 }
 
 const args = parseArgs();
@@ -32,9 +51,21 @@ if (fs.existsSync(root)) {
 }
 
 const adminOverviewSlug = `${id}-admin-overview`;
+const exportName = `${id}Pages`;
 
 fs.mkdirSync(path.join(root, "ai"), { recursive: true });
 fs.mkdirSync(path.join(root, "domain"), { recursive: true });
+fs.mkdirSync(path.join(root, "screens"), { recursive: true });
+fs.mkdirSync(path.join(root, "sources"), { recursive: true });
+
+fs.writeFileSync(
+  path.join(root, "screens/README.md"),
+  `# Custom screens for ${name}\n\nSee tenants/_default/screens/README.md and tenants/core/screens/agents-overview.tsx.\n`,
+);
+fs.writeFileSync(
+  path.join(root, "sources/README.md"),
+  `# BFF sources for ${name}\n\nSee tenants/_default/sources/README.md. Use resolveIntegrationToken() for secrets.\n`,
+);
 
 fs.writeFileSync(
   path.join(root, "config.ts"),
@@ -68,7 +99,7 @@ export const ${id}Tenant: TenantConfig = {
   },
   features: {
     chat: true, excel: false, quickbase: false, documents: true,
-    aiAgent: true, layoutBuilder: true, auditLog: false, impersonation: false,
+    aiAgent: true, layoutBuilder: true, navFromDb: false, auditLog: false, impersonation: false,
   },
   ai: {
     enabled: true, provider: "openai", model: "gpt-4o-mini",
@@ -102,14 +133,13 @@ export const agentGreeting = "Hola, ¿en qué puedo ayudarte?";
 `,
 );
 
-fs.writeFileSync(path.join(root, "domain/index.ts"), `// Add vertical collections here.\nexport const ${id}Collections: any[] = [];\n`);
+fs.writeFileSync(path.join(root, "domain/index.ts"), `export const ${id}Collections: import("payload").CollectionConfig[] = [];\n`);
 
 fs.writeFileSync(
   path.join(root, "pages.ts"),
-  `// Seed pages — slugs must match config.roles[].defaultLandingPageSlug and nav routes.
-import type { Page } from "@/collections/Pages";
+  `import type { Page } from "@/collections/Pages";
 
-export const ${id}Pages: Page[] = [
+export const ${exportName}: Page[] = [
   {
     title: "Panel de administración",
     slug: "${adminOverviewSlug}",
@@ -119,9 +149,7 @@ export const ${id}Pages: Page[] = [
       {
         blockType: "kpi-grid",
         title: "Indicadores",
-        cards: [
-          { label: "Usuarios", dataset: "count:users", format: "number", icon: "Users" },
-        ],
+        cards: [{ label: "Usuarios", dataset: "count:users", format: "number", icon: "Users" }],
       },
     ],
   },
@@ -129,23 +157,21 @@ export const ${id}Pages: Page[] = [
     title: "Mi perfil",
     slug: "profile",
     allowedRoles: ["admin", "member"],
-    layout: [
-      { blockType: "markdown", title: "Información personal", body: {} },
-    ],
+    layout: [{ blockType: "markdown", title: "Información personal", body: {} }],
   },
 ];
 `,
 );
 
+registerTenantInRegistry(id);
+
 console.log(`✔ Tenant "${id}" created at tenants/${id}/`);
+console.log(`✔ Registered in tenants/registry.ts`);
 console.log("");
-console.log("Next — register in src/lib/tenant.ts:");
-console.log(`  import { ${id}Tenant } from "../../tenants/${id}/config";`);
-console.log(`  // inside TENANT_REGISTRY:`);
-console.log(`  ${id}: ${id}Tenant,`);
-console.log("");
-console.log("Then:");
+console.log("Next:");
+console.log(`  Edit tenants/${id}/config.ts (theme, roles, nav)`);
 console.log(`  TENANT_ID=${id} pnpm seed`);
-console.log(`  Deploy with TENANT_ID=${id} (collections come from config.payloadCollections)`);
+console.log(`  pnpm self-check`);
 console.log("");
-console.log("Run pnpm self-check — tenant-registry.self-check fails if registration is missing.");
+console.log("Custom screens: tenants/" + id + "/screens/ + route in src/app/(frontend)/portal/…");
+console.log("See docs/FORK.md for the full fork checklist.");

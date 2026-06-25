@@ -2,6 +2,14 @@
 import type { Payload } from "payload";
 import type { TenantNavItem, TenantRole } from "@/lib/tenant";
 
+/** Keep config nav items with kind=custom when merging DB-driven nav. */
+export function mergeNavWithCustom(dbNav: TenantNavItem[], role: TenantRole): TenantNavItem[] {
+  const custom = role.nav.filter((n) => n.kind === "custom");
+  const dbPaths = new Set(dbNav.map((n) => n.to));
+  const extras = custom.filter((n) => !dbPaths.has(n.to));
+  return [...dbNav, ...extras];
+}
+
 /** Build sidebar nav from Pages with showInNav when tenant.features.navFromDb is true. */
 export async function loadNavFromPages(payload: Payload, role: TenantRole): Promise<TenantNavItem[]> {
   const { docs } = await payload.find({

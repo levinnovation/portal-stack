@@ -21,7 +21,7 @@ import { Dashboards } from "./collections/Dashboards";
 import { AIChats } from "./collections/AIChats";
 import { AIMessages } from "./collections/AIMessages";
 
-import { getTenantCollectionsSync, getTenantId } from "./lib/tenant";
+import { getTenantCollectionsSync, getTenantId } from "./lib/tenant-registry";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -55,6 +55,7 @@ function buildCollections(): CollectionConfig[] {
 export default buildConfig({
   admin: {
     user: Users.slug,
+    suppressHydrationWarning: true,
     meta: {
       titleSuffix: " · Portal Stack",
     },

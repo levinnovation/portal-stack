@@ -34,7 +34,7 @@ export function buildTools(payload: Payload, user: SessionUser) {
       }),
       execute: async ({ status, limit }) => {
         try {
-          const where: any = status ? { status: { equals: status } } : {};
+          const where: any = status ? { projectStatus: { equals: status } } : {};
           if (!isStaffRole(user.role)) {
             if (user.role === "investor") {
               const projectIds = await projectIdsForInvestors(payload, await investorIdsForUser(payload, user.id));
@@ -63,7 +63,7 @@ export function buildTools(payload: Payload, user: SessionUser) {
             projects: (r.docs as any[]).map((p) => ({
               id: p.id,
               name: p.name,
-              status: p.status,
+              status: p.projectStatus,
               location: p.location,
               totalUnits: p.totalUnits,
               budgetTotal: p.budgetTotal,

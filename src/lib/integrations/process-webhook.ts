@@ -1,17 +1,21 @@
 import type { Payload } from "payload";
+import { syncQuickbaseProjectRecord } from "./quickbase";
 
-/** Process inbound webhook payload — ponytail: map by source; extend per integration. */
+/** Process inbound webhook payload — extend per integration. */
 export async function processWebhook(
   payload: Payload,
   source: string,
   event: string,
   body: Record<string, unknown>,
 ): Promise<{ ok: boolean; message?: string }> {
-  if (source === "quickbase" && event === "record.updated") {
+  if (source === "quickbase" && (event === "record.updated" || event === "record.created")) {
     const table = String(body.table || "");
+    const projectsTable = process.env.QUICKBASE_PROJECTS_TABLE || "";
+    if (projectsTable && table === projectsTable) {
+      return syncQuickbaseProjectRecord(payload, body);
+    }
     const recordId = String(body.recordId || body.id || "");
     if (!recordId) return { ok: false, message: "missing recordId" };
-    // ponytail: stub — log only until QuickBase field mapper ships
     await payload.create({
       collection: "audit-logs",
       data: {

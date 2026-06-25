@@ -28,6 +28,10 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
         const blockType = block.blockType;
         const props = { ...block };
         delete props.blockType;
+        const datasetKey =
+          (typeof props.datasetRelation === "object" && props.datasetRelation?.key) ||
+          props.datasetRelation ||
+          props.dataset;
         // Inject resolved dataset values by key
         Object.keys(props).forEach((k) => {
           if (typeof props[k] === "string" && props[k] in data) {
@@ -40,9 +44,9 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
           case "kpi-grid":
             return <KpiGridBlock key={i} {...(props as KpiGridBlockProps)} data={data as any} />;
           case "chart":
-            return <ChartBlock key={i} {...(props as ChartBlockProps)} data={data[props.dataset]} />;
+            return <ChartBlock key={i} {...(props as ChartBlockProps)} data={data[datasetKey]} />;
           case "table":
-            return <TableBlock key={i} {...(props as TableBlockProps)} data={data[props.dataset]} />;
+            return <TableBlock key={i} {...(props as TableBlockProps)} data={data[datasetKey]} />;
           case "form":
             return <FormBlock key={i} {...(props as FormBlockProps)} />;
           case "markdown":

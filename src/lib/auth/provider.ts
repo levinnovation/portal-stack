@@ -43,7 +43,10 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     if (!token) return null;
     try {
       const result = await this.payload.auth({
-        headers: new Headers({ cookie: `${cookieName}=${token}` }),
+        headers: new Headers({
+          Authorization: `JWT ${token}`,
+          cookie: `${cookieName}=${token}`,
+        }),
       });
       if (!result.user) return null;
       return {
@@ -90,10 +93,9 @@ export async function getAuthProvider(): Promise<AuthProvider> {
   const payload = await getPayloadClient();
 
   if (tenant.auth.provider === "agentyx") {
-    // Future: load AgentyxAuthProvider here. For now, fall back to local with a warning.
-    console.warn(
-      `[auth] Tenant "${tenant.id}" declares agentyx provider but no adapter is implemented yet. Falling back to LocalPayloadAuthProvider.`,
-    );
+    const { AgentyxAuthProvider } = await import("./agentyx-provider");
+    cached = new AgentyxAuthProvider(payload, tenant.auth.agentyxJwksUrl);
+    return cached;
   }
   cached = new LocalPayloadAuthProvider(payload);
   return cached;
