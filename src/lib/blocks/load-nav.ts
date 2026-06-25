@@ -1,11 +1,11 @@
 import type { Payload } from "payload";
 import type { TenantNavItem, TenantRole } from "@/lib/tenant";
 
-/** Keep config nav items with kind=custom when merging DB-driven nav. */
+/** Keep config nav items with kind=custom or kind=group when merging DB-driven nav. */
 export function mergeNavWithCustom(dbNav: TenantNavItem[], role: TenantRole): TenantNavItem[] {
-  const custom = role.nav.filter((n) => n.kind === "custom");
+  const custom = role.nav.filter((n) => n.kind === "custom" || n.kind === "group");
   const dbPaths = new Set(dbNav.map((n) => n.to));
-  const extras = custom.filter((n) => !dbPaths.has(n.to));
+  const extras = custom.filter((n) => n.kind === "group" || !dbPaths.has(n.to));
   return [...dbNav, ...extras];
 }
 

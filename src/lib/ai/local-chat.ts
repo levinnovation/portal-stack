@@ -57,5 +57,7 @@ export async function streamLocalChat(args: LocalChatArgs): Promise<Response> {
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    headers: { "X-Chat-Id": aiChatId },
+  });
 }

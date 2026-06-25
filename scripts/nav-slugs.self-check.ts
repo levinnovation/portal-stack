@@ -7,6 +7,7 @@ const slugs = new Set(corePages.map((p) => p.slug));
 
 for (const role of coreTenant.roles) {
   for (const item of role.nav) {
+    if (item.kind === "group" || !item.to) continue;
     if (item.end || item.kind === "custom") continue;
     const candidates = navPathToSlugCandidates(item.to, role.homePath);
     const hit = candidates.some((c) => c && slugs.has(c));

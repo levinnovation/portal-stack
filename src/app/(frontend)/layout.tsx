@@ -5,6 +5,7 @@ import { getTenant } from "@/lib/tenant";
 import { tenantThemeStyle } from "@/lib/theme/css-vars";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/strings";
 import { ToastProvider } from "@/components/ui/toast";
+import { PortalProviders } from "@/components/PortalProviders";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getTenant();
@@ -28,7 +29,9 @@ export default async function FrontendRootLayout({ children }: { children: React
         className="min-h-screen bg-background text-foreground antialiased"
         style={tenantThemeStyle(tenant.theme)}
       >
-        <ToastProvider>{children}</ToastProvider>
+        <PortalProviders>
+          <ToastProvider>{children}</ToastProvider>
+        </PortalProviders>
       </body>
     </html>
   );
