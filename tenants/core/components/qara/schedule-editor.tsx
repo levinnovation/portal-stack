@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
 import { Clock, Loader2, Save, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +19,7 @@ const fmtHour = (h: number) => `${String(h).padStart(2, "0")}:00`;
 // Si el endpoint aún no existe (Track B sin desplegar), muestra "no disponible aún".
 export function ScheduleEditor() {
   const { toast } = useToast();
+  const router = useRouter();
   const [state, setState] = useState<"loading" | "ready" | "unavailable" | "saving">("loading");
   const [reason, setReason] = useState("");
   const [scan, setScan] = useState<number[]>([9, 10]);
@@ -62,6 +65,7 @@ export function ScheduleEditor() {
       if (!res.ok) throw new Error(data.detail || data.error || `Error ${res.status}`);
       toast({ tone: "success", title: "Horario guardado", description: "Aplica en el próximo ciclo" });
       setState("ready");
+      router.refresh();
     } catch (e) {
       toast({
         tone: "error",
@@ -98,14 +102,10 @@ export function ScheduleEditor() {
       <HourPicker label="Horas de limpieza" hint="Cuándo Qara cierra/depura leads pendientes" selected={cleanup} onToggle={(h) => toggle(cleanup, setCleanup, h)} />
 
       <div className="flex items-center gap-3">
-        <button
-          onClick={save}
-          disabled={state === "saving"}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <Button onClick={save} disabled={state === "saving"}>
           {state === "saving" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Guardar horario
-        </button>
+        </Button>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" /> Hora de Costa Rica · sin redeploy ni Railway — aplica en el próximo ciclo
         </span>
@@ -133,18 +133,16 @@ function HourPicker({
       </div>
       <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-12">
         {HOURS.map((h) => (
-          <button
+          <Button
             key={h}
+            type="button"
+            variant={selected.includes(h) ? "default" : "outline"}
+            size="sm"
             onClick={() => onToggle(h)}
-            className={cn(
-              "rounded-md border py-1 text-xs tabular-nums transition-colors",
-              selected.includes(h)
-                ? "border-primary bg-primary/15 text-primary"
-                : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
-            )}
+            className={cn("h-8 px-1 text-xs tabular-nums", selected.includes(h) && "shadow-none")}
           >
             {fmtHour(h)}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

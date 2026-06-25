@@ -5,6 +5,8 @@ import { ExternalLink, Check, X } from "lucide-react";
 import type { Contrato } from "@tenants/core/sources/quickbase";
 import { money, dias, fechaCorta } from "@tenants/core/lib/format";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type SortKey = "fecha" | "monto";
 
@@ -62,36 +64,22 @@ export function ContratosTable({
     <div className="space-y-4">
       {/* Controles */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={fuente}
-          onChange={(e) => setFuente(e.target.value)}
-          className="rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-sm text-foreground"
-          aria-label="Filtrar por fuente"
-        >
-          <option value="__all__">Todas las fuentes</option>
-          {fuentes.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
+        <Select value={fuente} onValueChange={setFuente}>
+          <SelectTrigger className="w-[220px] h-9" aria-label="Filtrar por fuente">
+            <SelectValue placeholder="Todas las fuentes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">Todas las fuentes</SelectItem>
+            {fuentes.map((f) => (
+              <SelectItem key={f} value={f}>{f}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div className="inline-flex overflow-hidden rounded-lg border border-border">
-          {(["fecha", "monto"] as SortKey[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => setSortKey(k)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium transition-colors",
-                sortKey === k
-                  ? "bg-accent text-foreground"
-                  : "bg-secondary/40 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Ordenar por {k === "fecha" ? "fecha" : "monto"}
-            </button>
-          ))}
-        </div>
+        <ToggleGroup type="single" value={sortKey} onValueChange={(v) => v && setSortKey(v as SortKey)}>
+          <ToggleGroupItem value="fecha" size="sm">Por fecha</ToggleGroupItem>
+          <ToggleGroupItem value="monto" size="sm">Por monto</ToggleGroupItem>
+        </ToggleGroup>
 
         <span className="ml-auto text-xs text-muted-foreground">{rows.length} contratos</span>
       </div>

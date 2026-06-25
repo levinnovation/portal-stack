@@ -10,6 +10,7 @@ import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
 import { dias, money, num, pct } from "@tenants/core/lib/format";
 import { getLeahData } from "@tenants/core/sources/quickbase";
+import { SectionTabs } from "@/components/portal/section-tabs";
 
 export async function LeahDashboardScreen() {
   let data: Awaited<ReturnType<typeof getLeahData>>;
@@ -35,60 +36,79 @@ export async function LeahDashboardScreen() {
         <KpiCard label="% match en HubSpot" value={pct(kpis.pctMatch)} icon={Link2} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard title="Tasa de conversión por fuente" description="Compradores ÷ leads, por fuente de primer toque">
-          {conversion.length ? (
-            <BarHorizontal
-              data={conversion.map((c) => ({ name: c.firstTouchSource, value: c.conversionRate }))}
-              format="pct"
-              color="hsl(var(--accent))"
-            />
-          ) : (
-            <EmptyState message="Sin tabla de conversión todavía" hint="La llena Leah al procesar contratos" />
-          )}
-        </SectionCard>
-        <SectionCard title="Leads vs compradores por fuente" description="Volumen del embudo por fuente">
-          {conversion.length ? (
-            <BarHorizontal data={conversion.map((c) => ({ name: c.firstTouchSource, value: c.leads }))} format="num" />
-          ) : (
-            <EmptyState message="Sin datos de conversión" />
-          )}
-        </SectionCard>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard title="Atribución por canal" description="Contratos por canal de primer toque">
-          {porCanal.length ? <Donut data={porCanal} format="num" /> : <EmptyState message="Sin contratos atribuidos" />}
-        </SectionCard>
-        <SectionCard title="Atribución por campaña" description="Top campañas que cerraron ventas">
-          {porCampaign.length ? <BarHorizontal data={porCampaign} format="num" /> : <EmptyState message="Sin campañas atribuidas" />}
-        </SectionCard>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard title="Monto por fuente" description="Colones cerrados por fuente de primer toque">
-          {porFuenteMonto.length ? (
-            <BarHorizontal data={porFuenteMonto} format="money" color="hsl(var(--primary-glow))" />
-          ) : (
-            <EmptyState message="Sin montos todavía" />
-          )}
-        </SectionCard>
-        <SectionCard title="Distribución de días a cierre" description="Cuánto tardan los leads en firmar">
-          {diasACierre.some((b) => b.count > 0) ? (
-            <Histogram data={diasACierre} color="hsl(var(--accent))" />
-          ) : (
-            <EmptyState message="Sin días a cierre calculados" />
-          )}
-        </SectionCard>
-      </div>
-
-      <SectionCard title="Tendencia de monto firmado" description="Por fecha de firma del contrato">
-        {tendenciaMonto.length ? (
-          <AreaTrend data={tendenciaMonto} label="Monto firmado" />
-        ) : (
-          <EmptyState message="Sin contratos firmados todavía" />
-        )}
-      </SectionCard>
+      <SectionTabs
+        sections={[
+          {
+            value: "conversion",
+            label: "Conversión",
+            content: (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="Tasa de conversión por fuente" description="Compradores ÷ leads, por fuente de primer toque">
+                  {conversion.length ? (
+                    <BarHorizontal
+                      data={conversion.map((c) => ({ name: c.firstTouchSource, value: c.conversionRate }))}
+                      format="pct"
+                      color="hsl(var(--accent))"
+                    />
+                  ) : (
+                    <EmptyState message="Sin tabla de conversión todavía" hint="La llena Leah al procesar contratos" />
+                  )}
+                </SectionCard>
+                <SectionCard title="Leads vs compradores por fuente" description="Volumen del embudo por fuente">
+                  {conversion.length ? (
+                    <BarHorizontal data={conversion.map((c) => ({ name: c.firstTouchSource, value: c.leads }))} format="num" />
+                  ) : (
+                    <EmptyState message="Sin datos de conversión" />
+                  )}
+                </SectionCard>
+              </div>
+            ),
+          },
+          {
+            value: "atribucion",
+            label: "Atribución",
+            content: (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="Atribución por canal" description="Contratos por canal de primer toque">
+                  {porCanal.length ? <Donut data={porCanal} format="num" /> : <EmptyState message="Sin contratos atribuidos" />}
+                </SectionCard>
+                <SectionCard title="Atribución por campaña" description="Top campañas que cerraron ventas">
+                  {porCampaign.length ? <BarHorizontal data={porCampaign} format="num" /> : <EmptyState message="Sin campañas atribuidas" />}
+                </SectionCard>
+                <SectionCard title="Monto por fuente" description="Colones cerrados por fuente de primer toque" className="lg:col-span-2">
+                  {porFuenteMonto.length ? (
+                    <BarHorizontal data={porFuenteMonto} format="money" color="hsl(var(--primary-glow))" />
+                  ) : (
+                    <EmptyState message="Sin montos todavía" />
+                  )}
+                </SectionCard>
+              </div>
+            ),
+          },
+          {
+            value: "tendencias",
+            label: "Tendencias",
+            content: (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard title="Distribución de días a cierre" description="Cuánto tardan los leads en firmar">
+                  {diasACierre.some((b) => b.count > 0) ? (
+                    <Histogram data={diasACierre} color="hsl(var(--accent))" />
+                  ) : (
+                    <EmptyState message="Sin días a cierre calculados" />
+                  )}
+                </SectionCard>
+                <SectionCard title="Tendencia de monto firmado" description="Por fecha de firma del contrato">
+                  {tendenciaMonto.length ? (
+                    <AreaTrend data={tendenciaMonto} label="Monto firmado" />
+                  ) : (
+                    <EmptyState message="Sin contratos firmados todavía" />
+                  )}
+                </SectionCard>
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
