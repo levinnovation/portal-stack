@@ -8,6 +8,7 @@ import { resolveTenantRole } from "@/lib/auth/resolve-tenant-role";
 import { getPayloadClient } from "@/lib/payload";
 import { getSession } from "@/lib/session";
 import { getTenant, type TenantNavItem } from "@/lib/tenant";
+import { toPortalShellTenant } from "@/lib/tenant-portal-shell";
 
 export interface RenderCustomScreenArgs {
   title: string;
@@ -37,7 +38,7 @@ export async function renderCustomScreen({ title, portalPrefix, roles, children 
   }
 
   return (
-    <PortalShell user={user} tenant={tenant} role={role} title={title} navOverride={navOverride}>
+    <PortalShell user={user} tenant={toPortalShellTenant(tenant)} role={role} title={title} navOverride={navOverride}>
       {children}
     </PortalShell>
   );

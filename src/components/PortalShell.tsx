@@ -10,12 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { TenantConfig, TenantNavItem, TenantRole } from "@/lib/tenant";
+import type { TenantNavItem, TenantRole } from "@/lib/tenant";
+import type { PortalShellTenant } from "@/lib/tenant-portal-shell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 
 export interface PortalShellProps {
   user: { id: string; email: string; name: string; role: string };
-  tenant: TenantConfig;
+  tenant: PortalShellTenant;
   role: TenantRole;
   title: string;
   action?: React.ReactNode;
@@ -30,7 +31,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   FileSpreadsheet,
 };
 
-function navItemVisible(item: TenantNavItem, tenant: TenantConfig, userRole: string): boolean {
+function navItemVisible(item: TenantNavItem, tenant: PortalShellTenant, userRole: string): boolean {
   if (item.roles?.length && !item.roles.includes(userRole)) return false;
   // ponytail: URL heuristics until nav items carry explicit feature keys
   if (item.to.includes("/excel") && !tenant.features.excel) return false;
@@ -38,7 +39,7 @@ function navItemVisible(item: TenantNavItem, tenant: TenantConfig, userRole: str
   return true;
 }
 
-function resolveNav(role: TenantRole, tenant: TenantConfig, userRole: string): TenantNavItem[] {
+function resolveNav(role: TenantRole, tenant: PortalShellTenant, userRole: string): TenantNavItem[] {
   const items = role.nav.length ? role.nav : tenant.roles.filter((r) => r.key === role.key).flatMap((r) => r.nav);
   return items.filter((item) => navItemVisible(item, tenant, userRole));
 }

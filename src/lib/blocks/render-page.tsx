@@ -14,6 +14,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { resolvePageSlugCandidates } from "@/lib/blocks/page-slug";
 import { normalizeLayout } from "@/lib/blocks/normalize-layout";
 import { loadNavFromPages, mergeNavWithCustom } from "@/lib/blocks/load-nav";
+import { toPortalShellTenant } from "@/lib/tenant-portal-shell";
 
 export interface RenderPageArgs {
   slugPath: string;
@@ -73,7 +74,7 @@ export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = fa
       : undefined;
 
   return (
-    <PortalShell user={user} tenant={tenant} role={role} title={pageTitle ?? page.title} navOverride={navOverride}>
+    <PortalShell user={user} tenant={toPortalShellTenant(tenant)} role={role} title={pageTitle ?? page.title} navOverride={navOverride}>
       <BlockRenderer layout={layout} data={data} />
     </PortalShell>
   );
