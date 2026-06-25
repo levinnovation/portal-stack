@@ -14,7 +14,10 @@
     "tenant:new": "tsx scripts/new-tenant.ts",
     "seed": "tsx scripts/seed.ts",
     "self-check": "tsx scripts/self-check.ts",
-    "seed:datasets": "tsx scripts/seed-datasets.ts"
+    "seed:datasets": "tsx scripts/seed-datasets.ts",
+    "verify:agents": "node scripts/verify-live.mjs",
+    "test:e2e:agents": "playwright test e2e/agents",
+    "sync:core-dashboard": "node scripts/sync-core-dashboard-check.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
@@ -65,6 +68,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",
     "@types/pg": "^8.11.10",

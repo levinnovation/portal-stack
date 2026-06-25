@@ -1,5 +1,5 @@
 import { renderCustomScreen } from "@/lib/blocks/render-custom-screen";
-import { RefreshButton } from "@tenants/core/components/layout/refresh-button";
+import { AgentHeaderActions } from "@tenants/core/components/layout/agent-header-actions";
 import { AGENT_ADMIN_ROLES } from "@tenants/core/lib/screen-config";
 import { QaraDashboardScreen } from "@tenants/core/screens/qara-dashboard";
 
@@ -10,7 +10,7 @@ export default async function QaraPage() {
     title: "Qara · Analítica",
     portalPrefix: "/portal/admin",
     roles: [...AGENT_ADMIN_ROLES],
-    action: <RefreshButton />,
+    action: <AgentHeaderActions />,
     children: <QaraDashboardScreen />,
   });
 }

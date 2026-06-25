@@ -25,6 +25,12 @@ export const env = {
   LANGFUSE_BASE_URL: process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST || "https://cloud.langfuse.com",
   LANGFUSE_PUBLIC_KEY: process.env.LANGFUSE_PUBLIC_KEY || "",
   LANGFUSE_SECRET_KEY: process.env.LANGFUSE_SECRET_KEY || "",
+  INTELIGENCIA_API_URL: process.env.INTELIGENCIA_API_URL || "",
+  INTELIGENCIA_API_KEY: process.env.INTELIGENCIA_API_KEY || "",
+  INTELIGENCIA_WORKSPACE_ID:
+    process.env.INTELIGENCIA_WORKSPACE_ID ||
+    process.env.WORKSPACE_ID ||
+    "",
 };
 
 export function requireEnv(key: keyof typeof env): string {
