@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { resolveTenantRole } from "@/lib/auth/resolve-tenant-role";
 import { getSession } from "@/lib/session";
 import { getTenant } from "@/lib/tenant";
 
@@ -9,7 +10,7 @@ export default async function PortalRoot() {
   const user = await getSession();
   if (!user) redirect("/portal/auth");
   const tenant = await getTenant();
-  const role = tenant.roles.find((r) => r.key === user.role);
+  const role = resolveTenantRole(tenant, user.role);
   if (!role) redirect("/portal/auth");
   redirect(role.homePath);
 }

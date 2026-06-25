@@ -6,6 +6,7 @@ import { execSync } from "node:child_process";
 const checks = [
   "src/lib/auth/cookie-name.self-check.ts",
   "src/lib/auth/portal-access.self-check.ts",
+  "src/lib/auth/resolve-tenant-role.self-check.ts",
   "src/lib/ai/scoping.self-check.ts",
   "src/lib/ai/backend.self-check.ts",
   "src/lib/ai/fastapi-client.self-check.ts",

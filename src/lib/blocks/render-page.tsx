@@ -7,6 +7,7 @@ import { getPayloadClient } from "@/lib/payload";
 import { getTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/session";
 import { canAccessPortalPrefix } from "@/lib/auth/portal-access";
+import { resolveTenantRole } from "@/lib/auth/resolve-tenant-role";
 import { resolvePageDatasets } from "@/lib/datasets/resolve";
 import { BlockRenderer } from "@/lib/blocks/renderer";
 import { PortalShell } from "@/components/PortalShell";
@@ -39,7 +40,7 @@ export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = fa
   const tenant = await getTenant();
   if (!tenant.features.layoutBuilder) notFound();
 
-  const role = tenant.roles.find((r) => r.key === user.role);
+  const role = resolveTenantRole(tenant, user.role);
   if (!role) redirect("/portal/auth");
 
   if (portalPrefix && !canAccessPortalPrefix(portalPrefix, user.role)) {

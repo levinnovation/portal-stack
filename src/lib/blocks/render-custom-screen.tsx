@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { PortalShell } from "@/components/PortalShell";
 import { loadNavFromPages, mergeNavWithCustom } from "@/lib/blocks/load-nav";
 import { canAccessPortalPrefix } from "@/lib/auth/portal-access";
+import { resolveTenantRole } from "@/lib/auth/resolve-tenant-role";
 import { getPayloadClient } from "@/lib/payload";
 import { getSession } from "@/lib/session";
 import { getTenant, type TenantNavItem } from "@/lib/tenant";
@@ -20,7 +21,7 @@ export async function renderCustomScreen({ title, portalPrefix, roles, children 
   if (!user) redirect("/portal/auth");
 
   const tenant = await getTenant();
-  const role = tenant.roles.find((r) => r.key === user.role);
+  const role = resolveTenantRole(tenant, user.role);
   if (!role || !roles.includes(user.role)) {
     redirect(role?.homePath || "/portal/auth");
   }

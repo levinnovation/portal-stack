@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthProvider } from "@/lib/auth/provider";
+import { resolveTenantRole } from "@/lib/auth/resolve-tenant-role";
 import { getTenant } from "@/lib/tenant";
 
 export async function POST(req: Request) {
@@ -11,7 +12,14 @@ export async function POST(req: Request) {
     const provider = await getAuthProvider();
     const session = await provider.signIn(email, password);
     const tenant = await getTenant();
-    const redirect = tenant.roles.find((r) => r.key === session.user.role)?.homePath || "/portal";
+    const role = resolveTenantRole(tenant, session.user.role);
+    if (!role) {
+      return NextResponse.json(
+        { error: "Tu rol no tiene acceso al portal. Usa una cuenta admin, investor o customer." },
+        { status: 403 },
+      );
+    }
+    const redirect = role.homePath;
 
     const res = NextResponse.json({ ok: true, redirect });
     res.cookies.set(tenant.auth.cookieName, session.token, {
