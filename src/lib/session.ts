@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAuthCookieName } from "./auth/cookie-name";
 import { getAuthProvider } from "./auth/provider";
 import { getTenant } from "./tenant";
 import type { SessionUser } from "./auth/provider";
@@ -40,5 +41,5 @@ export async function signOut() {
     headers: { cookie },
   });
   await provider.signOut(fakeReq);
-  (await cookies()).delete("payload-token");
+  (await cookies()).delete(getAuthCookieName());
 }

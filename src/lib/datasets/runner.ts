@@ -2,24 +2,25 @@
  * Dataset runner. Executes a query described by a Datasets collection
  * record against Payload and returns the result in a shape blocks can use.
  *
- * Supported kinds: count, sum, avg, list, monthly, custom (via handler).
- *
- * This module is intentionally side-effect free: it receives a Payload
- * instance and a dataset record, and returns a typed result. The page
- * server component collects the results for every dataset used by the
- * page's blocks before rendering.
+ * Supported kinds: count, sum, avg, list, monthly, custom, http.
  */
 
 import type { Payload } from "payload";
+import { getDatasetHandler } from "./handlers";
 
 export interface DatasetQuery {
-  kind: "count" | "sum" | "avg" | "list" | "monthly" | "custom";
+  kind: "count" | "sum" | "avg" | "list" | "monthly" | "custom" | "http";
   collection?: string;
   field?: string;
   where?: any;
   limit?: number;
   sort?: string;
   handler?: string;
+  /** http kind */
+  url?: string;
+  jsonPath?: string;
+  tokenSource?: string;
+  method?: "GET" | "POST";
 }
 
 export interface DatasetDef {
@@ -31,18 +32,24 @@ export type DatasetResult = number | string | Record<string, unknown>[] | Record
 
 export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user?: { id: string; role: string } }): Promise<DatasetResult> {
   const { query } = def;
-  const where = await applyUserScope(query.where, ctx);
 
-  // ponytail: custom handlers are not yet in use. To enable, add a
-  // ./handlers/<name>.ts file (see loadHandler at the bottom of this file)
-  // and uncomment the block below. Left disabled so webpack doesn't try
-  // to resolve a non-existent dynamic import.
-  /*
   if (query.kind === "custom" && query.handler) {
-    const handler = await loadHandler(query.handler);
-    if (handler) return handler(payload, ctx);
+    const handler = getDatasetHandler(query.handler);
+    if (!handler) throw new Error(`Unknown dataset handler: ${query.handler}`);
+    return handler(payload, ctx, query as Record<string, unknown>);
   }
-  */
+
+  if (query.kind === "http") {
+    const handler = getDatasetHandler("rest-json");
+    if (!handler) throw new Error("rest-json handler missing");
+    return handler(payload, ctx, {
+      url: query.url,
+      jsonPath: query.jsonPath,
+      tokenSource: query.tokenSource,
+    });
+  }
+
+  const where = await applyUserScope(query.where, ctx);
 
   if (!query.collection) {
     throw new Error(`Dataset ${def.key} has no collection`);
@@ -98,7 +105,7 @@ async function fetchAllFor(payload: Payload, collection: string, where?: any) {
     all.push(...r.docs);
     if (all.length >= r.totalDocs || r.docs.length < pageSize) break;
     page += 1;
-    if (page > 50) break; // safety
+    if (page > 50) break;
   }
   return all;
 }
@@ -106,12 +113,5 @@ async function fetchAllFor(payload: Payload, collection: string, where?: any) {
 async function applyUserScope(where: any, ctx?: { user?: { id: string; role: string } }) {
   if (!ctx?.user) return where;
   if (ctx.user.role === "admin" || ctx.user.role === "superadmin") return where;
-  // Restrict non-admins to their own data where the convention is a `user` relation field.
-  // Tenants can extend by passing their own where.
   return where ? { and: [where, { user: { equals: ctx.user.id } }] } : { user: { equals: ctx.user.id } };
 }
-
-// ponytail: `kind: "custom"` is dead code until a tenant ships a custom
-// dataset handler. Removed instead of commented to keep webpack happy and
-// the file small. Re-add when needed: see git history for the original
-// loadHandler() implementation.

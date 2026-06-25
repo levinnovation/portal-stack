@@ -1,13 +1,11 @@
 /**
  * Resolves all datasets used by a Page's blocks, returning a map
  * { [datasetKey]: result } that the BlockRenderer injects into each block.
- *
- * Block components reference datasets by their key (e.g. "count:projects").
- * This function scans the page layout, collects unique dataset keys, and
- * runs them through the dataset runner.
  */
 import "server-only";
 import type { Payload } from "payload";
+import { isVerticalEnabled } from "@/lib/tenant";
+import { parseInlineDatasetKey } from "./parse-inline";
 import { runDataset, type DatasetDef, type DatasetResult } from "./runner";
 
 interface BlockLike {
@@ -15,13 +13,35 @@ interface BlockLike {
   [k: string]: any;
 }
 
+function datasetKeyFromField(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null) {
+    const o = value as { key?: string; id?: unknown };
+    if (o.key) return o.key;
+  }
+  return null;
+}
+
 function collectDatasetKeysFromBlock(block: BlockLike): string[] {
   const keys: string[] = [];
-  if (block.dataset) keys.push(block.dataset);
+  const rel = datasetKeyFromField(block.datasetRelation);
+  if (rel) keys.push(rel);
+  const inline = datasetKeyFromField(block.dataset);
+  if (inline) keys.push(inline);
   if (Array.isArray(block.cards)) {
-    block.cards.forEach((c: any) => { if (c.dataset) keys.push(c.dataset); });
+    block.cards.forEach((c: any) => {
+      const k = datasetKeyFromField(c.dataset);
+      if (k) keys.push(k);
+    });
   }
-  return Array.from(new Set(keys));
+  return keys.filter(Boolean);
+}
+
+function inlineDef(key: string): DatasetDef | null {
+  const parsed = parseInlineDatasetKey(key);
+  if (!parsed) return null;
+  return { key, query: { kind: parsed.kind, collection: parsed.collection, field: parsed.field } };
 }
 
 export async function resolvePageDatasets(
@@ -29,22 +49,17 @@ export async function resolvePageDatasets(
   layout: BlockLike[],
   ctx?: { user?: { id: string; role: string } },
 ): Promise<Record<string, DatasetResult>> {
-  const keys = Array.from(new Set(layout.flatMap(collectDatasetKeysKeys => collectDatasetKeysFromBlock(collectDatasetKeysKeys))));
+  const keys = Array.from(new Set(layout.flatMap(collectDatasetKeysFromBlock)));
   if (keys.length === 0) return {};
 
   const out: Record<string, DatasetResult> = {};
   await Promise.all(
     keys.map(async (key) => {
-      // Datasets can be inline in the page block (via "dataset" prop = key) OR
-      // looked up from the Datasets collection. For inline we build a minimal
-      // dataset def: list with no extra config — handled at the runner.
-      // Here we support inline (key = "<kind>:<col>") and registry lookup.
-      if (key.includes(":")) {
-        const [kind, collection] = key.split(":");
-        const def: DatasetDef = { key, query: { kind: kind as any, collection } };
+      const inline = inlineDef(key);
+      if (inline) {
         try {
-          out[key] = await runDataset(payload, def, ctx);
-        } catch (e) {
+          out[key] = await runDataset(payload, inline, ctx);
+        } catch {
           out[key] = null;
         }
         return;
@@ -57,9 +72,11 @@ export async function resolvePageDatasets(
           depth: 0,
           overrideAccess: true,
         });
-        if (found.docs[0]) {
-          out[key] = await runDataset(payload, found.docs[0] as any, ctx);
-        }
+        const doc = found.docs[0] as any;
+        if (!doc) return;
+        const vertical = doc.vertical || "generic";
+        if (vertical !== "generic" && !(await isVerticalEnabled(vertical))) return;
+        out[key] = await runDataset(payload, { key: doc.key, query: doc.query }, ctx);
       } catch {
         out[key] = null;
       }

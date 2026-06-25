@@ -13,8 +13,16 @@ import { tool } from "ai";
 import { z } from "zod";
 import type { Payload } from "payload";
 import type { SessionUser } from "../../auth/provider";
+import {
+  customerIdForUser,
+  investmentIdsForInvestors,
+  investorIdsForUser,
+  isStaffRole,
+  projectIdsForCustomer,
+  projectIdsForInvestors,
+} from "../scoping";
 
-const isAdmin = (u: SessionUser) => u.role === "admin" || u.role === "superadmin";
+const isAdmin = (u: SessionUser) => isStaffRole(u.role);
 
 export function buildTools(payload: Payload, user: SessionUser) {
   return {
@@ -26,9 +34,25 @@ export function buildTools(payload: Payload, user: SessionUser) {
       }),
       execute: async ({ status, limit }) => {
         try {
+          const where: any = status ? { projectStatus: { equals: status } } : {};
+          if (!isStaffRole(user.role)) {
+            if (user.role === "investor") {
+              const projectIds = await projectIdsForInvestors(payload, await investorIdsForUser(payload, user.id));
+              if (!projectIds.length) return { total: 0, projects: [] };
+              where.id = { in: projectIds };
+            } else if (user.role === "customer") {
+              const customerId = await customerIdForUser(payload, user.id);
+              if (!customerId) return { total: 0, projects: [] };
+              const projectIds = await projectIdsForCustomer(payload, customerId);
+              if (!projectIds.length) return { total: 0, projects: [] };
+              where.id = { in: projectIds };
+            } else {
+              return { error: "forbidden" };
+            }
+          }
           const r = await payload.find({
             collection: "projects",
-            where: status ? { status: { equals: status } } : undefined,
+            where: Object.keys(where).length ? where : undefined,
             limit,
             sort: "-createdAt",
             depth: 0,
@@ -39,7 +63,7 @@ export function buildTools(payload: Payload, user: SessionUser) {
             projects: (r.docs as any[]).map((p) => ({
               id: p.id,
               name: p.name,
-              status: p.status,
+              status: p.projectStatus,
               location: p.location,
               totalUnits: p.totalUnits,
               budgetTotal: p.budgetTotal,
@@ -72,6 +96,20 @@ export function buildTools(payload: Payload, user: SessionUser) {
               });
           const project = id ? r : (r as any).docs[0];
           if (!project) return { error: "Project not found" };
+          if (!isStaffRole(user.role)) {
+            const projectId = String((project as any).id);
+            if (user.role === "investor") {
+              const allowed = await projectIdsForInvestors(payload, await investorIdsForUser(payload, user.id));
+              if (!allowed.includes(projectId)) return { error: "forbidden" };
+            } else if (user.role === "customer") {
+              const customerId = await customerIdForUser(payload, user.id);
+              if (!customerId) return { error: "forbidden" };
+              const allowed = await projectIdsForCustomer(payload, customerId);
+              if (!allowed.includes(projectId)) return { error: "forbidden" };
+            } else {
+              return { error: "forbidden" };
+            }
+          }
           return project;
         } catch (e: any) {
           return { error: e?.message || "Failed to get project" };
@@ -167,8 +205,16 @@ export function buildTools(payload: Payload, user: SessionUser) {
       }),
       execute: async ({ limit }) => {
         try {
+          const where: any = {};
+          if (!isStaffRole(user.role)) {
+            if (user.role !== "investor") return { error: "forbidden" };
+            const investmentIds = await investmentIdsForInvestors(payload, await investorIdsForUser(payload, user.id));
+            if (!investmentIds.length) return { total: 0, distributions: [] };
+            where.investment = { in: investmentIds };
+          }
           const r = await payload.find({
             collection: "distributions",
+            where: Object.keys(where).length ? where : undefined,
             limit,
             sort: "-distributionDate",
             depth: 1,
@@ -191,9 +237,15 @@ export function buildTools(payload: Payload, user: SessionUser) {
         try {
           const where: any = {};
           if (status) where.status = { equals: status };
+          if (!isStaffRole(user.role)) {
+            if (user.role !== "customer") return { error: "forbidden" };
+            const customerId = await customerIdForUser(payload, user.id);
+            if (!customerId) return { total: 0, payments: [] };
+            where.customer = { equals: customerId };
+          }
           const r = await payload.find({
             collection: "payments",
-            where,
+            where: Object.keys(where).length ? where : undefined,
             limit,
             sort: "-dueDate",
             depth: 1,
@@ -272,6 +324,7 @@ export function buildTools(payload: Payload, user: SessionUser) {
       description: "Compute high-level portfolio KPIs (totals, counts) across projects, investors, payments.",
       inputSchema: z.object({}),
       execute: async () => {
+        if (!isStaffRole(user.role)) return { error: "forbidden" };
         try {
           const [projects, investors, customers, payments] = await Promise.all([
             payload.find({ collection: "projects", limit: 0, overrideAccess: true }),

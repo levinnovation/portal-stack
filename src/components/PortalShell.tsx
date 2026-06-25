@@ -21,6 +21,7 @@ export interface PortalShellProps {
   action?: React.ReactNode;
   children: React.ReactNode;
   unreadCount?: number;
+  navOverride?: TenantNavItem[];
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -29,19 +30,24 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   FileSpreadsheet,
 };
 
-function resolveNav(role: TenantRole, tenant: TenantConfig): TenantNavItem[] {
-  // If role has explicit nav, use it. Otherwise build from tenant defaults for that role.
-  if (role.nav.length) return role.nav;
-  return tenant.roles
-    .filter((r) => r.key === role.key)
-    .flatMap((r) => r.nav);
+function navItemVisible(item: TenantNavItem, tenant: TenantConfig, userRole: string): boolean {
+  if (item.roles?.length && !item.roles.includes(userRole)) return false;
+  // ponytail: URL heuristics until nav items carry explicit feature keys
+  if (item.to.includes("/excel") && !tenant.features.excel) return false;
+  if (item.to.includes("/quickbase") && !tenant.features.quickbase) return false;
+  return true;
 }
 
-export function PortalShell({ user, tenant, role, title, action, children, unreadCount = 0 }: PortalShellProps) {
+function resolveNav(role: TenantRole, tenant: TenantConfig, userRole: string): TenantNavItem[] {
+  const items = role.nav.length ? role.nav : tenant.roles.filter((r) => r.key === role.key).flatMap((r) => r.nav);
+  return items.filter((item) => navItemVisible(item, tenant, userRole));
+}
+
+export function PortalShell({ user, tenant, role, title, action, children, unreadCount = 0, navOverride }: PortalShellProps) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const nav = resolveNav(role, tenant);
+  const nav = navOverride?.length ? navOverride : resolveNav(role, tenant, user.role);
 
   const isActive = (to: string, end?: boolean) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + "/");
@@ -87,6 +93,7 @@ export function PortalShell({ user, tenant, role, title, action, children, unrea
       </nav>
       {(user.role === "admin" || user.role === "superadmin") && (
         <div className="px-3 py-3 border-t border-sidebar-border space-y-1">
+          {/* ponytail: UI-only portal switch; route guards in renderPage + ACL enforce data access */}
           <div className="text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50 px-3 mb-1">Cambiar portal</div>
           {tenant.roles
             .filter((r) => r.key !== role.key)

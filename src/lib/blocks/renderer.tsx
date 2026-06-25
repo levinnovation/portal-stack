@@ -8,6 +8,7 @@ import { MarkdownBlock, type MarkdownBlockProps } from "@/components/blocks/Mark
 import { DividerBlock } from "@/components/blocks/DividerBlock";
 import { IframeBlock, type IframeBlockProps } from "@/components/blocks/IframeBlock";
 import { ChatBlock, type ChatBlockProps } from "@/components/blocks/ChatBlock";
+import { ColumnsBlock, type ColumnsBlockProps } from "@/components/blocks/ColumnsBlock";
 import type { DatasetResult } from "@/lib/datasets/runner";
 
 /**
@@ -27,6 +28,10 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
         const blockType = block.blockType;
         const props = { ...block };
         delete props.blockType;
+        const datasetKey =
+          (typeof props.datasetRelation === "object" && props.datasetRelation?.key) ||
+          props.datasetRelation ||
+          props.dataset;
         // Inject resolved dataset values by key
         Object.keys(props).forEach((k) => {
           if (typeof props[k] === "string" && props[k] in data) {
@@ -39,9 +44,9 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
           case "kpi-grid":
             return <KpiGridBlock key={i} {...(props as KpiGridBlockProps)} data={data as any} />;
           case "chart":
-            return <ChartBlock key={i} {...(props as ChartBlockProps)} data={data[props.dataset]} />;
+            return <ChartBlock key={i} {...(props as ChartBlockProps)} data={data[datasetKey]} />;
           case "table":
-            return <TableBlock key={i} {...(props as TableBlockProps)} data={data[props.dataset]} />;
+            return <TableBlock key={i} {...(props as TableBlockProps)} data={data[datasetKey]} />;
           case "form":
             return <FormBlock key={i} {...(props as FormBlockProps)} />;
           case "markdown":
@@ -52,6 +57,8 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
             return <IframeBlock key={i} {...(props as IframeBlockProps)} />;
           case "chat":
             return <ChatBlock key={i} {...(props as ChatBlockProps)} />;
+          case "columns":
+            return <ColumnsBlock key={i} {...(props as ColumnsBlockProps)} data={data as any} />;
           default:
             return (
               <div key={i} className="bg-card border border-dashed border-border rounded-lg p-6 text-center text-muted-foreground text-sm">

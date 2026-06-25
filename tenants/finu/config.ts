@@ -1,4 +1,5 @@
 import type { TenantConfig } from "@/lib/tenant";
+import { finuCollections } from "./domain";
 
 /**
  * Finu — fintech / lending vertical.
@@ -50,6 +51,7 @@ export const finuTenant: TenantConfig = {
     systemPromptFile: "tenants/finu/ai/prompts.ts",
     maxStepsPerTurn: 5,
     temperature: 0.2,
+    backend: "local",
   },
   auth: {
     provider: "local",
@@ -83,5 +85,5 @@ export const finuTenant: TenantConfig = {
       ],
     },
   ],
-  payloadCollections: [],
+  payloadCollections: finuCollections,
 };
