@@ -1,21 +1,6 @@
 import type { CollectionConfig } from "payload";
 
-/**
- * Datasets — named, reusable data sources that blocks consume.
- *
- * A dataset is a (key, query) pair where query is a structured JSON
- * describing how to fetch data from Payload or a derived aggregate.
- *
- * Datasets are tenant-aware: each dataset declares which vertical
- * (`realestate`, `fintech`, `generic`) it belongs to, and only loads
- * when the active tenant has that vertical enabled.
- *
- * Example keys (real estate):
- *   - count:projects
- *   - sum:investments.amountInvested
- *   - list:recent-payments
- *   - chart:investments-over-time
- */
+/** Named, reusable data sources for layout blocks and AI tools. */
 export const Datasets: CollectionConfig = {
   slug: "datasets",
   admin: { useAsTitle: "name", group: "Content" },
@@ -27,7 +12,7 @@ export const Datasets: CollectionConfig = {
   },
   fields: [
     { name: "name", type: "text", required: true },
-    { name: "key", type: "text", required: true, unique: true, index: true, admin: { description: "Reference key used by blocks, e.g. 'count:projects'" } },
+    { name: "key", type: "text", required: true, unique: true, index: true },
     { name: "description", type: "textarea" },
     {
       name: "vertical",
@@ -56,15 +41,19 @@ export const Datasets: CollectionConfig = {
             { label: "Average", value: "avg" },
             { label: "List", value: "list" },
             { label: "Group by month", value: "monthly" },
-            { label: "Custom (advanced)", value: "custom" },
+            { label: "Custom handler", value: "custom" },
+            { label: "HTTP / REST", value: "http" },
           ],
         },
-        { name: "collection", type: "text", admin: { description: "Payload collection slug" } },
-        { name: "field", type: "text", admin: { description: "Field to aggregate (for sum/avg)" } },
-        { name: "where", type: "json", admin: { description: "Payload where clause" } },
+        { name: "collection", type: "text" },
+        { name: "field", type: "text" },
+        { name: "where", type: "json" },
         { name: "limit", type: "number", defaultValue: 10 },
         { name: "sort", type: "text" },
-        { name: "handler", type: "text", admin: { description: "Custom handler for kind=custom (file path relative to src/lib/datasets/handlers/)" } },
+        { name: "handler", type: "text", admin: { description: "Registry key: payload-count, rest-json, …" } },
+        { name: "url", type: "text", admin: { description: "HTTP kind: external URL" } },
+        { name: "jsonPath", type: "text", admin: { description: "HTTP kind: dot path into JSON body" } },
+        { name: "tokenSource", type: "text", admin: { description: "Credential source e.g. quickbase" } },
       ],
     },
   ],

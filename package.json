@@ -13,7 +13,8 @@
     "generate:types": "payload generate:types",
     "tenant:new": "tsx scripts/new-tenant.ts",
     "seed": "tsx scripts/seed.ts",
-    "self-check": "tsx scripts/self-check.ts"
+    "self-check": "tsx scripts/self-check.ts",
+    "seed:datasets": "tsx scripts/seed-datasets.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.0",
