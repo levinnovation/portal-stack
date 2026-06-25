@@ -1,11 +1,17 @@
 import { Gauge } from "@/components/portal/charts/gauge";
 import { SectionCard } from "@tenants/core/components/section-card";
+import { ErrorState } from "@tenants/core/components/states/error-state";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { num, pct } from "@tenants/core/lib/format";
-import { getInteligenciaData, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import type { InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import { loadInteligencia } from "@tenants/core/lib/inteligencia-run";
 
 export async function InteligenciaEquipoScreen({ run }: { run: InteligenciaRunType }) {
-  const data = await getInteligenciaData(run);
+  const loaded = await loadInteligencia(run);
+  if (!loaded.ok) {
+    return <ErrorState title="No se pudo leer Inteligencia BI" detail={loaded.error} />;
+  }
+  const data = loaded.data;
 
   return (
     <div className="space-y-6">

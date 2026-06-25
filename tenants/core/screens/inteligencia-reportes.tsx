@@ -1,10 +1,16 @@
 import { FileDown } from "lucide-react";
 
 import { SectionCard } from "@tenants/core/components/section-card";
-import { getInteligenciaData, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import type { InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import { loadInteligencia } from "@tenants/core/lib/inteligencia-run";
+import { ErrorState } from "@tenants/core/components/states/error-state";
 
 export async function InteligenciaReportesScreen({ run }: { run: InteligenciaRunType }) {
-  const data = await getInteligenciaData(run);
+  const loaded = await loadInteligencia(run);
+  if (!loaded.ok) {
+    return <ErrorState title="No se pudo leer Inteligencia BI" detail={loaded.error} />;
+  }
+  const data = loaded.data;
   const pdfUrl = run === "monthly" ? "/api/agents/inteligencia/report" : "";
 
   return (

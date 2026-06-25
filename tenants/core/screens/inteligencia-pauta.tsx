@@ -3,11 +3,17 @@ import { ScatterEfficiency } from "@/components/portal/charts/scatter";
 import { RecommendationCard } from "@tenants/core/components/inteligencia/recommendation-card";
 import { WhatIfSimulator } from "@tenants/core/components/inteligencia/whatif-simulator";
 import { SectionCard } from "@tenants/core/components/section-card";
+import { ErrorState } from "@tenants/core/components/states/error-state";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
-import { getInteligenciaData, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import type { InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import { loadInteligencia } from "@tenants/core/lib/inteligencia-run";
 
 export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunType }) {
-  const data = await getInteligenciaData(run);
+  const loaded = await loadInteligencia(run);
+  if (!loaded.ok) {
+    return <ErrorState title="No se pudo leer Inteligencia BI" detail={loaded.error} />;
+  }
+  const data = loaded.data;
   const spend = data.campaigns.reduce((acc, c) => acc + c.spend, 0);
   const reservations = data.campaigns.reduce((acc, c) => acc + c.reservations, 0);
 

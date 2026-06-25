@@ -3,12 +3,18 @@ import { FlaskConical, Target, TrendingUp } from "lucide-react";
 import { AbTestCard } from "@tenants/core/components/inteligencia/ab-test-card";
 import { KpiCard } from "@tenants/core/components/kpi-card";
 import { SectionCard } from "@tenants/core/components/section-card";
+import { ErrorState } from "@tenants/core/components/states/error-state";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { num } from "@tenants/core/lib/format";
-import { getInteligenciaData, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import type { InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import { loadInteligencia } from "@tenants/core/lib/inteligencia-run";
 
 export async function InteligenciaExperimentosScreen({ run }: { run: InteligenciaRunType }) {
-  const data = await getInteligenciaData(run);
+  const loaded = await loadInteligencia(run);
+  if (!loaded.ok) {
+    return <ErrorState title="No se pudo leer Inteligencia BI" detail={loaded.error} />;
+  }
+  const data = loaded.data;
   const highPriority = data.abTests.filter((test) => test.priority === "high").length;
   const avgLift =
     data.abTests.reduce((acc, test) => acc + Number(test.expected_lift ?? test.expectedLift ?? 0), 0) /
