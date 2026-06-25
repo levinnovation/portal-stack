@@ -8,6 +8,7 @@ import { MarkdownBlock, type MarkdownBlockProps } from "@/components/blocks/Mark
 import { DividerBlock } from "@/components/blocks/DividerBlock";
 import { IframeBlock, type IframeBlockProps } from "@/components/blocks/IframeBlock";
 import { ChatBlock, type ChatBlockProps } from "@/components/blocks/ChatBlock";
+import { ColumnsBlock, type ColumnsBlockProps } from "@/components/blocks/ColumnsBlock";
 import type { DatasetResult } from "@/lib/datasets/runner";
 
 /**
@@ -52,6 +53,8 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
             return <IframeBlock key={i} {...(props as IframeBlockProps)} />;
           case "chat":
             return <ChatBlock key={i} {...(props as ChatBlockProps)} />;
+          case "columns":
+            return <ColumnsBlock key={i} {...(props as ColumnsBlockProps)} data={data as any} />;
           default:
             return (
               <div key={i} className="bg-card border border-dashed border-border rounded-lg p-6 text-center text-muted-foreground text-sm">
