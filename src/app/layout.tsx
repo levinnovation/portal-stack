@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { getTenant } from "@/lib/tenant";
+import { tenantThemeStyle } from "@/lib/theme/css-vars";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/strings";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,11 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={htmlLang} suppressHydrationWarning>
       <body
         className="min-h-screen bg-background text-foreground antialiased"
-        style={
-          {
-            ["--tenant-brand" as any]: tenant.theme.brand,
-          } as React.CSSProperties
-        }
+        style={tenantThemeStyle(tenant.theme)}
       >
         {children}
       </body>

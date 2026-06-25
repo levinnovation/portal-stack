@@ -235,34 +235,57 @@ Each tenant can be partially overridden in the DB via the `tenants` collection (
 
 ## Layout builder
 
-Dashboards are composed in the Payload admin (no code). A `Page` has:
+Pages are the dashboard primitive. Compose them in Payload `/admin` (blocks field) or seed from `tenants/<id>/pages.ts`.
 
-- `slug` — URL path under `/portal/<role>/`
-- `allowedRoles` — which roles can view
-- `layout` — array of typed blocks
+- **URL resolution**: `/portal/admin/projects` tries slugs `projects`, then `admin-projects` (see `src/lib/blocks/page-slug.ts`).
+- **Nav validation**: `pnpm self-check` includes `nav-slugs` — core nav links must resolve to seeded page slugs.
+- **Nav from DB**: set `features.navFromDb: true` and `showInNav` on Pages records (optional; default uses `tenants/<id>/config.ts` nav).
+- **Draft preview**: `/portal/preview/<slug>?draft=1` (admin only). Live preview URL configured on Pages admin.
+- **Self-checks**: `pnpm self-check` before deploy.
 
 Available blocks:
 
-| Block | Purpose | Key props |
-|---|---|---|
-| `hero` | Top banner with CTA | title, subtitle, image, ctaLabel, ctaHref, background |
-| `kpi-grid` | Grid of metric cards | cards: [{ label, dataset, format, icon }] |
-| `chart` | Line/bar/pie/area chart (recharts) | dataset, kind, height |
-| `table` | Tabular data with paging & formatting | dataset, columns: [{ key, label, format }], pageSize |
-| `form` | Submit-to-endpoint form | endpoint, fields: [...] |
-| `markdown` | Lexical rich text | body |
-| `divider` | Spacer | size |
-| `iframe` | Embedded URL | src, height |
-| `chat` | AI agent widget | agentId, greeting, suggestedPrompts |
+| Block | Purpose |
+|---|---|
+| `hero` | Top banner with CTA |
+| `kpi-grid` | Metric cards from datasets |
+| `chart` | recharts line/bar/pie/area |
+| `table` | Tabular data |
+| `form` | POST to API (e.g. Excel upload) |
+| `markdown` | Lexical rich text (rendered) |
+| `columns` | Two-column layout with optional table datasets |
+| `chat` | AI agent widget |
+| `divider` | Spacer |
+| `iframe` | Embedded external URL |
 
 ### Datasets
 
-A block's `dataset` string points to a query. Two forms:
+Block `dataset` props accept:
 
-1. **Inline**: `"count:projects"`, `"sum:investments.amountInvested"`, `"list:units"`, `"monthly:payments.amount"`. Format is `<kind>:<collection>` or `<kind>:<collection>.<field>` for sum/avg.
-2. **Named**: any string key. Looked up in the `datasets` Payload collection, which lets admins define reusable queries with `where` filters, sorts, custom handlers.
+1. **Inline**: `count:projects`, `sum:payments.amount`, `list:units`, `monthly:investments.amountInvested`
+2. **Named**: key looked up in the `datasets` collection (`pnpm seed:datasets` for core defaults)
 
-Supported query kinds: `count`, `sum`, `avg`, `list`, `monthly`, `custom` (handler in `src/lib/datasets/handlers/<name>.ts`).
+Query kinds: `count`, `sum`, `avg`, `list`, `monthly`, `custom` (handler registry in `src/lib/datasets/handlers/`), `http` (REST with optional `tokenSource`).
+
+Handlers shipped: `payload-count`, `rest-json` (60s in-memory cache).
+
+### External data (hybrid)
+
+| Path | Use case | Entry |
+|---|---|---|
+| **Sync → Postgres** | Master data (ERP/CRM/Excel) | `POST /api/webhooks/[source]`, `POST /api/forms/excel-upload` |
+| **Live read** | Point KPIs | Dataset `kind: http` or `custom` + `rest-json` handler |
+| **Credentials** | Per-tenant secrets | Env `INTEGRATION_<TENANT>_<SOURCE>_TOKEN` (see `.env.example`) |
+
+Webhook receiver: `POST /api/webhooks/quickbase|stripe|n8n|agentyx|other` with optional `WEBHOOK_SECRET` header `x-webhook-secret`.
+
+User invite (admin): `POST /api/auth/invite` with `{ email, password, name, role }`.
+
+Password reset stub: `POST /api/auth/reset-request` (logs until email wired).
+
+QuickBase client stub: `src/lib/integrations/quickbase.ts` (needs `QUICKBASE_REALM` + token).
+
+RAG stub: `src/lib/ai/rag.ts` — enable with `FEATURE_RAG=true` when pgvector ships.
 
 ## AI agent
 
@@ -361,18 +384,20 @@ For a second tenant, repeat steps 1-5 with a different `TENANT_ID`, a separate R
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint |
 | `pnpm seed` | Insert/update seed Pages for the active tenant (`TENANT_ID`, default `core`) |
+| `pnpm seed:datasets` | Upsert named datasets (core defaults) |
 | `pnpm tenant:new` | Scaffold a new tenant under `tenants/` |
-| `pnpm self-check` | Run ponytail assert checks (auth, scoping, tenant registry, seed resolver) |
+| `pnpm self-check` | Run assert checks (nav, datasets, auth, tenant registry, …) |
 
 ## Roadmap
 
 - [ ] Agentyx `AuthProvider` adapter (JWT validation)
-- [ ] Server-side webhooks for QuickBase (bidirectional sync)
-- [ ] Excel upload endpoint (`/api/forms/excel-upload`)
+- [x] Webhook receiver (`POST /api/webhooks/[source]`) — processor extensible per source
+- [x] Excel upload endpoint (`/api/forms/excel-upload`)
+- [ ] QuickBase bidirectional sync (client stub exists)
 - [ ] S3 / Vercel Blob media storage per-tenant
 - [ ] Per-tenant custom domains
-- [ ] RAG over `documents` (pgvector)
-- [ ] Vertical `fintech` collection set
+- [ ] RAG over `documents` (pgvector) — stub in `src/lib/ai/rag.ts`
+- [ ] Vertical `fintech` collection set (Finu)
 - [ ] Voice integration via LiveKit (`agentyx-core-voice`)
 
 ## License
