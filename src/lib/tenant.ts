@@ -63,6 +63,7 @@ export interface TenantFeatureFlags {
   documents: boolean;
   aiAgent: boolean;
   layoutBuilder: boolean;
+  navFromDb?: boolean;
   auditLog: boolean;
   impersonation: boolean;
 }
@@ -102,6 +103,14 @@ export interface TenantRole {
   nav: TenantNavItem[];
 }
 
+export interface TenantIntegrationConfig {
+  source: string;
+  enabled?: boolean;
+  baseUrl?: string;
+  /** Env var name holding the secret, e.g. INTEGRATION_CORE_QUICKBASE_TOKEN */
+  secretRef?: string;
+}
+
 export interface TenantConfig {
   id: string;
   name: string;
@@ -113,7 +122,8 @@ export interface TenantConfig {
   ai: TenantAIConfig;
   auth: TenantAuthConfig;
   roles: TenantRole[];
-  payloadCollections?: CollectionConfig[];   // domain collections added by this tenant
+  payloadCollections?: CollectionConfig[];
+  integrations?: TenantIntegrationConfig[];
 }
 
 const TENANT_REGISTRY: Record<string, TenantConfig> = {
@@ -190,6 +200,7 @@ function mergeTenant(base: TenantConfig, override: any): TenantConfig {
     features: { ...base.features, ...(override.features || {}) },
     ai: { ...base.ai, ...(override.ai || {}) },
     auth: { ...base.auth, ...(override.auth || {}) },
+    integrations: override.integrations ?? base.integrations,
   };
 }
 

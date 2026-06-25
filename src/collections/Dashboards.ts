@@ -1,13 +1,16 @@
 import type { CollectionConfig } from "payload";
 
 /**
- * Dashboards — named groupings of Pages, shown in the sidebar.
- * Each dashboard is a landing container; users land on their role's
- * default dashboard after login.
+ * Dashboards — optional grouping of Pages for admin organization.
+ * ponytail: sidebar nav is driven by Pages.showInNav when features.navFromDb is on.
  */
 export const Dashboards: CollectionConfig = {
   slug: "dashboards",
-  admin: { useAsTitle: "title", group: "Content" },
+  admin: {
+    useAsTitle: "title",
+    group: "Content",
+    description: "Group pages for admin UX. Portal sidebar uses Pages.showInNav, not this collection.",
+  },
   access: {
     read: ({ req }) => !!req.user,
     create: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
@@ -22,19 +25,14 @@ export const Dashboards: CollectionConfig = {
       name: "allowedRoles",
       type: "select",
       hasMany: true,
-      defaultValue: ["admin", "investor", "customer", "member"],
+      defaultValue: ["admin"],
       options: [
         { label: "Admin", value: "admin" },
         { label: "Inversionista", value: "investor" },
         { label: "Cliente", value: "customer" },
-        { label: "Member (genérico)", value: "member" },
+        { label: "Member", value: "member" },
       ],
     },
-    {
-      name: "pages",
-      type: "relationship",
-      relationTo: "pages",
-      hasMany: true,
-    },
+    { name: "pages", type: "relationship", relationTo: "pages", hasMany: true },
   ],
 };

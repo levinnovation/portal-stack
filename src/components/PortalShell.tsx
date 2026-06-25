@@ -21,6 +21,7 @@ export interface PortalShellProps {
   action?: React.ReactNode;
   children: React.ReactNode;
   unreadCount?: number;
+  navOverride?: TenantNavItem[];
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -42,11 +43,11 @@ function resolveNav(role: TenantRole, tenant: TenantConfig, userRole: string): T
   return items.filter((item) => navItemVisible(item, tenant, userRole));
 }
 
-export function PortalShell({ user, tenant, role, title, action, children, unreadCount = 0 }: PortalShellProps) {
+export function PortalShell({ user, tenant, role, title, action, children, unreadCount = 0, navOverride }: PortalShellProps) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const nav = resolveNav(role, tenant, user.role);
+  const nav = navOverride?.length ? navOverride : resolveNav(role, tenant, user.role);
 
   const isActive = (to: string, end?: boolean) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + "/");
