@@ -1,21 +1,12 @@
 /**
- * Shared block field schema. Imported by both the Pages and Dashboards
- * collections to compose dashboards from typed blocks.
- *
- * Each block has a `blockType` discriminator and a `props` object whose
- * shape is enforced by the matching component in src/components/blocks.
- *
- * To add a new block type:
- *  1. Add an entry to the array below.
- *  2. Implement the corresponding component in src/components/blocks/.
- *  3. Register it in src/lib/blocks/renderer.tsx.
+ * Block configs for Payload `type: "blocks"` layout field.
+ * Runtime format: { blockType: "hero", title, ... } — matches seed TS and admin.
  */
-import type { Field } from "payload";
+import type { Block } from "payload";
 
-const heroBlock: Field = {
-  name: "hero",
-  type: "group",
-  label: "Hero",
+const heroBlock: Block = {
+  slug: "hero",
+  labels: { singular: "Hero", plural: "Heroes" },
   fields: [
     { name: "title", type: "text", required: true },
     { name: "subtitle", type: "text" },
@@ -30,10 +21,9 @@ const heroBlock: Field = {
   ],
 };
 
-const kpiGridBlock: Field = {
-  name: "kpi-grid",
-  type: "group",
-  label: "KPI Grid",
+const kpiGridBlock: Block = {
+  slug: "kpi-grid",
+  labels: { singular: "KPI Grid", plural: "KPI Grids" },
   fields: [
     { name: "title", type: "text" },
     { name: "subtitle", type: "text" },
@@ -43,7 +33,12 @@ const kpiGridBlock: Field = {
       minRows: 1,
       fields: [
         { name: "label", type: "text", required: true },
-        { name: "dataset", type: "text", required: true, admin: { description: "Dataset key, e.g. count:projects" } },
+        {
+          name: "dataset",
+          type: "text",
+          required: true,
+          admin: { description: "Inline key (count:projects) or named dataset key" },
+        },
         { name: "format", type: "select", defaultValue: "number", options: [
           { label: "Number", value: "number" },
           { label: "USD", value: "usd" },
@@ -57,14 +52,13 @@ const kpiGridBlock: Field = {
   ],
 };
 
-const chartBlock: Field = {
-  name: "chart",
-  type: "group",
-  label: "Chart",
+const chartBlock: Block = {
+  slug: "chart",
+  labels: { singular: "Chart", plural: "Charts" },
   fields: [
     { name: "title", type: "text" },
     { name: "subtitle", type: "text" },
-    { name: "dataset", type: "text", required: true, admin: { description: "Dataset key returning array of points" } },
+    { name: "dataset", type: "text", required: true },
     {
       name: "kind",
       type: "select",
@@ -80,13 +74,12 @@ const chartBlock: Field = {
   ],
 };
 
-const tableBlock: Field = {
-  name: "table",
-  type: "group",
-  label: "Table",
+const tableBlock: Block = {
+  slug: "table",
+  labels: { singular: "Table", plural: "Tables" },
   fields: [
     { name: "title", type: "text" },
-    { name: "dataset", type: "text", required: true, admin: { description: "Dataset key returning array of rows" } },
+    { name: "dataset", type: "text", required: true },
     {
       name: "columns",
       type: "array",
@@ -107,15 +100,14 @@ const tableBlock: Field = {
   ],
 };
 
-const formBlock: Field = {
-  name: "form",
-  type: "group",
-  label: "Form",
+const formBlock: Block = {
+  slug: "form",
+  labels: { singular: "Form", plural: "Forms" },
   fields: [
     { name: "title", type: "text" },
     { name: "description", type: "textarea" },
     { name: "submitLabel", type: "text", defaultValue: "Enviar" },
-    { name: "endpoint", type: "text", required: true, admin: { description: "POST endpoint that handles submission" } },
+    { name: "endpoint", type: "text", required: true },
     {
       name: "fields",
       type: "array",
@@ -130,6 +122,7 @@ const formBlock: Field = {
           { label: "Number", value: "number" },
           { label: "Textarea", value: "textarea" },
           { label: "Date", value: "date" },
+          { label: "File", value: "file" },
         ]},
         { name: "required", type: "checkbox", defaultValue: false },
       ],
@@ -137,32 +130,29 @@ const formBlock: Field = {
   ],
 };
 
-const markdownBlock: Field = {
-  name: "markdown",
-  type: "group",
-  label: "Markdown / Rich text",
+const markdownBlock: Block = {
+  slug: "markdown",
+  labels: { singular: "Markdown", plural: "Markdown blocks" },
   fields: [
     { name: "title", type: "text" },
     { name: "body", type: "richText" },
   ],
 };
 
-const chatBlock: Field = {
-  name: "chat",
-  type: "group",
-  label: "AI Chat",
+const chatBlock: Block = {
+  slug: "chat",
+  labels: { singular: "AI Chat", plural: "AI Chats" },
   fields: [
     { name: "title", type: "text", defaultValue: "Asistente" },
-    { name: "agentId", type: "text", defaultValue: "default", admin: { description: "Identifier for the AI agent (mapped to system prompt in tenants/<id>/ai/)" } },
+    { name: "agentId", type: "text", defaultValue: "default" },
     { name: "greeting", type: "text" },
     { name: "suggestedPrompts", type: "array", fields: [{ name: "prompt", type: "text" }] },
   ],
 };
 
-const dividerBlock: Field = {
-  name: "divider",
-  type: "group",
-  label: "Divider / Spacer",
+const dividerBlock: Block = {
+  slug: "divider",
+  labels: { singular: "Divider", plural: "Dividers" },
   fields: [
     {
       name: "size",
@@ -177,10 +167,9 @@ const dividerBlock: Field = {
   ],
 };
 
-const iframeBlock: Field = {
-  name: "iframe",
-  type: "group",
-  label: "Embedded iframe",
+const iframeBlock: Block = {
+  slug: "iframe",
+  labels: { singular: "Iframe", plural: "Iframes" },
   fields: [
     { name: "title", type: "text" },
     { name: "src", type: "text", required: true },
@@ -188,7 +177,29 @@ const iframeBlock: Field = {
   ],
 };
 
-export const BLOCK_FIELDS: Field[] = [
+const columnsBlock: Block = {
+  slug: "columns",
+  labels: { singular: "Columns", plural: "Column layouts" },
+  fields: [
+    { name: "title", type: "text" },
+    {
+      name: "ratio",
+      type: "select",
+      defaultValue: "1-1",
+      options: [
+        { label: "50 / 50", value: "1-1" },
+        { label: "66 / 33", value: "2-1" },
+        { label: "33 / 66", value: "1-2" },
+      ],
+    },
+    { name: "leftDataset", type: "text", admin: { description: "Optional table/list dataset for left column" } },
+    { name: "rightDataset", type: "text", admin: { description: "Optional table/list dataset for right column" } },
+    { name: "leftTitle", type: "text" },
+    { name: "rightTitle", type: "text" },
+  ],
+};
+
+export const LAYOUT_BLOCKS: Block[] = [
   heroBlock,
   kpiGridBlock,
   chartBlock,
@@ -198,6 +209,10 @@ export const BLOCK_FIELDS: Field[] = [
   chatBlock,
   dividerBlock,
   iframeBlock,
+  columnsBlock,
 ];
 
-export const BLOCK_TYPES = BLOCK_FIELDS.map((b) => (b as any).name) as string[];
+export const BLOCK_TYPES = LAYOUT_BLOCKS.map((b) => b.slug);
+
+/** @deprecated use LAYOUT_BLOCKS — kept for normalizeLayout group fallback */
+export const BLOCK_FIELDS: import("payload").Field[] = [];

@@ -1,18 +1,24 @@
 import type { CollectionConfig } from "payload";
-import { BLOCK_FIELDS } from "./_blocks";
+import { LAYOUT_BLOCKS } from "./_blocks";
+import { normalizeLayout } from "@/lib/blocks/normalize-layout";
 
 /**
- * Pages — the layout builder primitive.
- * Each Page has a slug, optional role restrictions, and an array of blocks.
- * The frontend catch-all route (app/(frontend)/(portal)/[...slug]/page.tsx)
- * reads a Page by slug and renders its blocks via the BlockRenderer.
- *
- * versions + drafts + autosave: edits are autosaved as drafts, can be
- * previewed, then published. The frontend always reads the published version.
+ * Pages — layout builder primitive. Frontend reads published versions via renderPage().
  */
 export const Pages: CollectionConfig = {
   slug: "pages",
-  admin: { useAsTitle: "title", group: "Content" },
+  admin: {
+    useAsTitle: "title",
+    group: "Content",
+    livePreview: {
+      url: ({ data }) => {
+        const slug = data?.slug as string | undefined;
+        if (!slug) return null;
+        const base = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
+        return `${base}/portal/preview/${slug}?draft=1`;
+      },
+    },
+  },
   versions: { drafts: { autosave: true }, maxPerDoc: 50 },
   access: {
     read: ({ req }) => !!req.user,
@@ -20,6 +26,14 @@ export const Pages: CollectionConfig = {
     update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     delete: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     readVersions: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
+  },
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        if (data?.layout) data.layout = normalizeLayout(data.layout as unknown[]);
+        return data;
+      },
+    ],
   },
   fields: [
     { name: "title", type: "text", required: true },
@@ -29,7 +43,7 @@ export const Pages: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
-      admin: { description: "URL path under /portal/<role>/. E.g. 'overview', 'projects/123'. Use leading '/'." },
+      admin: { description: "Stored slug e.g. admin-projects. URL /portal/admin/projects resolves via prefix." },
     },
     { name: "description", type: "textarea" },
     {
@@ -44,13 +58,25 @@ export const Pages: CollectionConfig = {
         { label: "Member (genérico)", value: "member" },
         { label: "Superadmin", value: "superadmin" },
       ],
-      admin: { description: "Which roles can view this page" },
+    },
+    {
+      name: "showInNav",
+      type: "checkbox",
+      defaultValue: false,
+      admin: { description: "Show in sidebar when features.navFromDb is enabled" },
+    },
+    { name: "navLabel", type: "text" },
+    { name: "navIcon", type: "text", admin: { description: "Lucide icon name" } },
+    { name: "navOrder", type: "number", defaultValue: 0 },
+    {
+      name: "navPath",
+      type: "text",
+      admin: { description: "Portal path e.g. /portal/admin/projects (optional; derived from slug if empty)" },
     },
     {
       name: "layout",
-      type: "array",
-      labels: { singular: "Block", plural: "Blocks" },
-      fields: BLOCK_FIELDS,
+      type: "blocks",
+      blocks: LAYOUT_BLOCKS,
       admin: { description: "Compose the page from blocks top-to-bottom" },
     },
   ],
