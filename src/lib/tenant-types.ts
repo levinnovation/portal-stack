@@ -84,6 +84,34 @@ export interface TenantIntegrationConfig {
   secretRef?: string;
 }
 
+export interface ExternalAgentActionConfig {
+  name: string;
+  label?: string;
+  path?: string;
+  method?: "GET" | "POST";
+  /** Optional form/input field names for action-driven UIs */
+  inputs?: string[];
+}
+
+export interface TenantExternalAgentConfig {
+  id: string;
+  label: string;
+  baseUrlEnv: string;
+  apiKeyEnv?: string;
+  runPath?: string;
+  statusPath?: string;
+  schedulePath?: string;
+  statusAdapter?: string;
+  actions?: ExternalAgentActionConfig[];
+}
+
+export interface TenantExternalDatabaseConfig {
+  id: string;
+  label: string;
+  urlEnv: string;
+  driver: "postgres";
+}
+
 export interface TenantConfig {
   id: string;
   name: string;
@@ -97,4 +125,6 @@ export interface TenantConfig {
   roles: TenantRole[];
   payloadCollections?: CollectionConfig[];
   integrations?: TenantIntegrationConfig[];
+  externalAgents?: TenantExternalAgentConfig[];
+  externalDatabases?: TenantExternalDatabaseConfig[];
 }

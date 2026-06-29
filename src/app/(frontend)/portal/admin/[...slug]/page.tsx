@@ -2,8 +2,19 @@ import { renderPage } from "@/lib/blocks/render-page";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCatchallPage({ params }: { params: Promise<{ slug?: string[] }> }) {
+type PageProps = {
+  params: Promise<{ slug?: string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AdminCatchallPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const slugPath = (slug ?? []).join("/") || "admin-overview";
-  return renderPage({ slugPath, portalPrefix: "/portal/admin" });
+  const resolved = searchParams ? await searchParams : undefined;
+  const run = resolved?.run;
+  return renderPage({
+    slugPath,
+    portalPrefix: "/portal/admin",
+    params: { run: Array.isArray(run) ? run[0] : run },
+  });
 }

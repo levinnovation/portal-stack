@@ -126,4 +126,38 @@ export const coreTenant: TenantConfig = {
   integrations: [
     { source: "quickbase", enabled: true, secretRef: "quickbase" },
   ],
+  externalAgents: [
+    {
+      id: "inteligencia-13",
+      label: "Inteligencia BI (Agent 13)",
+      baseUrlEnv: "INTELIGENCIA_API_URL",
+      apiKeyEnv: "INTELIGENCIA_API_KEY",
+      statusPath: "/api/v1/inteligencia/etl/status",
+      actions: [
+        { name: "etl", label: "Actualizar datos", path: "/api/v1/inteligencia/etl/run", method: "POST", inputs: ["run_type"] },
+      ],
+    },
+    {
+      id: "qara",
+      label: "Qara Leads Agent",
+      baseUrlEnv: "QARA_API_URL",
+      apiKeyEnv: "QARA_API_KEY",
+      runPath: "/api/v1/run",
+      statusPath: "/api/v1/jobs",
+      schedulePath: "/api/v1/config/schedule",
+      statusAdapter: "qara-langfuse",
+      actions: [
+        { name: "scan", label: "Escanear leads", method: "POST" },
+        { name: "single", label: "Contactar un lead", method: "POST", inputs: ["hubspot_contact_id", "channel"] },
+      ],
+    },
+  ],
+  externalDatabases: [
+    {
+      id: "bi",
+      label: "CORE BI snapshots",
+      urlEnv: "INTELIGENCIA_DB_URL",
+      driver: "postgres",
+    },
+  ],
 };

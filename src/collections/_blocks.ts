@@ -78,9 +78,41 @@ const chartBlock: Block = {
         { label: "Bar", value: "bar" },
         { label: "Pie", value: "pie" },
         { label: "Area", value: "area" },
+        { label: "Funnel", value: "funnel" },
+        { label: "Combo (Spend vs Reservas)", value: "combo" },
+        { label: "Scatter", value: "scatter" },
+        { label: "Gauge", value: "gauge" },
+        { label: "Area Trend", value: "area-trend" },
+        { label: "Pareto", value: "pareto" },
+        { label: "Waterfall", value: "waterfall" },
+        { label: "Matrix Heatmap", value: "matrix-heatmap" },
+        { label: "Stacked Bar", value: "stacked-bar" },
+        { label: "Forecast", value: "forecast" },
+        { label: "Anomaly Timeline", value: "anomaly" },
+        { label: "Transition Matrix", value: "transition-matrix" },
       ],
     },
     { name: "height", type: "number", defaultValue: 280 },
+  ],
+};
+
+const timeWindowBlock: Block = {
+  slug: "time-window",
+  labels: { singular: "Time Window", plural: "Time Windows" },
+  fields: [
+    { name: "title", type: "text" },
+    { name: "subtitle", type: "text" },
+  ],
+};
+
+const agentControlBlock: Block = {
+  slug: "agent-control",
+  labels: { singular: "Agent Control", plural: "Agent Controls" },
+  fields: [
+    { name: "title", type: "text" },
+    { name: "subtitle", type: "text" },
+    { name: "agentId", type: "text", required: true, admin: { description: "Configured external agent id (e.g. inteligencia-13, qara)." } },
+    { name: "showSchedule", type: "checkbox", defaultValue: false },
   ],
 };
 
@@ -230,6 +262,8 @@ export const LAYOUT_BLOCKS: Block[] = [
   dividerBlock,
   iframeBlock,
   columnsBlock,
+  timeWindowBlock,
+  agentControlBlock,
 ];
 
 export const BLOCK_TYPES = LAYOUT_BLOCKS.map((b) => b.slug);

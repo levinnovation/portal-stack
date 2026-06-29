@@ -1,20 +1,21 @@
-import { FlaskConical, Target, TrendingUp } from "lucide-react";
-
 import { AbTestCard } from "@tenants/core/components/inteligencia/ab-test-card";
 import { KpiCard } from "@tenants/core/components/kpi-card";
 import { SectionCard } from "@tenants/core/components/section-card";
-import { ErrorState } from "@tenants/core/components/states/error-state";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
+import { ErrorState } from "@tenants/core/components/states/error-state";
+import { getInteligenciaDataOrNull, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import { WindowEmptyState } from "@tenants/core/components/inteligencia/window-empty-state";
 import { num } from "@tenants/core/lib/format";
-import type { InteligenciaRunType } from "@tenants/core/sources/inteligencia";
-import { loadInteligencia } from "@tenants/core/lib/inteligencia-run";
+import { FlaskConical, Target, TrendingUp } from "lucide-react";
 
 export async function InteligenciaExperimentosScreen({ run }: { run: InteligenciaRunType }) {
-  const loaded = await loadInteligencia(run);
-  if (!loaded.ok) {
-    return <ErrorState title="No se pudo leer Inteligencia BI" detail={loaded.error} />;
+  let data: Awaited<ReturnType<typeof getInteligenciaDataOrNull>>;
+  try {
+    data = await getInteligenciaDataOrNull(run);
+  } catch (err) {
+    return <ErrorState title="No se pudo leer Inteligencia BI" detail={String(err)} />;
   }
-  const data = loaded.data;
+  if (!data) return <WindowEmptyState title="Inteligencia · Experimentos A/B" subtitle={`Recomendaciones live (${run})`} run={run} />;
   const highPriority = data.abTests.filter((test) => test.priority === "high").length;
   const avgLift =
     data.abTests.reduce((acc, test) => acc + Number(test.expected_lift ?? test.expectedLift ?? 0), 0) /
@@ -24,7 +25,7 @@ export async function InteligenciaExperimentosScreen({ run }: { run: Inteligenci
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <KpiCard label="Experimentos recomendados" value={num(data.abTests.length)} icon={FlaskConical} />
-        <KpiCard label="Alta prioridad" value={num(highPriority)} icon={Target} />
+        <KpiCard label="Alta prioridad" value={num(highPriority)} icon={Target} status={highPriority ? "amber" : "green"} />
         <KpiCard label="Lift esperado promedio" value={`${Math.round(avgLift * 100)}%`} icon={TrendingUp} />
       </div>
 

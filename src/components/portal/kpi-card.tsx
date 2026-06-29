@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { InfoHint } from "@/components/ui/info-hint";
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 
 type Props = {
@@ -12,9 +13,11 @@ type Props = {
   status?: "green" | "amber" | "red";
   /** Para métricas donde subir es malo (ej. días a cierre). Por defecto subir = bueno. */
   invertDelta?: boolean;
+  /** Explicación (qué mide + fórmula) mostrada como tooltip junto a la etiqueta. */
+  info?: React.ReactNode;
 };
 
-export function KpiCard({ label, value, icon: Icon, delta, deltaLabel, hint, status, invertDelta }: Props) {
+export function KpiCard({ label, value, icon: Icon, delta, deltaLabel, hint, status, invertDelta, info }: Props) {
   const hasDelta = delta !== null && delta !== undefined && isFinite(delta);
   const up = (delta ?? 0) >= 0;
   const bad = invertDelta ? up : !up;
@@ -30,9 +33,10 @@ export function KpiCard({ label, value, icon: Icon, delta, deltaLabel, hint, sta
   return (
     <Card className="relative overflow-hidden p-5">
       <div className="flex items-start justify-between">
-        <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           {status && <span className={`h-2 w-2 rounded-full ${statusClass}`} />}
           {label}
+          {info && <InfoHint content={info} />}
         </span>
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary/70 text-primary">
           <Icon className="h-4 w-4" />

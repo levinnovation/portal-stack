@@ -9,6 +9,8 @@ import { DividerBlock } from "@/components/blocks/DividerBlock";
 import { IframeBlock, type IframeBlockProps } from "@/components/blocks/IframeBlock";
 import { ChatBlock, type ChatBlockProps } from "@/components/blocks/ChatBlock";
 import { ColumnsBlock, type ColumnsBlockProps } from "@/components/blocks/ColumnsBlock";
+import { TimeWindowBlock, type TimeWindowBlockProps } from "@/components/blocks/TimeWindowBlock";
+import { AgentControlBlock, type AgentControlBlockProps } from "@/components/blocks/AgentControlBlock";
 import type { DatasetResult } from "@/lib/datasets/runner";
 
 /**
@@ -59,6 +61,10 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
             return <ChatBlock key={i} {...(props as ChatBlockProps)} />;
           case "columns":
             return <ColumnsBlock key={i} {...(props as ColumnsBlockProps)} data={data as any} />;
+          case "time-window":
+            return <TimeWindowBlock key={i} {...(props as TimeWindowBlockProps)} />;
+          case "agent-control":
+            return <AgentControlBlock key={i} {...(props as AgentControlBlockProps)} />;
           default:
             return (
               <div key={i} className="bg-card border border-dashed border-border rounded-lg p-6 text-center text-muted-foreground text-sm">

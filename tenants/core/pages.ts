@@ -184,6 +184,127 @@ export const corePages = [
     ],
   },
 
+  // ────────────────────────── Agent dashboards (blocks) ──────────────────────────
+  {
+    title: "Agentes · Overview",
+    slug: "admin-agents",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "markdown", title: "Agentes de IA", body: {} },
+      { blockType: "agent-control", title: "Inteligencia · ETL", subtitle: "Ejecutar y monitorear Agent 13", agentId: "inteligencia-13" },
+      { blockType: "agent-control", title: "Qara · Control", subtitle: "Scan, single lead y horario", agentId: "qara", showSchedule: true },
+    ],
+  },
+  {
+    title: "Leah · Mercadeo",
+    slug: "admin-agents-leah",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "markdown", title: "Leah · Atribución", body: {} },
+      { blockType: "table", title: "KPIs Leah", dataset: "core.leah.kpis", columns: [{ key: "name", label: "Métrica" }, { key: "value", label: "Valor" }] },
+    ],
+  },
+  {
+    title: "Leah · Contratos",
+    slug: "admin-agents-leah-contratos",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "markdown", title: "Contratos atribuidos", body: {} },
+      { blockType: "table", title: "Contratos", dataset: "core.leah.kpis", columns: [{ key: "name", label: "Campo" }, { key: "value", label: "Valor" }] },
+    ],
+  },
+  {
+    title: "Qara · Analítica",
+    slug: "admin-agents-qara",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "agent-control", title: "Despertar a Qara", subtitle: "Scan y single lead", agentId: "qara" },
+      { blockType: "table", title: "Distribución", dataset: "core.qara.distribution", columns: [{ key: "name", label: "Segmento" }, { key: "value", label: "Valor" }] },
+    ],
+  },
+  {
+    title: "Qara · Control",
+    slug: "admin-agents-qara-control",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "agent-control", title: "Qara · Control operativo", subtitle: "Scan, single lead, schedule", agentId: "qara", showSchedule: true },
+    ],
+  },
+  {
+    title: "Inteligencia · Comando",
+    slug: "admin-agents-inteligencia",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Seleccioná el período de análisis" },
+      { blockType: "agent-control", title: "Actualizar datos", subtitle: "Control ETL (Agent 13)", agentId: "inteligencia-13" },
+      { blockType: "chart", title: "Inversión vs reservas", dataset: "core.inteligencia.campaigns", kind: "combo" },
+      { blockType: "table", title: "Top leads en riesgo", dataset: "core.inteligencia.leads_at_risk", columns: [{ key: "name", label: "Lead" }, { key: "owner", label: "Owner" }, { key: "revenue_at_risk", label: "Riesgo" }] },
+    ],
+  },
+  {
+    title: "Inteligencia · Segmentos",
+    slug: "admin-agents-inteligencia-segmentos",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Segmentación comercial" },
+      { blockType: "chart", title: "Campañas", dataset: "core.inteligencia.campaigns", kind: "bar" },
+    ],
+  },
+  {
+    title: "Inteligencia · Equipo",
+    slug: "admin-agents-inteligencia-equipo",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Performance por asesor" },
+      { blockType: "table", title: "Leads riesgo", dataset: "core.inteligencia.leads_at_risk", columns: [{ key: "owner", label: "Asesor" }, { key: "name", label: "Lead" }, { key: "revenue_at_risk", label: "Riesgo" }] },
+    ],
+  },
+  {
+    title: "Inteligencia · Pauta",
+    slug: "admin-agents-inteligencia-pauta",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Eficiencia de pauta" },
+      { blockType: "chart", title: "Spend vs reservas", dataset: "core.inteligencia.campaigns", kind: "combo" },
+    ],
+  },
+  {
+    title: "Inteligencia · Predicciones",
+    slug: "admin-agents-inteligencia-predicciones",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Forecast y anomalías" },
+      { blockType: "chart", title: "Forecast", dataset: "core.inteligencia.campaigns", kind: "forecast" },
+    ],
+  },
+  {
+    title: "Inteligencia · Diagnóstico",
+    slug: "admin-agents-inteligencia-diagnostico",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Diagnóstico de causas" },
+      { blockType: "chart", title: "Pareto", dataset: "core.inteligencia.campaigns", kind: "pareto" },
+    ],
+  },
+  {
+    title: "Inteligencia · Experimentos",
+    slug: "admin-agents-inteligencia-experimentos",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "A/B test recommendations" },
+      { blockType: "markdown", title: "Experimentos", body: {} },
+    ],
+  },
+  {
+    title: "Inteligencia · Reportes",
+    slug: "admin-agents-inteligencia-reportes",
+    allowedRoles: ["admin"],
+    layout: [
+      { blockType: "time-window", title: "Ventana", subtitle: "Reporte ejecutivo" },
+      { blockType: "markdown", title: "Resumen ejecutivo", body: {} },
+    ],
+  },
+
   // ────────────────────────── Investor ──────────────────────────
   {
     title: "Tu portafolio",

@@ -31,7 +31,7 @@ export async function streamLocalChat(args: LocalChatArgs): Promise<Response> {
       await payload.create({
         collection: "ai-messages",
         data: {
-          chat: aiChatId,
+          chat: Number(aiChatId),
           role: "assistant",
           content: text,
           tokens: usage?.totalTokens ?? null,
@@ -44,11 +44,11 @@ export async function streamLocalChat(args: LocalChatArgs): Promise<Response> {
         await payload.create({
           collection: "ai-messages",
           data: {
-            chat: aiChatId,
+            chat: Number(aiChatId),
             role: "tool",
             content: typeof out === "string" ? out : JSON.stringify(out ?? {}),
             toolName: call?.toolName ?? "unknown",
-            toolInput: call?.input ?? null,
+            toolInput: (call?.input ?? null) as Record<string, unknown> | null,
             toolOutput: out ?? null,
           },
           overrideAccess: true,
