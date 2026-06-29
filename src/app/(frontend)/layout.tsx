@@ -22,7 +22,11 @@ export default async function FrontendRootLayout({ children }: { children: React
   const tenant = await getTenant();
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
-  const themePreference = normalizeThemePreference(cookieStore.get(THEME_COOKIE)?.value);
+  // No saved preference falls back to the tenant's brand default (CORE is dark-first).
+  const savedTheme = cookieStore.get(THEME_COOKIE)?.value;
+  const themePreference = savedTheme
+    ? normalizeThemePreference(savedTheme)
+    : tenant.theme.defaultMode ?? "system";
   const htmlLang: Locale =
     cookieLocale && (SUPPORTED_LOCALES as readonly string[]).includes(cookieLocale)
       ? (cookieLocale as Locale)

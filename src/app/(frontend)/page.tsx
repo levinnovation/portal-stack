@@ -15,13 +15,13 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <nav className="absolute top-0 left-0 right-0 z-20 px-8 py-6 flex items-center justify-between">
-        <Link href="/" className="text-accent">
+        <Link href="/" className="text-white">
           <BrandLogo tenantId={tenant.id} brand={tenant.theme.brand} />
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/admin" className="text-sm text-primary-foreground/80 hover:text-accent hidden md:inline">Admin CMS</Link>
+          <Link href="/admin" className="text-sm text-white/80 hover:text-accent hidden md:inline">Admin CMS</Link>
           <Link href="/portal/auth">
-            <Button variant="ghost" className="text-primary-foreground hover:text-accent hover:bg-transparent">
+            <Button variant="ghost" className="text-white hover:text-accent hover:bg-transparent">
               Iniciar sesión
             </Button>
           </Link>
@@ -40,11 +40,11 @@ export default async function LandingPage() {
         <div className="relative z-10 h-full flex items-center px-8 md:px-16 max-w-7xl mx-auto">
           <div className="max-w-2xl">
             <div className="text-accent text-xs tracking-[0.3em] uppercase mb-6">{tenant.name}</div>
-            <h1 className="font-display text-5xl md:text-7xl text-primary-foreground leading-[1.05] mb-6">
+            <h1 className="font-display text-5xl md:text-7xl text-white leading-[1.05] mb-6">
               {heroTagline}
             </h1>
             <p className="text-accent text-sm tracking-[0.2em] uppercase mb-5">{heroSubline}</p>
-            <p className="text-lg text-primary-foreground/75 max-w-xl mb-10 leading-relaxed">
+            <p className="text-lg text-white/75 max-w-xl mb-10 leading-relaxed">
               {tenant.description}
             </p>
             <div className="flex gap-4 flex-wrap">
@@ -54,7 +54,7 @@ export default async function LandingPage() {
                 </Button>
               </Link>
               <Link href="/admin">
-                <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
                   Panel administrativo
                 </Button>
               </Link>

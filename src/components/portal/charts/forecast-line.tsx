@@ -27,10 +27,10 @@ export function ForecastLine({
         <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickFormatter={(v) => fmt(v as number)} />
         <Tooltip {...TOOLTIP_STYLE} formatter={(v) => fmt(v as number)} />
-        <Area type="monotone" dataKey="bandHigh" stroke="none" fill="#2dd4bf22" name="Banda superior" />
+        <Area type="monotone" dataKey="bandHigh" stroke="none" fill="hsl(var(--accent) / 0.18)" name="Banda superior" />
         <Area type="monotone" dataKey="bandLow" stroke="none" fill="hsl(var(--background))" name="Banda inferior" />
-        <Line type="monotone" dataKey="actual" name="Real" stroke="var(--primary)" strokeWidth={2.4} dot={false} />
-        <Line type="monotone" dataKey="forecast" name="Forecast" stroke="#2dd4bf" strokeDasharray="5 5" strokeWidth={2.4} />
+        <Line type="monotone" dataKey="actual" name="Real" stroke="hsl(var(--primary))" strokeWidth={2.4} dot={false} />
+        <Line type="monotone" dataKey="forecast" name="Forecast" stroke="hsl(var(--accent))" strokeDasharray="5 5" strokeWidth={2.4} />
       </LineChart>
     </ResponsiveContainer>
   );

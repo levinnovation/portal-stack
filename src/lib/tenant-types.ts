@@ -26,6 +26,8 @@ export interface TenantTheme {
   brand: string;
   logo?: string;
   tagline?: string;
+  /** Default color mode when the user has no saved preference. Defaults to "system". */
+  defaultMode?: "light" | "dark" | "system";
   colors: TenantThemeColors;
   colorsDark?: TenantThemeColors;
   fonts: { display: string; sans: string };

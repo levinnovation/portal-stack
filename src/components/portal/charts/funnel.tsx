@@ -19,7 +19,7 @@ export function FunnelSimple({
     <ResponsiveContainer width="100%" height={height}>
       <FunnelChart>
         <Tooltip {...TOOLTIP_STYLE} formatter={(v) => [fmt(v as number), ""]} />
-        <Funnel dataKey="value" data={data} isAnimationActive fill="var(--primary)">
+        <Funnel dataKey="value" data={data} isAnimationActive fill="hsl(var(--primary))">
           <LabelList
             dataKey="name"
             position="right"

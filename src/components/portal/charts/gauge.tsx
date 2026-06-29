@@ -23,7 +23,7 @@ export function Gauge({
         endAngle={0}
       >
         <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-        <RadialBar background dataKey="value" fill="var(--primary)" cornerRadius={10} />
+        <RadialBar background dataKey="value" fill="hsl(var(--accent))" cornerRadius={10} />
         <text x="50%" y="56%" textAnchor="middle" fill="hsl(var(--foreground))" fontSize={24} fontWeight={700}>
           {Math.round(pct * 100)}%
         </text>

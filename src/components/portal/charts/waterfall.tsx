@@ -20,7 +20,7 @@ export function WaterfallChart({
         <Tooltip {...TOOLTIP_STYLE} />
         <Bar dataKey="value" name="Impacto" radius={[6, 6, 0, 0]}>
           {data.map((row) => (
-            <Cell key={row.name} fill={row.type === "total" ? "var(--primary)" : row.value >= 0 ? "#34d399" : "#fb7185"} />
+            <Cell key={row.name} fill={row.type === "total" ? "hsl(var(--primary))" : row.value >= 0 ? "hsl(var(--success))" : "hsl(var(--destructive))"} />
           ))}
         </Bar>
       </BarChart>

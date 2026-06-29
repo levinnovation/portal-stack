@@ -4,6 +4,9 @@ function cssString(value: string): string {
   return `"${value.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")}"`;
 }
 
+// ponytail: emit only the explicit brand tokens. Surface/sidebar/chart tokens
+// live in globals.css per :root/.dark so an inverted dark palette (light text on
+// near-black) doesn't get a light sidebar from deriving off --primary.
 function varsFor(c: TenantTheme["colors"]): string {
   return [
     `--background:${c.background};`,
@@ -19,20 +22,6 @@ function varsFor(c: TenantTheme["colors"]): string {
     `--destructive:${c.destructive};`,
     `--border:${c.border};`,
     `--ring:${c.ring};`,
-    // ponytail: derive side-nav/chart tokens from theme accents to keep one source of truth.
-    `--sidebar-background:${c.primary};`,
-    `--sidebar-foreground:${c.primaryForeground};`,
-    `--sidebar-primary:${c.accent};`,
-    `--sidebar-primary-foreground:${c.accentForeground};`,
-    `--sidebar-accent:${c.primaryGlow};`,
-    `--sidebar-accent-foreground:${c.primaryForeground};`,
-    `--sidebar-border:${c.border};`,
-    `--sidebar-ring:${c.ring};`,
-    `--chart-1:${c.accent};`,
-    `--chart-2:${c.primary};`,
-    `--chart-3:${c.primaryGlow};`,
-    `--chart-4:${c.foreground};`,
-    `--chart-5:${c.warning};`,
   ].join("");
 }
 

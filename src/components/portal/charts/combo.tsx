@@ -30,8 +30,8 @@ export function ComboSpendReservations({
           formatter={(v, name) => [name === "spend" ? lfmt(v as number) : rfmt(v as number), name]}
         />
         <Legend />
-        <Bar yAxisId="left" dataKey="spend" name="Inversión" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-        <Line yAxisId="right" type="monotone" dataKey="reservations" name="Reservas" stroke="#2dd4bf" strokeWidth={2.2} />
+        <Bar yAxisId="left" dataKey="spend" name="Inversión" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+        <Line yAxisId="right" type="monotone" dataKey="reservations" name="Reservas" stroke="hsl(var(--accent))" strokeWidth={2.2} />
       </ComposedChart>
     </ResponsiveContainer>
   );

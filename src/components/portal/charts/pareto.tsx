@@ -26,8 +26,8 @@ export function ParetoChart({
           {...TOOLTIP_STYLE}
           formatter={(v, name) => [name === "Cumulativo" ? `${Math.round((v as number) * 100)}%` : v, name]}
         />
-        <Bar yAxisId="left" dataKey="value" name="Reservas" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-        <Line yAxisId="right" type="monotone" dataKey="cumulative" name="Cumulativo" stroke="#2dd4bf" strokeWidth={2.4} />
+        <Bar yAxisId="left" dataKey="value" name="Reservas" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+        <Line yAxisId="right" type="monotone" dataKey="cumulative" name="Cumulativo" stroke="hsl(var(--accent))" strokeWidth={2.4} />
       </ComposedChart>
     </ResponsiveContainer>
   );

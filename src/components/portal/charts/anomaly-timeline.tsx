@@ -20,14 +20,14 @@ export function AnomalyTimeline({
         <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <Tooltip {...TOOLTIP_STYLE} />
-        <Line type="monotone" dataKey="value" name="Valor" stroke="var(--primary)" strokeWidth={2.4} dot={false} />
+        <Line type="monotone" dataKey="value" name="Valor" stroke="hsl(var(--primary))" strokeWidth={2.4} dot={false} />
         {anomalies.map((a) => (
           <ReferenceDot
             key={`${a.metric}-${a.date}`}
             x={a.date}
             y={a.value}
             r={6}
-            fill={a.severity === "high" ? "#fb7185" : "#fbbf24"}
+            fill={a.severity === "high" ? "hsl(var(--destructive))" : "hsl(var(--warning))"}
             stroke="none"
           />
         ))}

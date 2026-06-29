@@ -32,8 +32,8 @@ export function TimeWindowToggle({ run, className }: { run: InteligenciaRunType;
           className={cn(
             "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
             option.value === run
-              ? "bg-primary text-primary-foreground"
-              : "bg-accent text-muted-foreground hover:text-foreground",
+              ? "bg-accent text-accent-foreground"
+              : "bg-secondary text-muted-foreground hover:bg-muted hover:text-foreground",
           )}
           title={option.label}
         >

@@ -22,7 +22,7 @@ export function ScatterEfficiency({
           formatter={(v, key) => [Number(v ?? 0).toFixed(1), key]}
           labelFormatter={(_, payload) => String(payload?.[0]?.payload?.name ?? "")}
         />
-        <Scatter data={data} fill="var(--primary)" />
+        <Scatter data={data} fill="hsl(var(--accent))" />
       </ScatterChart>
     </ResponsiveContainer>
   );

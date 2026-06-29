@@ -124,7 +124,7 @@ function SidebarBody({
   return (
     <>
       <div className="px-6 py-7 border-b border-sidebar-border">
-        <Link href="/" className="text-accent">
+        <Link href="/" className="text-sidebar-foreground">
           <BrandLogo tenantId={tenant.id} brand={tenant.theme.brand} />
         </Link>
         <div className="text-xs uppercase tracking-[0.2em] text-sidebar-foreground/60 mt-1">{role.label}</div>
