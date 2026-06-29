@@ -17,8 +17,10 @@ import { resolveActiveNavPath } from "@/lib/nav-active";
 import type { TenantNavItem, TenantRole } from "@/lib/tenant";
 import type { PortalShellTenant } from "@/lib/tenant-portal-shell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { EmptyState as PortalEmptyState } from "@/components/portal/empty-state";
 import { Card } from "@/components/ui/card";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 export interface PortalShellProps {
   user: { id: string; email: string; name: string; role: string };
@@ -122,7 +124,9 @@ function SidebarBody({
   return (
     <>
       <div className="px-6 py-7 border-b border-sidebar-border">
-        <Link href="/" className="font-display text-2xl text-accent tracking-tight">{tenant.theme.brand}</Link>
+        <Link href="/" className="text-accent">
+          <BrandLogo tenantId={tenant.id} brand={tenant.theme.brand} />
+        </Link>
         <div className="text-xs uppercase tracking-[0.2em] text-sidebar-foreground/60 mt-1">{role.label}</div>
       </div>
       <SidebarNav nav={nav} activePath={activePath} onNavigate={onNavigate} />
@@ -189,6 +193,7 @@ export function PortalShell({ user, tenant, role, title, action, children, unrea
                 </Link>
               </Button>
               <LocaleSwitcher />
+              <ThemeToggle />
               {action}
             </div>
           </header>

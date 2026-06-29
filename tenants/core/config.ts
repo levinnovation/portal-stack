@@ -5,7 +5,7 @@ import { realestateCollections } from "./domain";
  * Core Real Estate tenant.
  * 3 roles: admin, investor (inversionista), customer (comprador).
  * Vertical: realestate.
- * Brand: institutional navy + warm gold (Fraunces serif + Inter).
+ * Brand: CORE black/white + midnight with electric accent (Fraunces + Inter).
  */
 export const coreTenant: TenantConfig = {
   id: "core",
@@ -15,20 +15,36 @@ export const coreTenant: TenantConfig = {
   verticals: ["realestate"],
   theme: {
     brand: "CORE",
+    tagline: "Tu historia, nuestra magia.",
     colors: {
-      background: "30 20% 97%",
-      foreground: "220 40% 12%",
-      primary: "220 50% 14%",
-      primaryForeground: "38 50% 92%",
-      primaryGlow: "220 45% 24%",
-      accent: "38 65% 52%",
-      accentForeground: "220 50% 14%",
-      accentSoft: "38 60% 88%",
-      success: "152 50% 38%",
+      background: "0 0% 100%",
+      foreground: "0 0% 10%",
+      primary: "258 76% 10%",
+      primaryForeground: "0 0% 94%",
+      primaryGlow: "259 29% 15%",
+      accent: "67 100% 50%",
+      accentForeground: "0 0% 8%",
+      accentSoft: "0 0% 94%",
+      success: "147 54% 31%",
       warning: "35 85% 50%",
-      destructive: "0 70% 48%",
-      border: "220 18% 88%",
-      ring: "38 65% 52%",
+      destructive: "0 70% 47%",
+      border: "0 0% 88%",
+      ring: "258 76% 10%",
+    },
+    colorsDark: {
+      background: "258 76% 10%",
+      foreground: "0 0% 94%",
+      primary: "0 0% 96%",
+      primaryForeground: "258 76% 10%",
+      primaryGlow: "0 0% 80%",
+      accent: "67 100% 50%",
+      accentForeground: "0 0% 8%",
+      accentSoft: "259 25% 18%",
+      success: "147 54% 45%",
+      warning: "35 95% 54%",
+      destructive: "0 84% 60%",
+      border: "259 22% 24%",
+      ring: "67 100% 50%",
     },
     fonts: {
       display: "Fraunces, Georgia, serif",

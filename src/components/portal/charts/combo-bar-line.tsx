@@ -20,8 +20,8 @@ export function ComboBarLine({
   lineKey,
   barLabel,
   lineLabel,
-  barColor = "var(--primary)",
-  lineColor = "#2dd4bf",
+  barColor = "hsl(var(--primary))",
+  lineColor = "hsl(var(--chart-1))",
   height = 280,
   leftTickFormatter,
   rightTickFormatter,
@@ -43,13 +43,13 @@ export function ComboBarLine({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <ComposedChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 8 }}>
-        <CartesianGrid stroke="#1c2438" strokeDasharray="3 3" />
-        <XAxis dataKey="name" tick={{ fill: "#8b94ac", fontSize: 11 }} />
-        <YAxis yAxisId="left" tick={{ fill: "#8b94ac", fontSize: 11 }} tickFormatter={lfmt} />
+        <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+        <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+        <YAxis yAxisId="left" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickFormatter={lfmt} />
         <YAxis
           yAxisId="right"
           orientation="right"
-          tick={{ fill: "#8b94ac", fontSize: 11 }}
+          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
           tickFormatter={rfmt}
         />
         <Tooltip

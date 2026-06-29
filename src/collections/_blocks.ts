@@ -96,26 +96,6 @@ const chartBlock: Block = {
   ],
 };
 
-const timeWindowBlock: Block = {
-  slug: "time-window",
-  labels: { singular: "Time Window", plural: "Time Windows" },
-  fields: [
-    { name: "title", type: "text" },
-    { name: "subtitle", type: "text" },
-  ],
-};
-
-const agentControlBlock: Block = {
-  slug: "agent-control",
-  labels: { singular: "Agent Control", plural: "Agent Controls" },
-  fields: [
-    { name: "title", type: "text" },
-    { name: "subtitle", type: "text" },
-    { name: "agentId", type: "text", required: true, admin: { description: "Configured external agent id (e.g. inteligencia-13, qara)." } },
-    { name: "showSchedule", type: "checkbox", defaultValue: false },
-  ],
-};
-
 const tableBlock: Block = {
   slug: "table",
   labels: { singular: "Table", plural: "Tables" },
@@ -262,8 +242,6 @@ export const LAYOUT_BLOCKS: Block[] = [
   dividerBlock,
   iframeBlock,
   columnsBlock,
-  timeWindowBlock,
-  agentControlBlock,
 ];
 
 export const BLOCK_TYPES = LAYOUT_BLOCKS.map((b) => b.slug);

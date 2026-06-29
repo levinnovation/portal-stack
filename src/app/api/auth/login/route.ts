@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthProvider } from "@/lib/auth/provider";
 import { resolveTenantRole } from "@/lib/auth/resolve-tenant-role";
 import { getTenant } from "@/lib/tenant";
+import { THEME_COOKIE } from "@/lib/theme/preference";
 
 export async function POST(req: Request) {
   const { email, password } = await req.json();
@@ -28,6 +29,13 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * tenant.auth.sessionDays,
+    });
+    res.cookies.set(THEME_COOKIE, session.user.themePreference, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
     });
     return res;
   } catch (err: any) {

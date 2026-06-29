@@ -11,6 +11,7 @@
 
 import type { Payload } from "payload";
 import { getAuthCookieName, parseAuthCookie } from "./cookie-name";
+import { normalizeThemePreference, type ThemePreference } from "@/lib/theme/preference";
 
 export interface AuthSession {
   token: string;
@@ -22,6 +23,7 @@ export interface SessionUser {
   email: string;
   name: string;
   role: string;
+  themePreference: ThemePreference;
 }
 
 export interface AuthProvider {
@@ -54,6 +56,7 @@ export class LocalPayloadAuthProvider implements AuthProvider {
         email: result.user.email!,
         name: ((result.user as any).name ?? result.user.email)!,
         role: ((result.user as any).role ?? "member") as string,
+        themePreference: normalizeThemePreference((result.user as any).themePreference),
       };
     } catch {
       return null;
@@ -74,6 +77,7 @@ export class LocalPayloadAuthProvider implements AuthProvider {
         email: result.user.email!,
         name: ((result.user as any).name ?? result.user.email)!,
         role: ((result.user as any).role ?? "member") as string,
+        themePreference: normalizeThemePreference((result.user as any).themePreference),
       },
     };
   }

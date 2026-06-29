@@ -99,6 +99,7 @@ function mergeTenant(base: TenantConfig, override: any): TenantConfig {
       ...base.theme,
       ...(override.theme || {}),
       colors: { ...base.theme.colors, ...(override.theme?.colors || {}) },
+      colorsDark: { ...(base.theme.colorsDark || {}), ...(override.theme?.colorsDark || {}) },
     },
     features: { ...base.features, ...(override.features || {}) },
     ai: { ...base.ai, ...(override.ai || {}) },

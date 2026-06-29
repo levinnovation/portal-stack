@@ -6,25 +6,28 @@ export type { AIBackend } from "./ai/backend";
 export type Vertical = "realestate" | "fintech" | "generic";
 export type AuthProviderKind = "local" | "agentyx";
 export type TenantNavKind = "page" | "custom" | "group";
+export type TenantThemeColors = {
+  background: string;
+  foreground: string;
+  primary: string;
+  primaryForeground: string;
+  primaryGlow: string;
+  accent: string;
+  accentForeground: string;
+  accentSoft: string;
+  success: string;
+  warning: string;
+  destructive: string;
+  border: string;
+  ring: string;
+};
 
 export interface TenantTheme {
   brand: string;
   logo?: string;
-  colors: {
-    background: string;
-    foreground: string;
-    primary: string;
-    primaryForeground: string;
-    primaryGlow: string;
-    accent: string;
-    accentForeground: string;
-    accentSoft: string;
-    success: string;
-    warning: string;
-    destructive: string;
-    border: string;
-    ring: string;
-  };
+  tagline?: string;
+  colors: TenantThemeColors;
+  colorsDark?: TenantThemeColors;
   fonts: { display: string; sans: string };
   radius: string;
 }

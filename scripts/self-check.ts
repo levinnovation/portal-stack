@@ -23,6 +23,7 @@ const checks = [
   "scripts/blocks-datasets.self-check.ts",
   "scripts/bi-postgres.self-check.ts",
   "src/lib/nav-active.self-check.ts",
+  "src/lib/theme/css-vars.self-check.ts",
   "tenants/core/agents-nav.self-check.ts",
 ];
 

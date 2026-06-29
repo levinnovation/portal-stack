@@ -2,16 +2,22 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getTenant } from "@/lib/tenant";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function LandingPage() {
   const tenant = await getTenant();
+  const heroTagline = tenant.theme.tagline ?? "Tu historia, nuestra magia.";
+  const heroSubline =
+    tenant.id === "core" ? "El verdadero lujo está en el servicio." : `${tenant.name}. Transparente.`;
   return (
     <div className="min-h-screen bg-background">
       <nav className="absolute top-0 left-0 right-0 z-20 px-8 py-6 flex items-center justify-between">
-        <Link href="/" className="font-display text-2xl text-accent tracking-tight">{tenant.theme.brand}</Link>
+        <Link href="/" className="text-accent">
+          <BrandLogo tenantId={tenant.id} brand={tenant.theme.brand} />
+        </Link>
         <div className="flex items-center gap-3">
           <Link href="/admin" className="text-sm text-primary-foreground/80 hover:text-accent hidden md:inline">Admin CMS</Link>
           <Link href="/portal/auth">
@@ -35,9 +41,9 @@ export default async function LandingPage() {
           <div className="max-w-2xl">
             <div className="text-accent text-xs tracking-[0.3em] uppercase mb-6">{tenant.name}</div>
             <h1 className="font-display text-5xl md:text-7xl text-primary-foreground leading-[1.05] mb-6">
-              {tenant.name}.<br />
-              <span className="text-accent italic">Transparente.</span>
+              {heroTagline}
             </h1>
+            <p className="text-accent text-sm tracking-[0.2em] uppercase mb-5">{heroSubline}</p>
             <p className="text-lg text-primary-foreground/75 max-w-xl mb-10 leading-relaxed">
               {tenant.description}
             </p>

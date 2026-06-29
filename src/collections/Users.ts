@@ -41,6 +41,17 @@ export const Users: CollectionConfig = {
         update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
       },
     },
+    {
+      name: "themePreference",
+      type: "select",
+      required: true,
+      defaultValue: "system",
+      options: [
+        { label: "Sistema", value: "system" },
+        { label: "Claro", value: "light" },
+        { label: "Oscuro", value: "dark" },
+      ],
+    },
     { name: "phone", type: "text" },
     { name: "avatar", type: "upload", relationTo: "media" },
   ],
