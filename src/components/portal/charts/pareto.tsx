@@ -11,9 +11,13 @@ export function ParetoChart({
   data: { name: string; value: number; cumulative: number }[];
   height?: number;
 }) {
+  // Anchor the cumulative line at the origin (0%): prepend a zero point so the
+  // Pareto trend starts from the bottom-left instead of on top of the first bar.
+  const series = data.length ? [{ name: "", value: 0, cumulative: 0 }, ...data] : data;
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+      <ComposedChart data={series} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
         <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
         <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <YAxis yAxisId="left" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
