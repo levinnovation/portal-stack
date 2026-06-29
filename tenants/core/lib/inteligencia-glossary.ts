@@ -29,6 +29,15 @@ export const GLOSSARY = {
   prescriptions: "Acciones recomendadas generadas a partir de la clasificación de leads y campañas (acelerar, re-enganchar, reciclar, escalar/pausar/ajustar). Clic en una tarjeta para ver los leads impactados.",
   transitionMatrix: "Matriz de transiciones de temperatura entre el período previo y el actual. Cada celda = nº de leads que pasaron de una temperatura (fila) a otra (columna).",
   topRisk: "Leads con mayor revenue en riesgo: contactos previamente calificados que se están enfriando. Revenue en riesgo = valor potencial del lead × probabilidad de pérdida estimada.",
+  forecastReservationsKpi: "Reservas proyectadas para el próximo período según la tendencia de la serie. Fórmula: proyección sobre las reservas observadas (media móvil / tendencia).",
+  anomaliesKpi: "Número de puntos atípicos detectados en la serie de reservas (incluye los detectados localmente con z-score sensible). Verde = sin anomalías; ámbar = hay al menos una.",
+  reservasForecast: "Reservas reales vs proyección. Línea sólida = reservas observadas; línea punteada = forecast del modelo; banda sombreada = intervalo de confianza. El método se indica en el subtítulo.",
+  cprForecast: "Costo por reserva proyectado a partir de snapshots horarios de spend y reservas. Línea sólida = real; punteada = forecast; banda = intervalo de confianza (en USD).",
+  anomaliesChart: "Serie de reservas con marcadores de anomalía y una línea de tendencia (media móvil de 3 puntos). Marcador ámbar = anomalía media (|z| ≥ 1.5); rojo = alta (|z| ≥ 2.5). El z-score mide a cuántas desviaciones estándar está el punto de la media de la serie.",
+  funnelRadar: "Radar de eficiencia: cada eje es un KPI normalizado como % de su meta (anillo gris = 100%). Combina conversiones del embudo (lead→calificado→cita→reserva→cliente) con señales financieras (ROAS, LTV:CAC). Las hendiduras señalan el cuello de botella.",
+  ltvCac: "Relación entre el valor de vida del cliente (LTV) y el costo de adquisición (CAC). Fórmula: LTV ÷ CAC. Saludable ≥ 3x.",
+  mer: "Marketing Efficiency Ratio: ingreso total ÷ inversión total en marketing. Mide la eficiencia agregada del gasto.",
+  financialContext: "Indicadores económicos que contextualizan el forecast: CAC (costo de adquisición), LTV:CAC (retorno por cliente) y MER (eficiencia agregada del marketing).",
 } as const;
 
 export type GlossaryKey = keyof typeof GLOSSARY;
