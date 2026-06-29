@@ -49,12 +49,12 @@ export default function AuthPage() {
       </div>
       <Link href="/" className="mb-7" aria-label="CORE">
         <Image
-          src="/brand/core-logo.png"
+          src="/brand/core-logo-wide.png"
           alt="CORE"
-          width={112}
-          height={112}
+          width={900}
+          height={360}
           priority
-          className="h-24 w-24 rounded-2xl"
+          className="h-16 w-auto"
         />
       </Link>
       <Card className="w-full max-w-md bg-card">
