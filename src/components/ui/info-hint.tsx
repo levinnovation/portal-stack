@@ -1,14 +1,19 @@
+"use client";
+
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Info } from "lucide-react";
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /**
  * Small accessible info affordance: an "i" icon that reveals an explanatory
- * tooltip on hover/focus. SSR-safe (CSS-only, no client state) so it can be
- * dropped into server components like SectionCard / KpiCard.
+ * tooltip on hover/focus (include the formula in `content`).
  *
- * Use it to explain what a KPI / chart / table shows and how it is computed
- * (include the formula in `content`).
+ * Backed by Radix Tooltip + Portal so the bubble renders on <body> and is never
+ * clipped by an ancestor's `overflow-hidden` (e.g. KpiCard) and auto-flips away
+ * from viewport edges. Safe to drop into server components like SectionCard /
+ * KpiCard since `content` is passed through as serializable children.
  */
 export function InfoHint({
   content,
@@ -20,21 +25,27 @@ export function InfoHint({
   side?: "bottom" | "top";
 }) {
   return (
-    <span
-      className={cn("group/info relative inline-flex shrink-0 items-center align-middle", className)}
-      tabIndex={0}
-      aria-label="Más información"
-    >
-      <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground/60 transition-colors hover:text-foreground" />
-      <span
-        role="tooltip"
-        className={cn(
-          "pointer-events-none absolute left-1/2 z-50 w-64 -translate-x-1/2 rounded-lg border border-border bg-popover px-3 py-2 text-left text-xs font-normal leading-snug text-popover-foreground opacity-0 shadow-xl transition-opacity duration-150 group-hover/info:opacity-100 group-focus-within/info:opacity-100",
-          side === "bottom" ? "top-full mt-1.5" : "bottom-full mb-1.5"
-        )}
-      >
-        {content}
-      </span>
-    </span>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label="Más información"
+            className={cn("inline-flex shrink-0 items-center align-middle", className)}
+          >
+            <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground/60 transition-colors hover:text-foreground" />
+          </button>
+        </TooltipTrigger>
+        <TooltipPrimitive.Portal>
+          <TooltipContent
+            side={side}
+            collisionPadding={12}
+            className="w-64 whitespace-normal text-left font-normal leading-snug"
+          >
+            {content}
+          </TooltipContent>
+        </TooltipPrimitive.Portal>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
