@@ -10,9 +10,12 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { FunnelConversionTable, SourceBreakdownTable, type FunnelRow, type SourceRow } from "@tenants/core/components/inteligencia/evidence-tables";
+import { RootCauseList } from "@tenants/core/components/inteligencia/root-cause-list";
 import { num, pct } from "@tenants/core/lib/format";
+import { buildRootCauseInsights } from "@tenants/core/lib/root-causes";
 import { getInteligenciaDataOrNull, getInteligenciaPosts, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
 import { WindowEmptyState } from "@tenants/core/components/inteligencia/window-empty-state";
+import { GLOSSARY } from "@tenants/core/lib/inteligencia-glossary";
 
 export async function InteligenciaDiagnosticoScreen({ run }: { run: InteligenciaRunType }) {
   let data: Awaited<ReturnType<typeof getInteligenciaDataOrNull>>;
@@ -27,6 +30,12 @@ export async function InteligenciaDiagnosticoScreen({ run }: { run: Inteligencia
   }
   if (!data) return <WindowEmptyState title="Inteligencia · Diagnóstico" subtitle={`Root-cause comercial (${run})`} run={run} />;
   const rootCauses = data.diagnostics.root_causes ?? data.diagnostics.rootCauses ?? [];
+  const rootCauseInsights = buildRootCauseInsights({
+    kris: data.kris,
+    deltas: data.diagnostics.deltas,
+    campaigns: data.campaigns,
+    kpis: data.kpis,
+  });
   const sourceBreakdown = data.diagnostics.source_breakdown ?? data.diagnostics.sourceBreakdown ?? [];
 
   // Funnel conversion table data
@@ -50,7 +59,7 @@ export async function InteligenciaDiagnosticoScreen({ run }: { run: Inteligencia
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <KpiCard label="Delta reservas" value={num(data.diagnostics.deltas.reservations?.absolute ?? 0)} delta={data.diagnostics.deltas.reservations?.relative} icon={Funnel} />
         <KpiCard label="Delta ROAS" value={`${(data.diagnostics.deltas.roas?.absolute ?? 0).toFixed(2)}x`} delta={data.diagnostics.deltas.roas?.relative} icon={Radar} />
-        <KpiCard label="Causas activas" value={num(rootCauses.length)} icon={Activity} status={rootCauses.length > 1 ? "amber" : "green"} />
+        <KpiCard label="Causas activas" value={num(rootCauseInsights.length)} icon={Activity} status={rootCauseInsights.some((i) => i.severity === "high") ? "red" : rootCauseInsights.length > 1 ? "amber" : "green"} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -79,15 +88,12 @@ export async function InteligenciaDiagnosticoScreen({ run }: { run: Inteligencia
         </SectionCard>
       )}
 
-      <SectionCard title="Causas raíz sugeridas" description="Diagnóstico determinístico sobre KPIs/KRIs live">
-        <div className="space-y-2">
-          {rootCauses.map((cause) => (
-            <div key={cause} className="rounded-lg border border-border bg-secondary/20 px-3 py-2 text-sm">
-              {cause}
-            </div>
-          ))}
-          {!rootCauses.length && <EmptyState message="Sin causas raíz activas" />}
-        </div>
+      <SectionCard title="Causas raíz sugeridas" description="Diagnóstico determinístico sobre KPIs/KRIs live" info={GLOSSARY.rootCauses}>
+        {rootCauseInsights.length || rootCauses.length ? (
+          <RootCauseList insights={rootCauseInsights} notes={rootCauses} />
+        ) : (
+          <EmptyState message="Sin causas raíz activas — KPIs dentro de umbral" />
+        )}
       </SectionCard>
 
       <SectionCard title="Conversión de funnel" description="Tasas clave para aislar caída de volumen vs calidad">

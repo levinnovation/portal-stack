@@ -38,6 +38,7 @@ export const GLOSSARY = {
   ltvCac: "Relación entre el valor de vida del cliente (LTV) y el costo de adquisición (CAC). Fórmula: LTV ÷ CAC. Saludable ≥ 3x.",
   mer: "Marketing Efficiency Ratio: ingreso total ÷ inversión total en marketing. Mide la eficiencia agregada del gasto.",
   financialContext: "Indicadores económicos que contextualizan el forecast: CAC (costo de adquisición), LTV:CAC (retorno por cliente) y MER (eficiencia agregada del marketing).",
+  rootCauses: "Síntesis determinística de causas raíz sobre los datos live: KRIs fuera de umbral, caídas período-vs-período (reservas/ROAS), campañas en fatiga de frecuencia, gasto sin conversión y el cuello de botella del embudo. Cada tarjeta incluye la evidencia numérica que la respalda y una recomendación accionable.",
 } as const;
 
 export type GlossaryKey = keyof typeof GLOSSARY;
