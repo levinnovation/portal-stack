@@ -27,10 +27,10 @@ export function StackedBar({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 8 }}>
-        <CartesianGrid stroke="#1c2438" strokeDasharray="3 3" />
-        <XAxis dataKey="name" tick={{ fill: "#8b94ac", fontSize: 11 }} />
+        <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+        <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <YAxis
-          tick={{ fill: "#8b94ac", fontSize: 11 }}
+          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
           tickFormatter={tickFormatter ?? ((v) => String(v))}
         />
         <Tooltip {...TOOLTIP_STYLE} />

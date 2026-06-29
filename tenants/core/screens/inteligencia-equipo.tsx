@@ -60,12 +60,12 @@ export async function InteligenciaEquipoScreen({ run }: { run: InteligenciaRunTy
     <div className="space-y-6">
       <TimeWindowToggle run={run} />
 
-      {/* Team gauges */}
+      {/* Team gauges — two distinct funnel-stage conversions, scaled to their own target */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard title="Show-up rate" description="Objetivo operativo mínimo 60%" info={GLOSSARY.showUpRate}>
-          <Gauge value={data.kpis.showUpRate} threshold={0.6} />
+        <SectionCard title="Calificado → cita" description="Qué tan bien el equipo agenda a los leads calificados (meta 50%)" info={GLOSSARY.qualifiedToMeeting}>
+          <Gauge value={data.kpis.qualifiedToMeetingRate} threshold={0.5} />
         </SectionCard>
-        <SectionCard title="Cita → reserva" description="Conversión de reuniones a reservas" info={GLOSSARY.meetingToReservation}>
+        <SectionCard title="Cita → reserva" description="Qué tan bien el equipo cierra las citas en reservas (meta 20%)" info={GLOSSARY.meetingToReservation}>
           <Gauge value={data.kpis.meetingToReservation} threshold={0.2} />
         </SectionCard>
       </div>
@@ -118,6 +118,7 @@ export async function InteligenciaEquipoScreen({ run }: { run: InteligenciaRunTy
             lineKey="showUpRate"
             barLabel="Citas"
             lineLabel="Show-up rate"
+            showLabels
           />
         ) : (
           <EmptyState message="Sin datos de citas por rep" />
@@ -127,7 +128,14 @@ export async function InteligenciaEquipoScreen({ run }: { run: InteligenciaRunTy
       {/* Bubble scatter: meetings vs reservations, size = score */}
       <SectionCard title="Citas vs reservas (tamaño = score promedio)" description="Reps más arriba/derecha tienen mayor conversión" info={GLOSSARY.repScatter}>
         {scatterData.filter((d) => d.x > 0 || d.y > 0).length ? (
-          <ScatterEfficiency data={scatterData} height={260} />
+          <ScatterEfficiency
+            data={scatterData}
+            height={260}
+            xName="Citas"
+            yName="Reservas"
+            zName="Score promedio"
+            showLabels
+          />
         ) : (
           <EmptyState message="Sin scatter data para el periodo" />
         )}

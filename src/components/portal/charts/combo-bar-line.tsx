@@ -4,6 +4,7 @@ import {
   Bar,
   CartesianGrid,
   ComposedChart,
+  LabelList,
   Legend,
   Line,
   ResponsiveContainer,
@@ -25,6 +26,7 @@ export function ComboBarLine({
   height = 280,
   leftTickFormatter,
   rightTickFormatter,
+  showLabels = false,
 }: {
   data: Record<string, string | number>[];
   barKey: string;
@@ -36,6 +38,7 @@ export function ComboBarLine({
   height?: number;
   leftTickFormatter?: (v: number) => string;
   rightTickFormatter?: (v: number) => string;
+  showLabels?: boolean;
 }) {
   const lfmt = leftTickFormatter ?? ((v) => String(v));
   const rfmt = rightTickFormatter ?? ((v) => `${(v * 100).toFixed(0)}%`);
@@ -66,7 +69,17 @@ export function ComboBarLine({
           name={barLabel ?? barKey}
           fill={barColor}
           radius={[5, 5, 0, 0]}
-        />
+        >
+          {showLabels ? (
+            <LabelList
+              dataKey={barKey}
+              position="top"
+              fill="hsl(var(--muted-foreground))"
+              fontSize={10}
+              formatter={(v) => lfmt(Number(v ?? 0))}
+            />
+          ) : null}
+        </Bar>
         <Line
           yAxisId="right"
           type="monotone"
@@ -75,7 +88,17 @@ export function ComboBarLine({
           stroke={lineColor}
           strokeWidth={2.2}
           dot={{ fill: lineColor, r: 3 }}
-        />
+        >
+          {showLabels ? (
+            <LabelList
+              dataKey={lineKey}
+              position="top"
+              fill={lineColor}
+              fontSize={10}
+              formatter={(v) => rfmt(Number(v ?? 0))}
+            />
+          ) : null}
+        </Line>
       </ComposedChart>
     </ResponsiveContainer>
   );

@@ -1,7 +1,7 @@
 import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
-import { ComboSpendReservations } from "@/components/portal/charts/combo";
+import { StackedSpendReservations } from "@/components/portal/charts/combo";
 import { ScatterEfficiency } from "@/components/portal/charts/scatter";
 import { RecommendationCard } from "@tenants/core/components/inteligencia/recommendation-card";
 import { TimeWindowToggle } from "@tenants/core/components/inteligencia/time-window-toggle";
@@ -28,14 +28,14 @@ export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunTyp
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title="Spend vs reservas" description="Diagnóstico por campaña" info={GLOSSARY.spendVsReservations}>
           {data.campaigns.length ? (
-            <ComboSpendReservations
+            <StackedSpendReservations
               data={data.campaigns.map((c) => ({
                 name: c.name.length > 16 ? `${c.name.slice(0, 16)}…` : c.name,
-                spend: c.spend,
+                qualified: c.qualified,
+                meetings: c.meetings,
                 reservations: c.reservations,
+                spend: c.spend,
               }))}
-              leftFormat="money"
-              rightFormat="num"
             />
           ) : (
             <EmptyState message="Sin campañas para graficar" />
@@ -48,7 +48,14 @@ export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunTyp
                 name: c.name,
                 x: c.costPerQualified,
                 y: c.costPerReservation,
+                z: Math.max(c.qualified, 1),
               }))}
+              xName="Costo/lead calif."
+              yName="Costo/reserva"
+              zName="Leads calificados"
+              xFormat="money"
+              yFormat="money"
+              showLabels
             />
           ) : (
             <EmptyState message="Sin datos para scatter" />
