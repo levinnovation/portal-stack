@@ -1,6 +1,7 @@
 import "server-only";
 
 import { env, requireEnv } from "@tenants/core/lib/env";
+import { crcToUsd, getCrcPerUsd } from "@tenants/core/lib/fx";
 
 export type InteligenciaRunType =
   | "today"
@@ -507,6 +508,9 @@ export async function getInteligenciaPosts(runType: InteligenciaRunType, limit =
   if (!res.ok) throw new Error(`Inteligencia posts error ${res.status}: ${await res.text()}`);
   const raw = await res.json();
   const posts = (raw?.data?.posts ?? raw?.posts ?? []) as Record<string, unknown>[];
+  // Meta bills CORE's account in colones, so per-ad/post spend & CPM arrive in
+  // CRC; convert to USD at the daily rate so the whole UI is consistently USD.
+  const crcPerUsd = await getCrcPerUsd();
   return posts.map((p) => ({
     id: String(p.id ?? ""),
     postId: String(p.postId ?? p.post_id ?? ""),
@@ -519,10 +523,10 @@ export async function getInteligenciaPosts(runType: InteligenciaRunType, limit =
     impressions: Number(p.impressions ?? 0),
     clicks: Number(p.clicks ?? 0),
     reach: Number(p.reach ?? 0),
-    spend: Number(p.spend ?? 0),
+    spend: crcToUsd(Number(p.spend ?? 0), crcPerUsd),
     frequency: Number(p.frequency ?? 0),
     ctr: Number(p.ctr ?? 0),
-    cpm: Number(p.cpm ?? 0),
+    cpm: crcToUsd(Number(p.cpm ?? 0), crcPerUsd),
     reactions: Number(p.reactions ?? 0),
     comments: Number(p.comments ?? 0),
     shares: Number(p.shares ?? 0),
