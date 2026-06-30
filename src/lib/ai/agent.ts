@@ -58,14 +58,16 @@ export async function resolveSystemPrompt(agentId: string, user: SessionUser): P
   // import() — webpack can't statically analyse a runtime string, and the
   // dynamic import forced a `new Function` workaround that broke
   // server-rendered routes. Add new tenants to the map below.
-  const prompts: Record<string, { systemPrompt?: string }> = {
+  const prompts: Record<string, { systemPrompt?: string; toolsDescription?: string }> = {
     _default: await import("../../../tenants/_default/ai/prompts"),
     core: await import("../../../tenants/core/ai/prompts"),
     finu: await import("../../../tenants/finu/ai/prompts"),
   };
-  const base = prompts[tenantId]?.systemPrompt ?? prompts._default?.systemPrompt ?? "Eres un asistente del portal.";
+  const mod = prompts[tenantId] ?? prompts._default;
+  const base = mod?.systemPrompt ?? prompts._default?.systemPrompt ?? "Eres un asistente del portal.";
+  const toolsDesc = mod?.toolsDescription ? `\n\n${mod.toolsDescription}` : "";
   const userCtx = `\n\nEl usuario actual es: ${user.role} (id: ${user.id}, email: ${user.email}). Adapta tus respuestas.`;
-  return base + userCtx;
+  return base + toolsDesc + userCtx;
 }
 
 export async function resolveTools(user: SessionUser, tenant: TenantConfig) {

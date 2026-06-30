@@ -6,7 +6,6 @@ import { Send, Bot, User as UserIcon, Sparkles, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export interface ChatBlockProps {
@@ -57,6 +56,11 @@ export function ChatBlock({ title = "Asistente", agentId = "default", greeting, 
 
   const greetingMsg = greeting || "Hola, soy el asistente del portal. ¿En qué puedo ayudarte?";
   const isLoading = status === "submitted" || status === "streaming";
+  const bottomRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isLoading]);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -177,8 +181,8 @@ export function ChatBlock({ title = "Asistente", agentId = "default", greeting, 
           <Sparkles className="h-4 w-4 text-accent" />
           <h3 className="font-medium text-sm">{title}</h3>
         </div>
-        <ScrollArea className="flex-1 px-5 py-4">
-          <div className="space-y-4 pr-3">
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="space-y-4 pr-1">
             {messages.length === 0 && (
               <>
                 <div className="flex items-start gap-2">
@@ -303,8 +307,9 @@ export function ChatBlock({ title = "Asistente", agentId = "default", greeting, 
                 <div className="bg-muted px-3 py-2 rounded-lg text-sm text-muted-foreground animate-pulse">Escribiendo…</div>
               </div>
             )}
+            <div ref={bottomRef} />
           </div>
-        </ScrollArea>
+        </div>
         <form onSubmit={onSubmit} className="p-3 border-t border-border flex gap-2 bg-card">
           <Input
             value={input}
