@@ -103,7 +103,8 @@ export function ConversionsPanel() {
             customData: { value: Number(value || 0), currency: "USD" },
           }}
           variant="ghost"
-          description="Enviar test event con META_TEST_EVENT_CODE"
+          description="Envía un test event a Meta. El portal genera y muestra el código de prueba — búscalo en Events Manager › Test Events."
+          showResult
           onSuccess={() => void loadDiagnostics()}
         />
       </div>

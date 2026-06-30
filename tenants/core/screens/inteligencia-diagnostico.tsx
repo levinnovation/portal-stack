@@ -12,7 +12,7 @@ import { ErrorState } from "@tenants/core/components/states/error-state";
 import { FunnelConversionTable, SourceBreakdownTable, type FunnelRow, type SourceRow } from "@tenants/core/components/inteligencia/evidence-tables";
 import { RootCauseList } from "@tenants/core/components/inteligencia/root-cause-list";
 import { num, pct } from "@tenants/core/lib/format";
-import { buildRootCauseInsights } from "@tenants/core/lib/root-causes";
+import { buildRootCauseInsights, type RootCauseAction } from "@tenants/core/lib/root-causes";
 import { getInteligenciaDataOrNull, getInteligenciaPosts, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
 import { WindowEmptyState } from "@tenants/core/components/inteligencia/window-empty-state";
 import { GLOSSARY } from "@tenants/core/lib/inteligencia-glossary";
@@ -35,6 +35,48 @@ export async function InteligenciaDiagnosticoScreen({ run }: { run: Inteligencia
     deltas: data.diagnostics.deltas,
     campaigns: data.campaigns,
     kpis: data.kpis,
+  });
+  // Cookbook: attach runnable Meta actions to campaign-level root causes by
+  // resolving the evidence campaign names to live campaign IDs.
+  const liveCampaigns = (data.campaigns as Array<{ name: string; campaignId?: string; spend: number }>).filter(
+    (c) => c.campaignId,
+  );
+  const resolveCampaign = (name: string) => {
+    const needle = name.trim().toLowerCase();
+    return liveCampaigns.find((c) => {
+      const n = c.name.trim().toLowerCase();
+      return n === needle || n.includes(needle) || needle.includes(n);
+    });
+  };
+  const enrichedInsights = rootCauseInsights.map((insight) => {
+    if (insight.id !== "campaign:inefficient" && insight.id !== "campaign:fatigue") return insight;
+    const actions: RootCauseAction[] = [];
+    for (const ev of insight.evidence) {
+      const hit = resolveCampaign(ev.label);
+      if (!hit?.campaignId) continue;
+      const short = ev.label.length > 16 ? `${ev.label.slice(0, 16)}…` : ev.label;
+      actions.push({
+        label: `Pausar ${short}`,
+        target: "meta",
+        op: "pauseCampaign",
+        payload: { campaignId: hit.campaignId },
+        variant: "danger",
+        destructive: true,
+        description: `Pausar la campaña "${ev.label}" en Meta`,
+      });
+      if (hit.spend > 0) {
+        const daily = Math.max((hit.spend / 30) * 0.7, 1);
+        actions.push({
+          label: `Bajar 30% ${short}`,
+          target: "meta",
+          op: "updateCampaign",
+          payload: { campaignId: hit.campaignId, dailyBudget: Math.round(daily * 100) / 100 },
+          variant: "ghost",
+          description: `Reducir 30% el presupuesto diario de "${ev.label}"`,
+        });
+      }
+    }
+    return actions.length ? { ...insight, actions } : insight;
   });
   const sourceBreakdown = data.diagnostics.source_breakdown ?? data.diagnostics.sourceBreakdown ?? [];
 
@@ -90,7 +132,7 @@ export async function InteligenciaDiagnosticoScreen({ run }: { run: Inteligencia
 
       <SectionCard title="Causas raíz sugeridas" description="Diagnóstico determinístico sobre KPIs/KRIs live" info={GLOSSARY.rootCauses}>
         {rootCauseInsights.length || rootCauses.length ? (
-          <RootCauseList insights={rootCauseInsights} notes={rootCauses} />
+          <RootCauseList insights={enrichedInsights} notes={rootCauses} />
         ) : (
           <EmptyState message="Sin causas raíz activas — KPIs dentro de umbral" />
         )}

@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import type { RootCauseInsight, RootCauseSeverity } from "@tenants/core/lib/root-causes";
 
 const SEVERITY_DOT: Record<RootCauseSeverity, string> = {
@@ -55,6 +56,26 @@ export function RootCauseList({
               <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               {insight.recommendation}
             </p>
+          )}
+          {insight.actions && insight.actions.length > 0 && (
+            <div className="mt-3 border-t border-border/60 pt-3">
+              <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">Acciones recomendadas</p>
+              <div className="flex flex-wrap gap-2">
+                {insight.actions.map((a, i) => (
+                  <CommandControl
+                    key={`${insight.id}-act-${i}`}
+                    label={a.label}
+                    target={a.target}
+                    op={a.op}
+                    payload={a.payload}
+                    variant={a.variant}
+                    destructive={a.destructive}
+                    description={a.description}
+                    showResult
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </div>
       ))}

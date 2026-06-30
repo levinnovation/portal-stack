@@ -7,6 +7,7 @@ import { ScatterEfficiency } from "@/components/portal/charts/scatter";
 import { StackedBar } from "@/components/portal/charts/stacked-bar";
 import { SegmentLeadsTable } from "@tenants/core/components/inteligencia/segment-leads-table";
 import { SegmentSummaryTable } from "@tenants/core/components/inteligencia/evidence-tables";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import { TimeWindowToggle } from "@tenants/core/components/inteligencia/time-window-toggle";
 import { KpiCard } from "@tenants/core/components/kpi-card";
 import { SectionCard } from "@tenants/core/components/section-card";
@@ -88,6 +89,37 @@ export async function InteligenciaSegmentosScreen({ run }: { run: InteligenciaRu
           <EmptyState message="Sin segmentos disponibles" />
         )}
       </SectionCard>
+
+      {/* Acciones sobre segmentos — crear audiencias reales en Meta desde cada segmento */}
+      {segments.length ? (
+        <SectionCard
+          title="Acciones sobre segmentos"
+          description="Crea una Custom Audience en Meta Ads sembrada desde el segmento — base para campañas y lookalikes"
+        >
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {segments.slice(0, 9).map((s) => (
+              <div key={s.name} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-secondary/20 p-2">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-medium text-foreground">{s.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{num(s.leads ?? s.value)} leads</p>
+                </div>
+                <CommandControl
+                  label="Crear audiencia"
+                  target="meta"
+                  op="createCustomAudience"
+                  payload={{
+                    name: `Seg · ${s.name}`.slice(0, 80),
+                    description: `Audiencia generada desde el segmento "${s.name}" (${num(s.leads ?? s.value)} leads)`,
+                    customerFileSource: "USER_PROVIDED_ONLY",
+                  }}
+                  description={`Crea una Custom Audience en Meta para el segmento "${s.name}".`}
+                  showResult
+                />
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
 
       {/* Combo: leads + tasa de calificación por segmento */}
       <SectionCard title="Leads vs tasa de calificación por segmento" description="Barras = leads totales · Línea = tasa de calificación (eje derecho)">

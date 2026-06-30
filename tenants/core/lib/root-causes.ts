@@ -5,6 +5,17 @@ export type RootCauseSeverity = "high" | "medium" | "low";
 
 export type RootCauseEvidence = { label: string; value: string };
 
+/** A runnable remediation tied to a root cause — dispatched through /api/inteligencia/command. */
+export type RootCauseAction = {
+  label: string;
+  target: string;
+  op: string;
+  payload: Record<string, unknown>;
+  variant?: "default" | "danger" | "ghost";
+  destructive?: boolean;
+  description?: string;
+};
+
 export type RootCauseInsight = {
   id: string;
   title: string;
@@ -12,6 +23,8 @@ export type RootCauseInsight = {
   detail: string;
   evidence: RootCauseEvidence[];
   recommendation?: string;
+  /** Cookbook of recommended actions, enriched at the screen with live Meta IDs. */
+  actions?: RootCauseAction[];
 };
 
 export type RootCauseCampaign = {

@@ -78,6 +78,7 @@ export function AbTestCard({
           op="createCampaign"
           payload={{ name: experimentName, objective, status: "PAUSED", special_ad_categories: [] }}
           description={`Crea una campaña PAUSADA en Meta para "${experimentName}" (objetivo ${objective}). Aparecerá en Campañas lanzadas para activarla.`}
+          showResult
         />
         {baseCampaignId ? (
           <>

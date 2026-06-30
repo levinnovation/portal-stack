@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2, Search } from "lucide-react";
 import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
+import { MetaSelect } from "@tenants/core/components/inteligencia/meta/meta-select";
 
 type Json = Record<string, unknown>;
 
@@ -14,25 +15,25 @@ export function MetaEntityInspector() {
   const [ads, setAds] = useState<Json[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    if (!entityId.trim()) return;
+  async function load(id: string = entityId) {
+    if (!id.trim()) return;
     setBusy(true);
     setError(null);
     try {
-      const entityRes = await fetch(`/api/inteligencia/meta/${encodeURIComponent(entityId)}?fields=id,name,status,objective,daily_budget,lifetime_budget`);
+      const entityRes = await fetch(`/api/inteligencia/meta/${encodeURIComponent(id)}?fields=id,name,status,objective,daily_budget,lifetime_budget`);
       if (!entityRes.ok) throw new Error(`Meta GET ${entityRes.status}`);
       const entityJson = (await entityRes.json()) as Json;
       setEntity(entityJson);
 
-      const adSetRes = await fetch(`/api/inteligencia/meta/${encodeURIComponent(entityId)}/adsets?fields=id,name,status,daily_budget,lifetime_budget`);
+      const adSetRes = await fetch(`/api/inteligencia/meta/${encodeURIComponent(id)}/adsets?fields=id,name,status,daily_budget,lifetime_budget`);
       const loadedAdSets = adSetRes.ok ? ((await adSetRes.json()) as { data?: Json[] }).data || [] : [];
       setAdSets(loadedAdSets);
 
       const adRows: Json[] = [];
       for (const adset of loadedAdSets) {
-        const id = String(adset.id || "");
-        if (!id) continue;
-        const adsRes = await fetch(`/api/inteligencia/meta/${encodeURIComponent(id)}/ads?fields=id,name,status`);
+        const adsetId = String(adset.id || "");
+        if (!adsetId) continue;
+        const adsRes = await fetch(`/api/inteligencia/meta/${encodeURIComponent(adsetId)}/ads?fields=id,name,status`);
         if (!adsRes.ok) continue;
         const adsJson = (await adsRes.json()) as { data?: Json[] };
         adRows.push(...(adsJson.data || []));
@@ -48,6 +49,16 @@ export function MetaEntityInspector() {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card/40 p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Meta Entity Inspector</p>
+      <MetaSelect
+        type="campaigns"
+        label="Campaña (live desde Meta)"
+        placeholder="Selecciona una campaña…"
+        value={entityId}
+        onChange={(id) => {
+          setEntityId(id);
+          if (id) void load(id);
+        }}
+      />
       <div className="flex items-center gap-2">
         <input
           value={entityId}

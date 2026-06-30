@@ -84,15 +84,25 @@ export async function sendConversions(input: z.input<typeof SendConversionsSchem
   });
 }
 
+// Test event codes are arbitrary labels the portal picks; Events Manager groups
+// matching events under whatever code we send. Auto-generate one when not supplied
+// so operators never have to manage META_TEST_EVENT_CODE by hand.
+function generateTestEventCode(): string {
+  return `TEST${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
 export async function sendTestEvent(event: MetaConversionEvent, testEventCode?: string) {
-  const code = testEventCode || process.env.META_TEST_EVENT_CODE || "";
-  if (!code) throw new Error("Meta test event code missing (META_TEST_EVENT_CODE)");
-  return sendConversions({ events: [event], test_event_code: code });
+  const code = testEventCode?.trim() || process.env.META_TEST_EVENT_CODE?.trim() || generateTestEventCode();
+  const result = await sendConversions({ events: [event], test_event_code: code });
+  return { testEventCode: code, result };
 }
 
 export async function getEventDiagnostics() {
+  // Only fields exposed on the Ads Pixel/dataset node; event_stats/EMQ are not
+  // readable via a plain fields query (permission denied) and last_received_event_time
+  // does not exist — requesting them returns Graph (#100).
   return metaGraph("GET", `/${encodeURIComponent(datasetId())}`, {
-    fields: "id,name,last_received_event_time,event_stats,event_match_quality,event_source_stats",
+    fields: "id,name,last_fired_time,is_unavailable,data_use_setting,enable_automatic_matching",
   });
 }
 

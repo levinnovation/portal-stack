@@ -23,6 +23,8 @@ type CommandControlProps = {
   description?: string;
   className?: string;
   onSuccess?: (result: unknown) => void;
+  /** When true, renders a small inline result/debug output under the button after success. */
+  showResult?: boolean;
 };
 
 function buttonTone(variant: CommandControlProps["variant"], destructive?: boolean): string {
@@ -45,11 +47,13 @@ export function CommandControl({
   description,
   className = "",
   onSuccess,
+  showResult = false,
 }: CommandControlProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<unknown>(null);
   const [confirmText, setConfirmText] = useState("");
   const signature = useMemo(() => `${target}.${op}`, [target, op]);
   const needsTypedConfirm = destructive;
@@ -67,6 +71,7 @@ export function CommandControl({
       });
       const json = (await res.json()) as { result?: unknown; detail?: string; error?: string };
       if (!res.ok) throw new Error(json.detail || json.error || `HTTP ${res.status}`);
+      if (showResult) setResult(json.result ?? { ok: true });
       onSuccess?.(json.result);
       setOpen(false);
       router.refresh();
@@ -77,7 +82,7 @@ export function CommandControl({
     }
   }
 
-  return (
+  const dialog = (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
@@ -135,6 +140,23 @@ export function CommandControl({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+
+  if (!showResult) return dialog;
+  return (
+    <div className="space-y-1">
+      {dialog}
+      {result != null ? (
+        <pre className="max-w-full overflow-x-auto rounded border border-emerald-500/30 bg-emerald-500/5 p-1.5 text-[10px] leading-tight text-emerald-200/90">
+          {(() => {
+            const r = result as Record<string, unknown>;
+            const id = r?.id ?? (r?.result as Record<string, unknown>)?.id;
+            const head = id ? `✓ id ${String(id)} · ` : "✓ ";
+            return head + JSON.stringify(result).slice(0, 220);
+          })()}
+        </pre>
+      ) : null}
+    </div>
   );
 }
 

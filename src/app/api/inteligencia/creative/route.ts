@@ -27,23 +27,27 @@ export async function POST(req: NextRequest) {
 
   const payload = await getPayloadClient();
   const data = Buffer.from(await file.arrayBuffer());
-  const doc = await payload.create({
-    collection: "creative-assets" as any,
-    data: {
-      name,
-      alt,
-      status: "draft",
-    },
-    file: {
-      data,
-      mimetype: file.type,
-      name: file.name || name,
-      size: file.size,
-    },
-    overrideAccess: true,
-  });
-
-  return NextResponse.json({ asset: doc });
+  try {
+    const doc = await payload.create({
+      collection: "creative-assets" as any,
+      data: {
+        name,
+        alt,
+        status: "draft",
+      },
+      file: {
+        data,
+        mimetype: file.type,
+        name: file.name || name,
+        size: file.size,
+      },
+      overrideAccess: true,
+    });
+    return NextResponse.json({ asset: doc });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: "upload failed", detail }, { status: 500 });
+  }
 }
 
 export async function GET() {
