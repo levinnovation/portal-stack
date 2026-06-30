@@ -11,6 +11,7 @@ const checks = [
   "src/lib/ai/scoping.self-check.ts",
   "src/lib/ai/backend.self-check.ts",
   "src/lib/ai/fastapi-client.self-check.ts",
+  "src/lib/ai/tools.self-check.ts",
   "src/lib/tenant-collections.self-check.ts",
   "src/lib/tenant-registry.self-check.ts",
   "scripts/load-tenant-pages.self-check.ts",

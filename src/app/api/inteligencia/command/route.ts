@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAgentAdmin } from "@/lib/agents/require-agent-admin";
-import { executeChartCommand, listCommandKeys } from "@/lib/inteligencia/commands";
+import { executeChartCommand, listCommandCatalog } from "@/lib/inteligencia/commands";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const auth = await requireAgentAdmin();
   if (auth.error) return auth.error;
-  return NextResponse.json({ commands: listCommandKeys() });
+  return NextResponse.json({ commands: listCommandCatalog() });
 }
 
 export async function POST(req: NextRequest) {

@@ -30,6 +30,11 @@ type CommandEntry = {
   destructive?: boolean;
 };
 
+export type CommandCatalogEntry = {
+  key: string;
+  destructive: boolean;
+};
+
 const COMMANDS: Record<string, CommandEntry> = {
   "meta.pauseCampaign": {
     schema: z.object({ campaignId: z.string().min(1) }),
@@ -366,6 +371,12 @@ const COMMANDS: Record<string, CommandEntry> = {
 
 export function listCommandKeys(): string[] {
   return Object.keys(COMMANDS).sort();
+}
+
+export function listCommandCatalog(): CommandCatalogEntry[] {
+  return Object.entries(COMMANDS)
+    .map(([key, command]) => ({ key, destructive: !!command.destructive }))
+    .sort((a, b) => a.key.localeCompare(b.key));
 }
 
 export function resolveCommand(key: string): CommandEntry | undefined {

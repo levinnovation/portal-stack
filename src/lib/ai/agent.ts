@@ -20,6 +20,7 @@ import { getTenant } from "../tenant";
 import { getPayloadClient } from "../payload";
 import { buildTools } from "./tools";
 import type { SessionUser } from "../auth/provider";
+import type { TenantConfig } from "../tenant-types";
 
 export interface AgentRunArgs {
   user: SessionUser;
@@ -60,7 +61,7 @@ export async function resolveSystemPrompt(agentId: string, user: SessionUser): P
   return base + userCtx;
 }
 
-export async function resolveTools(user: SessionUser) {
+export async function resolveTools(user: SessionUser, tenant: TenantConfig) {
   const payload = await getPayloadClient();
-  return buildTools(payload, user);
+  return buildTools(payload, user, tenant);
 }

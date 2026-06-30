@@ -18,7 +18,8 @@ export async function streamLocalChat(args: LocalChatArgs): Promise<Response> {
   const { user, tenant, messages, agentId, aiChatId, payload } = args;
   const { model } = await resolveLanguageModel();
   const systemPrompt = await resolveSystemPrompt(agentId, user);
-  const tools = await resolveTools(user);
+  const tools = await resolveTools(user, tenant);
+  const maxSteps = Math.max(tenant.ai.maxStepsPerTurn ?? 5, 10);
 
   const result = streamText({
     model,
@@ -26,7 +27,7 @@ export async function streamLocalChat(args: LocalChatArgs): Promise<Response> {
     messages: convertToModelMessages(messages),
     tools,
     temperature: tenant.ai.temperature,
-    stopWhen: ({ steps }) => steps.length >= (tenant.ai.maxStepsPerTurn ?? 5),
+    stopWhen: ({ steps }) => steps.length >= maxSteps,
     onFinish: async ({ text, toolCalls, toolResults, usage }) => {
       await payload.create({
         collection: "ai-messages",
