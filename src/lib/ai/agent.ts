@@ -45,7 +45,10 @@ export async function resolveLanguageModel(): Promise<{ model: LanguageModel; pr
     throw new Error("OPENAI_API_KEY not set");
   }
   const modelId = process.env.OPENAI_MODEL || ai.model;
-  return { model: openai(modelId), provider: "openai", modelId };
+  // Use Chat Completions (not the default Responses API) — LiteLLM/proxies and
+  // non-OpenAI models behind them support /chat/completions reliably, while
+  // /v1/responses coverage is spotty.
+  return { model: openai.chat(modelId), provider: "openai", modelId };
 }
 
 export async function resolveSystemPrompt(agentId: string, user: SessionUser): Promise<string> {
