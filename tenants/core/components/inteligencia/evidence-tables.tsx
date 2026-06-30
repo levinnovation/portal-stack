@@ -15,6 +15,7 @@ import { ExternalLink } from "lucide-react";
 
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import { num, pct } from "@tenants/core/lib/format";
 import type {
   Kri,
@@ -165,10 +166,31 @@ export function CampaignTable({ data, run }: { data: CampaignRow[]; run: string 
       key: "action",
       header: "Acción",
       sortable: true,
-      render: (v) => (
-        <span className={cn("font-semibold uppercase text-xs", ACTION_COLORS[String(v)] ?? "text-muted-foreground")}>
-          {String(v)}
-        </span>
+      render: (v, row) => (
+        <div className="flex items-center gap-1">
+          <span className={cn("font-semibold uppercase text-xs", ACTION_COLORS[String(v)] ?? "text-muted-foreground")}>
+            {String(v)}
+          </span>
+          {row.campaignId ? (
+            <>
+              <CommandControl
+                label="||"
+                target="meta"
+                op="pauseCampaign"
+                payload={{ campaignId: row.campaignId }}
+                variant="danger"
+                className="px-1.5 py-0.5 text-[10px]"
+              />
+              <CommandControl
+                label=">"
+                target="meta"
+                op="resumeCampaign"
+                payload={{ campaignId: row.campaignId }}
+                className="px-1.5 py-0.5 text-[10px]"
+              />
+            </>
+          ) : null}
+        </div>
       ),
     },
   ];

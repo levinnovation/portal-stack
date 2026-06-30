@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Check, X } from "lucide-react";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import type { Contrato } from "@tenants/core/sources/quickbase";
 import { money, dias, fechaCorta } from "@tenants/core/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,9 +15,11 @@ type SortKey = "fecha" | "monto";
 export function ContratosTable({
   contratos,
   portalId,
+  quickbaseTableId,
 }: {
   contratos: Contrato[];
   portalId?: string;
+  quickbaseTableId?: string;
 }) {
   const [fuente, setFuente] = useState<string>("__all__");
   const [sortKey, setSortKey] = useState<SortKey>("fecha");
@@ -110,6 +113,7 @@ export function ContratosTable({
               <th className="px-3 py-2 text-right font-medium">Días</th>
               <th className="px-3 py-2 text-center font-medium">Estado</th>
               <th className="px-3 py-2 text-center font-medium">Deal</th>
+              <th className="px-3 py-2 text-center font-medium">QuickBase</th>
             </tr>
           </thead>
           <tbody>
@@ -142,6 +146,24 @@ export function ContratosTable({
                       </a>
                     ) : c.hubspotDealId ? (
                       <span className="font-mono text-[11px] text-muted-foreground">{c.hubspotDealId}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {quickbaseTableId ? (
+                      <CommandControl
+                        label="Marcar atribuido"
+                        target="quickbase"
+                        op="updateContrato"
+                        payload={{
+                          recordId: c.recordId,
+                          fields: { leahAttributed: true },
+                        }}
+                        className="px-1.5 py-0.5 text-[10px]"
+                        variant="ghost"
+                        description={`Marcar contrato de ${c.fullName || c.recordId} como atribuido en QuickBase`}
+                      />
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

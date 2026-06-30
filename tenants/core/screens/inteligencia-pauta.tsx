@@ -7,6 +7,11 @@ import { RecommendationCard } from "@tenants/core/components/inteligencia/recomm
 import { TimeWindowToggle } from "@tenants/core/components/inteligencia/time-window-toggle";
 import { WhatIfSimulator } from "@tenants/core/components/inteligencia/whatif-simulator";
 import { CampaignTable } from "@tenants/core/components/inteligencia/evidence-tables";
+import { MetaEntityInspector } from "@tenants/core/components/inteligencia/meta/entity-inspector";
+import { MetaBuilder } from "@tenants/core/components/inteligencia/meta/builder";
+import { CreativeStudio } from "@tenants/core/components/inteligencia/meta/creative-studio";
+import { ConversionsPanel } from "@tenants/core/components/inteligencia/meta/conversions-panel";
+import { CommandHistory } from "@tenants/core/components/inteligencia/command-history";
 import { getInteligenciaDataOrNull, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
 import { GLOSSARY } from "@tenants/core/lib/inteligencia-glossary";
 import { WindowEmptyState } from "@tenants/core/components/inteligencia/window-empty-state";
@@ -87,6 +92,18 @@ export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunTyp
       <SectionCard title="What-if simulator" description="Simulación rápida de reasignación de presupuesto" info={GLOSSARY.whatIf}>
         <WhatIfSimulator baseSpend={spend} baseReservations={reservations} />
       </SectionCard>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <MetaEntityInspector />
+        <MetaBuilder />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <CreativeStudio />
+        <ConversionsPanel />
+      </div>
+
+      <CommandHistory autoRefreshMs={15000} />
 
       {/* Campaigns detail table */}
       <SectionCard

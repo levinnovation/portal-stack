@@ -4,6 +4,7 @@ import { FlaskConical } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import {
   Dialog,
   DialogContent,
@@ -152,6 +153,36 @@ export function RecommendationCard({
 
         <div className="max-h-[70vh] space-y-5 overflow-y-auto">
           <section>
+            {!!campaign.campaignId && (
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <CommandControl
+                  label="Pausar"
+                  target="meta"
+                  op="pauseCampaign"
+                  payload={{ campaignId: campaign.campaignId }}
+                  variant="danger"
+                  description={`Pausar ${campaign.name} en Meta`}
+                />
+                <CommandControl
+                  label="Reactivar"
+                  target="meta"
+                  op="resumeCampaign"
+                  payload={{ campaignId: campaign.campaignId }}
+                  description={`Reactivar ${campaign.name} en Meta`}
+                />
+                <CommandControl
+                  label="Ajustar budget +10%"
+                  target="meta"
+                  op="updateCampaign"
+                  payload={{
+                    campaignId: campaign.campaignId,
+                    dailyBudget: Math.max(campaign.spend / 30 * 1.1, 1),
+                  }}
+                  variant="ghost"
+                  description="Ajuste rápido de presupuesto diario (+10% sobre promedio diario estimado)"
+                />
+              </div>
+            )}
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Rendimiento de campaña
             </p>

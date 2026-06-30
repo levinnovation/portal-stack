@@ -17,6 +17,8 @@ import { RUN_TYPE_OPTIONS } from "@tenants/core/lib/inteligencia-run";
 import { EtlControl } from "@tenants/core/components/inteligencia/etl-control";
 import { GLOSSARY } from "@tenants/core/lib/inteligencia-glossary";
 import { money, num, pct } from "@tenants/core/lib/format";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
+import { CommandHistory } from "@tenants/core/components/inteligencia/command-history";
 
 export async function InteligenciaComandoScreen({ run }: { run: InteligenciaRunType }) {
   let data: Awaited<ReturnType<typeof getInteligenciaDataOrNull>>;
@@ -91,6 +93,64 @@ export async function InteligenciaComandoScreen({ run }: { run: InteligenciaRunT
           )}
         </SectionCard>
       </div>
+
+      {data.campaigns.length > 0 && (
+        <SectionCard title="Control de campañas" description="Acciones rápidas en Meta por campaña">
+          <div className="space-y-2">
+            {data.campaigns.map((campaign) => (
+              <div key={campaign.name} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-secondary/20 p-2">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{campaign.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Spend {money(campaign.spend, "USD")} · Reservas {num(campaign.reservations)}
+                  </p>
+                </div>
+                {campaign.campaignId ? (
+                  <div className="flex items-center gap-2">
+                    <CommandControl
+                      label="Pausar"
+                      target="meta"
+                      op="pauseCampaign"
+                      payload={{ campaignId: campaign.campaignId }}
+                      variant="danger"
+                      description={`Pausar ${campaign.name} en Meta`}
+                    />
+                    <CommandControl
+                      label="Reactivar"
+                      target="meta"
+                      op="resumeCampaign"
+                      payload={{ campaignId: campaign.campaignId }}
+                      description={`Reactivar ${campaign.name} en Meta`}
+                    />
+                    <CommandControl
+                      label="Budget +10%"
+                      target="meta"
+                      op="updateCampaign"
+                      payload={{
+                        campaignId: campaign.campaignId,
+                        dailyBudget: Math.max(campaign.spend / 30 * 1.1, 1),
+                      }}
+                      variant="ghost"
+                      description="Ajuste rápido de budget diario"
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Sin campaignId</span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3">
+            <CommandHistory autoRefreshMs={15000} />
+          </div>
+        </SectionCard>
+      )}
+
+      {data.campaigns.length === 0 && (
+        <SectionCard title="Historial de comandos" description="Acciones ejecutadas sobre Meta, HubSpot y QuickBase">
+          <CommandHistory autoRefreshMs={15000} />
+        </SectionCard>
+      )}
 
       {/* Lead temperature summary — shown when we have classification data */}
       {data.leadTemperatureSummary && data.leadTemperatureSummary.total > 0 && (() => {

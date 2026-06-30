@@ -1,0 +1,140 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AlertTriangle, Loader2, Play } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+type CommandControlProps = {
+  label: string;
+  target: string;
+  op: string;
+  payload: Record<string, unknown>;
+  variant?: "default" | "danger" | "ghost";
+  destructive?: boolean;
+  description?: string;
+  className?: string;
+  onSuccess?: (result: unknown) => void;
+};
+
+function buttonTone(variant: CommandControlProps["variant"], destructive?: boolean): string {
+  if (destructive || variant === "danger") {
+    return "border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20";
+  }
+  if (variant === "ghost") {
+    return "border border-border bg-secondary/30 text-foreground hover:bg-secondary/50";
+  }
+  return "border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20";
+}
+
+export function CommandControl({
+  label,
+  target,
+  op,
+  payload,
+  variant = "default",
+  destructive = false,
+  description,
+  className = "",
+  onSuccess,
+}: CommandControlProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmText, setConfirmText] = useState("");
+  const signature = useMemo(() => `${target}.${op}`, [target, op]);
+  const needsTypedConfirm = destructive;
+  const confirmOk = !needsTypedConfirm || confirmText === "CONFIRM";
+
+  async function run() {
+    if (!confirmOk) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/inteligencia/command", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target, op, payload }),
+      });
+      const json = (await res.json()) as { result?: unknown; detail?: string; error?: string };
+      if (!res.ok) throw new Error(json.detail || json.error || `HTTP ${res.status}`);
+      onSuccess?.(json.result);
+      setOpen(false);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Command failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition ${buttonTone(variant, destructive)} ${className}`}
+        >
+          <Play className="h-3 w-3" />
+          {label}
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirmar acción</DialogTitle>
+          <DialogDescription>{description || `Se ejecutará ${signature} en sistemas externos.`}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="rounded border border-border bg-secondary/30 p-2 text-xs">
+            <div className="font-semibold text-foreground">{signature}</div>
+            <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">{JSON.stringify(payload, null, 2)}</pre>
+          </div>
+          {needsTypedConfirm && (
+            <label className="block text-xs text-muted-foreground">
+              Escribe <span className="font-semibold text-foreground">CONFIRM</span> para continuar.
+              <input
+                className="mt-1 w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+              />
+            </label>
+          )}
+          {error && (
+            <div className="flex items-center gap-2 rounded border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-300">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {error}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="rounded border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={busy || !confirmOk}
+            onClick={() => void run()}
+            className="inline-flex items-center gap-2 rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            Ejecutar
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

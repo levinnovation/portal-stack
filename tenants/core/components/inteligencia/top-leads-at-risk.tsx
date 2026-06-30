@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import {
   TempBadge,
   TransitionArrow,
@@ -82,6 +83,38 @@ const COLUMNS: ColumnDef<LeadImpact>[] = [
     header: "Acción",
     sortable: false,
     render: (v) => <span className="truncate max-w-[180px] block text-xs">{String(v)}</span>,
+  },
+  {
+    key: "id",
+    header: "Control",
+    sortable: false,
+    render: (_, r) => (
+      <div className="flex items-center gap-1">
+        <CommandControl
+          label="Status↻"
+          target="hubspot"
+          op="updateContact"
+          payload={{ contactId: r.hsContactId || r.id, properties: { hs_lead_status: "IN_PROGRESS" } }}
+          className="px-1.5 py-0.5 text-[10px]"
+          variant="ghost"
+          description={`Actualizar estado de ${r.name} en HubSpot`}
+        />
+        <CommandControl
+          label="Conv"
+          target="meta"
+          op="sendConversion"
+          payload={{
+            contactId: r.hsContactId || r.id,
+            eventName: "Lead",
+            businessDay: new Date().toISOString().slice(0, 10),
+            userData: { em: r.email || undefined, external_id: r.hsContactId || r.id },
+            customData: { value: r.revenueAtRisk || 0, currency: "USD" },
+          }}
+          className="px-1.5 py-0.5 text-[10px]"
+          description={`Enviar conversión offline para ${r.name}`}
+        />
+      </div>
+    ),
   },
 ];
 
