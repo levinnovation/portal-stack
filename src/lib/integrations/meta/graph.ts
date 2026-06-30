@@ -82,8 +82,15 @@ async function parseBody(res: Response): Promise<unknown> {
 function mapGraphError(status: number, body: unknown): Error {
   const parsed = GraphErrorSchema.safeParse(body);
   if (parsed.success && parsed.data.error?.message) {
-    const msg = parsed.data.error.message;
-    return new Error(`Meta Graph ${status}: ${msg}`);
+    const err = parsed.data.error;
+    // subcode 33 / GraphMethodException on a write = the account object can't be
+    // written to with this token. With ads_read but no ads_management this is the
+    // generic response Graph returns for every Marketing API write.
+    const isWritePerm = err.error_subcode === 33 || err.type === "GraphMethodException";
+    const hint = isWritePerm
+      ? " — el token de Meta no autoriza escrituras (falta permiso ads_management). Provisiona un System User token con ads_management y asígnalo a la cuenta publicitaria."
+      : "";
+    return new Error(`Meta Graph ${status}: ${err.message}${hint}`);
   }
   return new Error(`Meta Graph ${status}`);
 }
