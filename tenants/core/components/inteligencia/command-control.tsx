@@ -101,7 +101,7 @@ export function CommandControl({
         <div className="space-y-3">
           <div className="rounded border border-border bg-secondary/30 p-2 text-xs">
             <div className="font-semibold text-foreground">{signature}</div>
-            <pre className="mt-1 overflow-x-auto text-[11px] text-muted-foreground">{JSON.stringify(payload, null, 2)}</pre>
+            <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words text-[11px] text-muted-foreground">{JSON.stringify(payload, null, 2)}</pre>
           </div>
           {needsTypedConfirm && (
             <label className="block text-xs text-muted-foreground">
@@ -114,9 +114,9 @@ export function CommandControl({
             </label>
           )}
           {error && (
-            <div className="flex items-center gap-2 rounded border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-300">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              {error}
+            <div className="flex items-start gap-2 rounded border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-300">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 break-words">{error}</span>
             </div>
           )}
         </div>
