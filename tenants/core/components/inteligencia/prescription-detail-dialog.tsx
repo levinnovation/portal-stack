@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { money, pct } from "@tenants/core/lib/format";
+import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
 import type { LeadImpact, LeadTemp, Prescription } from "@tenants/core/sources/inteligencia";
 import {
   TempBadge,
@@ -283,9 +284,34 @@ export function PrescriptionDetailDialog({
                       </TableCell>
                       <TableCell className="font-medium text-rose-300">{money(lead.revenueAtRisk)}</TableCell>
                       <TableCell>
-                        <span className="truncate max-w-[160px] block" title={lead.nextBestAction}>
-                          {lead.nextBestAction}
-                        </span>
+                        <div className="flex items-center gap-1" title={lead.nextBestAction}>
+                          <CommandControl
+                            label="Status↻"
+                            target="hubspot"
+                            op="updateContact"
+                            payload={{
+                              contactId: lead.hsContactId || lead.id,
+                              properties: { hs_lead_status: "IN_PROGRESS" },
+                            }}
+                            className="px-1.5 py-0.5 text-[10px]"
+                            variant="ghost"
+                            description={`Marcar a ${lead.name} como IN_PROGRESS en HubSpot`}
+                          />
+                          <CommandControl
+                            label="Conv"
+                            target="meta"
+                            op="sendConversion"
+                            payload={{
+                              contactId: lead.hsContactId || lead.id,
+                              eventName: "Lead",
+                              businessDay: new Date().toISOString().slice(0, 10),
+                              userData: { em: lead.email || undefined, external_id: lead.hsContactId || lead.id },
+                              customData: { value: lead.revenueAtRisk || 0, currency: "USD" },
+                            }}
+                            className="px-1.5 py-0.5 text-[10px]"
+                            description={`Enviar conversión offline (Lead) para ${lead.name}`}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
