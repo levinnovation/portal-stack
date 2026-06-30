@@ -1,7 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
-import { assertInAccount, listAccountEdge, majorToMinorCurrency, metaGraph } from "./graph";
+import { assertInAccount, createAccountEdge, listAccountEdge, majorToMinorCurrency, metaGraph } from "./graph";
 
 const CampaignCreateSchema = z.object({
   name: z.string().min(1),
@@ -138,7 +138,7 @@ export async function getCampaign(campaignId: string) {
 
 export async function createCampaign(input: z.input<typeof CampaignCreateSchema>) {
   const payload = CampaignCreateSchema.parse(input);
-  return listAccountEdge("campaigns", payload);
+  return createAccountEdge("campaigns", payload);
 }
 
 export async function updateCampaign(input: z.input<typeof CampaignUpdateSchema>) {
@@ -188,7 +188,7 @@ export async function createAdSet(input: z.input<typeof AdSetCreateSchema>) {
   };
   withOptionalJson(body, "targeting", payload.targeting);
   withOptionalJson(body, "promoted_object", payload.promotedObject);
-  return listAccountEdge("adsets", body as any);
+  return createAccountEdge("adsets", body as any);
 }
 
 export async function updateAdSet(input: z.input<typeof AdSetUpdateSchema>) {
@@ -224,7 +224,7 @@ export async function getAd(adId: string) {
 export async function createAd(input: z.input<typeof AdCreateSchema>) {
   const payload = AdCreateSchema.parse(input);
   await assertInAccount(payload.adSetId);
-  return listAccountEdge("ads", {
+  return createAccountEdge("ads", {
     adset_id: payload.adSetId,
     name: payload.name,
     status: payload.status,
@@ -277,7 +277,7 @@ export async function createAdCreative(input: z.input<typeof CreativeCreateSchem
         }
       : undefined;
 
-  return listAccountEdge("adcreatives", {
+  return createAccountEdge("adcreatives", {
     name: payload.name,
     object_story_id: payload.objectStoryId,
     object_story_spec: objectStorySpec ? JSON.stringify(objectStorySpec) : undefined,
@@ -299,7 +299,7 @@ export async function listCustomAudiences() {
 export async function createCustomAudience(input: z.input<typeof AudienceCreateSchema>) {
   const payload = AudienceCreateSchema.parse(input);
   if (payload.subtype !== "CUSTOM") throw new Error("use createLookalike for LOOKALIKE subtype");
-  return listAccountEdge("customaudiences", {
+  return createAccountEdge("customaudiences", {
     name: payload.name,
     subtype: "CUSTOM",
     description: payload.description,
@@ -310,7 +310,7 @@ export async function createCustomAudience(input: z.input<typeof AudienceCreateS
 export async function createLookalike(input: z.input<typeof AudienceCreateSchema>) {
   const payload = AudienceCreateSchema.parse(input);
   if (!payload.originAudienceId) throw new Error("originAudienceId is required for lookalike");
-  return listAccountEdge("customaudiences", {
+  return createAccountEdge("customaudiences", {
     name: payload.name,
     subtype: "LOOKALIKE",
     origin_audience_id: payload.originAudienceId,

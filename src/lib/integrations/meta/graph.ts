@@ -136,3 +136,12 @@ export async function listAccountEdge<T = unknown>(
   return metaGraph<T>("GET", `/${encodeURIComponent(account)}/${edge}`, params);
 }
 
+/** POST to an account-scoped edge (create campaign/ad set/ad/creative/audience). */
+export async function createAccountEdge<T = unknown>(
+  edge: string,
+  params: MetaParams = {},
+): Promise<T> {
+  const account = metaAccountId();
+  return metaGraph<T>("POST", `/${encodeURIComponent(account)}/${edge}`, params);
+}
+
