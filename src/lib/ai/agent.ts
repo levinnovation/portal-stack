@@ -37,11 +37,15 @@ export async function resolveLanguageModel(): Promise<{ model: LanguageModel; pr
     if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set");
     return { model: anthropic(ai.model), provider: "anthropic", modelId: ai.model };
   }
-  // openai (default) or vercel-gateway both use the openai() constructor
+  // openai (default) or vercel-gateway both use the openai() constructor.
+  // Base URL comes from OPENAI_BASE_URL (e.g. a LiteLLM proxy); OPENAI_MODEL
+  // overrides the tenant default so models can be swapped without a redeploy
+  // (the proxy's available model groups change as credit/providers shift).
   if (!process.env.OPENAI_API_KEY && ai.provider === "openai") {
     throw new Error("OPENAI_API_KEY not set");
   }
-  return { model: openai(ai.model), provider: "openai", modelId: ai.model };
+  const modelId = process.env.OPENAI_MODEL || ai.model;
+  return { model: openai(modelId), provider: "openai", modelId };
 }
 
 export async function resolveSystemPrompt(agentId: string, user: SessionUser): Promise<string> {

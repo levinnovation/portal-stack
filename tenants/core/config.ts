@@ -67,7 +67,7 @@ export const coreTenant: TenantConfig = {
   ai: {
     enabled: true,
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "deepinfra/openai/gpt-oss-120b",
     systemPromptFile: "tenants/core/ai/prompts.ts",
     maxStepsPerTurn: 6,
     temperature: 0.3,
