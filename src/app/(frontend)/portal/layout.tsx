@@ -22,20 +22,6 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   const [user, tenant] = await Promise.all([getSession(), getTenant()]);
   const showChat = !!user && tenant.features.aiAgent && tenant.ai.enabled;
   const config = user ? resolveFloatingChatConfig(tenant.id, user.role) : null;
-  // #region agent log
-  console.log(
-    "[debug-553f6b] PortalLayout showChat check",
-    JSON.stringify({
-      hasUser: !!user,
-      userRole: user?.role,
-      tenantId: tenant.id,
-      aiAgent: tenant.features.aiAgent,
-      aiEnabled: tenant.ai.enabled,
-      showChat,
-      hasConfig: !!config,
-    }),
-  );
-  // #endregion
 
   return (
     <>
