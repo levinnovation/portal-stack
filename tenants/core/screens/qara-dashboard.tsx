@@ -28,8 +28,9 @@ export async function QaraDashboardScreen() {
         Perfilado de leads de CORE — score, intención y estado del embudo.
       </p>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="Leads nuevos hoy" value={num(kpis.nuevosHoy)} icon={Users} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <KpiCard label="Nuevos (NEW)" value={num(kpis.nuevosNew)} icon={Users} hint="esperando scan" />
+        <KpiCard label="Creados hoy" value={num(kpis.nuevosHoy)} icon={Users} />
         <KpiCard label="Contactados" value={num(kpis.contactados)} icon={UserCheck} hint={`${num(kpis.totalLeads)} en total`} />
         <KpiCard label="Scoreados" value={num(kpis.scoreados)} icon={Gauge} />
         <KpiCard label="Score promedio" value={avg} icon={Gauge} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { X } from "lucide-react";
 import { SectionCard } from "@tenants/core/components/section-card";
 import { RunTrigger } from "./run-trigger";
 import { LiveStatus } from "./live-status";
@@ -17,6 +18,19 @@ export function ControlPanel() {
       </SectionCard>
 
       <SectionCard title="Progreso en vivo" description="Qué está haciendo Qara, paso a paso">
+        {/* Limpiar disponible siempre que haya un run activo: resetea el panel sin
+            recargar toda la pantalla. */}
+        {traceId && (
+          <div className="mb-3 flex justify-end">
+            <button
+              onClick={() => setTraceId(null)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpiar
+            </button>
+          </div>
+        )}
         <LiveStatus key={traceId ?? "idle"} traceId={traceId} />
       </SectionCard>
     </div>
