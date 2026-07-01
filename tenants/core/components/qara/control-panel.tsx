@@ -14,7 +14,7 @@ export function ControlPanel() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,340px)_1fr]">
       <SectionCard title="Despertar a Qara" description="Corré un scan ahora mismo, sin esperar al cron">
-        <RunTrigger onStarted={setRun} />
+        <RunTrigger onStarted={setRun} hasActiveRun={run !== null} />
       </SectionCard>
 
       <SectionCard title="Progreso en vivo" description="Qué está haciendo Qara, paso a paso">
