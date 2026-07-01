@@ -29,7 +29,8 @@ export async function QaraDashboardScreen() {
   return (
     <div className="space-y-6">
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <KpiCard label="Nuevos (NEW)" value={num(kpis.nuevosNew)} icon={Users} hint="esperando scan" />
         <KpiCard label="Leads nuevos hoy" value={num(kpis.nuevosHoy)} icon={Users} />
         <KpiCard label="Contactados" value={num(kpis.contactados)} icon={UserCheck} hint={`${num(kpis.totalLeads)} en total`} />
         <KpiCard label="Scoreados" value={num(kpis.scoreados)} icon={Gauge} />
