@@ -62,7 +62,8 @@ const NS = "flow.core_ventas.";
 
 export type QaraEvent =
   | { kind: "scan"; total: number | null; at: number }
-  | { kind: "outreach"; contactId: string; leadName: string; channel: string; index: number | null; total: number | null; at: number };
+  | { kind: "outreach"; contactId: string; leadName: string; channel: string; index: number | null; total: number | null; at: number }
+  | { kind: "run_complete"; scanned: number | null; processed: number | null; at: number };
 
 export type ScoredEvent = {
   contactId: string;
@@ -119,6 +120,11 @@ export async function getRunEvents(traceId: string): Promise<QaraEvent[]> {
         total: _num(i.total),
         at: _at(o),
       });
+    } else if (name === `${NS}run_complete`) {
+      // Señal terminal explícita del flow ("Qara terminó el scan") — evita depender
+      // solo del job en memoria de /jobs/{trace}, que puede quedar en "unknown" si el
+      // poll cae en otro proceso/replica que nunca corrió el run.
+      events.push({ kind: "run_complete", scanned: _num(i.scanned), processed: _num(i.processed), at: _at(o) });
     }
   }
   return events;

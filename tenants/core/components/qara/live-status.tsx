@@ -176,6 +176,18 @@ export function LiveStatus({ run, onClear }: { run: QaraRun | null; onClear?: ()
             const via = ev.channel ? ` · ${channelEs(ev.channel)}` : "";
             pushSteps([{ id: `o-${ev.contactId || ev.at}`, text: `→ Contactó a ${ev.leadName || "un lead"}${via}${prog}`, kind: "info" }]);
           }
+          // Señal terminal explícita del flow ("Qara terminó") — se usa antes que el
+          // job en memoria de /jobs/{trace}, que puede quedar en "unknown" para siempre
+          // si el poll cae en otro proceso/réplica que nunca corrió el run.
+          const complete = trace.events.find((e: { kind: string }) => e.kind === "run_complete");
+          if (complete) {
+            const proc = complete.processed ?? 0;
+            const scanned = complete.scanned ?? 0;
+            finish("done", `Listo — Qara contactó ${proc} de ${scanned} lead${scanned === 1 ? "" : "s"} nuevos.`, {
+              id: "done", text: `✅ Scan completado — ${proc}/${scanned} contactados`, kind: "ok",
+            });
+            return;
+          }
         }
         if (job?.status === "success") {
           const r = job.result || {};
