@@ -10,6 +10,8 @@ const GraphErrorSchema = z.object({
       type: z.string().optional(),
       code: z.number().optional(),
       error_subcode: z.number().optional(),
+      error_user_title: z.string().optional(),
+      error_user_msg: z.string().optional(),
       fbtrace_id: z.string().optional(),
     })
     .optional(),
@@ -95,7 +97,10 @@ function mapGraphError(status: number, body: unknown): Error {
     const hint = isWritePerm
       ? " — el token de Meta no autoriza escrituras (falta permiso ads_management). Provisiona un System User token con ads_management y asígnalo a la cuenta publicitaria."
       : "";
-    return new Error(`Meta Graph ${status}: ${err.message}${hint}`);
+    // Graph's top-level `message` is often generic ("Invalid parameter"); the
+    // human-readable reason lives in error_user_msg. Surface it when present.
+    const userMsg = err.error_user_msg ? ` — ${err.error_user_msg}` : "";
+    return new Error(`Meta Graph ${status}: ${err.message}${userMsg}${hint}`);
   }
   return new Error(`Meta Graph ${status}`);
 }

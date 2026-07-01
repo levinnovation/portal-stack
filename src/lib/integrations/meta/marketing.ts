@@ -138,7 +138,9 @@ export async function getCampaign(campaignId: string) {
 
 export async function createCampaign(input: z.input<typeof CampaignCreateSchema>) {
   const payload = CampaignCreateSchema.parse(input);
-  return createAccountEdge("campaigns", payload);
+  // Meta now requires this flag on campaign create when no campaign-level budget
+  // is set (ad-set budgeting). We never set a campaign budget here, so opt out.
+  return createAccountEdge("campaigns", { ...payload, is_adset_budget_sharing_enabled: false });
 }
 
 export async function updateCampaign(input: z.input<typeof CampaignUpdateSchema>) {
