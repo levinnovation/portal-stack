@@ -5,7 +5,7 @@ import { realestateCollections } from "./domain";
  * Core Real Estate tenant.
  * 3 roles: admin, investor (inversionista), customer (comprador).
  * Vertical: realestate.
- * Brand: institutional navy + warm gold (Fraunces serif + Inter).
+ * Brand: CORE black/white + midnight with electric accent (Fraunces + Inter).
  */
 export const coreTenant: TenantConfig = {
   id: "core",
@@ -15,20 +15,37 @@ export const coreTenant: TenantConfig = {
   verticals: ["realestate"],
   theme: {
     brand: "CORE",
+    tagline: "Tu historia, nuestra magia.",
+    defaultMode: "dark",
     colors: {
-      background: "30 20% 97%",
-      foreground: "220 40% 12%",
-      primary: "220 50% 14%",
-      primaryForeground: "38 50% 92%",
-      primaryGlow: "220 45% 24%",
-      accent: "38 65% 52%",
-      accentForeground: "220 50% 14%",
-      accentSoft: "38 60% 88%",
-      success: "152 50% 38%",
-      warning: "35 85% 50%",
-      destructive: "0 70% 48%",
-      border: "220 18% 88%",
-      ring: "38 65% 52%",
+      background: "0 0% 100%",
+      foreground: "0 0% 9%",
+      primary: "0 0% 11%",
+      primaryForeground: "0 0% 97%",
+      primaryGlow: "0 0% 25%",
+      accent: "66 90% 48%",
+      accentForeground: "0 0% 8%",
+      accentSoft: "66 70% 90%",
+      success: "147 54% 34%",
+      warning: "35 90% 46%",
+      destructive: "0 72% 48%",
+      border: "0 0% 88%",
+      ring: "0 0% 11%",
+    },
+    colorsDark: {
+      background: "0 0% 7%",
+      foreground: "0 0% 95%",
+      primary: "0 0% 96%",
+      primaryForeground: "0 0% 9%",
+      primaryGlow: "0 0% 78%",
+      accent: "66 95% 52%",
+      accentForeground: "0 0% 8%",
+      accentSoft: "0 0% 16%",
+      success: "147 50% 48%",
+      warning: "35 95% 56%",
+      destructive: "0 80% 60%",
+      border: "0 0% 18%",
+      ring: "66 95% 52%",
     },
     fonts: {
       display: "Fraunces, Georgia, serif",
@@ -50,7 +67,7 @@ export const coreTenant: TenantConfig = {
   ai: {
     enabled: true,
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "deepinfra/openai/gpt-oss-120b",
     systemPromptFile: "tenants/core/ai/prompts.ts",
     maxStepsPerTurn: 6,
     temperature: 0.3,
@@ -69,11 +86,24 @@ export const coreTenant: TenantConfig = {
       defaultLandingPageSlug: "admin-overview",
       nav: [
         { to: "/portal/admin", label: "Resumen", icon: "LayoutDashboard", end: true },
-        { to: "/portal/admin/agents", label: "Agentes · Resumen", icon: "MessageCircle", kind: "custom" },
-        { to: "/portal/admin/agents/leah", label: "Leah · Mercadeo", icon: "BarChart3", kind: "custom" },
-        { to: "/portal/admin/agents/leah/contratos", label: "Leah · Contratos", icon: "FileSpreadsheet", kind: "custom" },
-        { to: "/portal/admin/agents/qara", label: "Qara · Analítica", icon: "Users", kind: "custom" },
-        { to: "/portal/admin/agents/qara/control", label: "Qara · Control", icon: "RefreshCw", kind: "custom" },
+        { to: "", label: "Agentes de IA", icon: "MessageCircle", kind: "group" },
+        { to: "/portal/admin/agents", label: "Overview", icon: "LayoutDashboard", kind: "custom" },
+        { to: "", label: "Leah · Atribución", icon: "TrendingUp", kind: "group" },
+        { to: "/portal/admin/agents/leah", label: "Mercadeo", icon: "TrendingUp", kind: "custom" },
+        { to: "/portal/admin/agents/leah/contratos", label: "Contratos", icon: "FileText", kind: "custom" },
+        { to: "", label: "Qara · Leads", icon: "Radar", kind: "group" },
+        { to: "/portal/admin/agents/qara", label: "Analítica", icon: "Radar", kind: "custom" },
+        { to: "/portal/admin/agents/qara/control", label: "Control", icon: "SlidersHorizontal", kind: "custom" },
+        { to: "", label: "Inteligencia · Ventas BI", icon: "BrainCircuit", kind: "group" },
+        { to: "/portal/admin/agents/inteligencia", label: "Comando", icon: "BrainCircuit", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/segmentos", label: "Segmentos", icon: "PieChart", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/equipo", label: "Equipo", icon: "Trophy", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/pauta", label: "Pauta", icon: "Megaphone", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/predicciones", label: "Predicciones", icon: "TrendingUp", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/diagnostico", label: "Diagnóstico", icon: "ScanSearch", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/experimentos", label: "Experimentos", icon: "FlaskConical", kind: "custom" },
+        { to: "/portal/admin/agents/inteligencia/reportes", label: "Reportes", icon: "ChartNoAxesCombined", kind: "custom" },
+        { to: "", label: "Operaciones", icon: "Building2", kind: "group" },
         { to: "/portal/admin/projects", label: "Proyectos", icon: "Building2" },
         { to: "/portal/admin/investors", label: "Inversionistas", icon: "Users" },
         { to: "/portal/admin/customers", label: "Clientes", icon: "ShoppingBag" },
@@ -112,5 +142,39 @@ export const coreTenant: TenantConfig = {
   payloadCollections: realestateCollections,
   integrations: [
     { source: "quickbase", enabled: true, secretRef: "quickbase" },
+  ],
+  externalAgents: [
+    {
+      id: "inteligencia-13",
+      label: "Inteligencia BI (Agent 13)",
+      baseUrlEnv: "INTELIGENCIA_API_URL",
+      apiKeyEnv: "INTELIGENCIA_API_KEY",
+      statusPath: "/api/v1/inteligencia/etl/status",
+      actions: [
+        { name: "etl", label: "Actualizar datos", path: "/api/v1/inteligencia/etl/run", method: "POST", inputs: ["run_type"] },
+      ],
+    },
+    {
+      id: "qara",
+      label: "Qara Leads Agent",
+      baseUrlEnv: "QARA_API_URL",
+      apiKeyEnv: "QARA_API_KEY",
+      runPath: "/api/v1/run",
+      statusPath: "/api/v1/jobs",
+      schedulePath: "/api/v1/config/schedule",
+      statusAdapter: "qara-langfuse",
+      actions: [
+        { name: "scan", label: "Escanear leads", method: "POST" },
+        { name: "single", label: "Contactar un lead", method: "POST", inputs: ["hubspot_contact_id", "channel"] },
+      ],
+    },
+  ],
+  externalDatabases: [
+    {
+      id: "bi",
+      label: "CORE BI snapshots",
+      urlEnv: "INTELIGENCIA_DB_URL",
+      driver: "postgres",
+    },
   ],
 };

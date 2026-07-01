@@ -20,6 +20,7 @@ import { Datasets } from "./collections/Datasets";
 import { Dashboards } from "./collections/Dashboards";
 import { AIChats } from "./collections/AIChats";
 import { AIMessages } from "./collections/AIMessages";
+import { CreativeAssets } from "./collections/CreativeAssets";
 
 import { getTenantCollectionsSync, getTenantId } from "./lib/tenant-registry";
 
@@ -46,6 +47,7 @@ function buildCollections(): CollectionConfig[] {
     Dashboards,
     AIChats,
     AIMessages,
+    CreativeAssets,
   ];
   const tenantId = getTenantId();
   const verticalCollections = getTenantCollectionsSync(tenantId);

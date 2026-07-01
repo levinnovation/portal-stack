@@ -6,7 +6,7 @@ import "server-only";
 import type { Payload } from "payload";
 import { isVerticalEnabled } from "@/lib/tenant";
 import { parseInlineDatasetKey } from "./parse-inline";
-import { runDataset, type DatasetDef, type DatasetResult } from "./runner";
+import { runDataset, type DatasetContext, type DatasetDef, type DatasetResult } from "./runner";
 
 interface BlockLike {
   blockType: string;
@@ -47,7 +47,7 @@ function inlineDef(key: string): DatasetDef | null {
 export async function resolvePageDatasets(
   payload: Payload,
   layout: BlockLike[],
-  ctx?: { user?: { id: string; role: string } },
+  ctx?: DatasetContext,
 ): Promise<Record<string, DatasetResult>> {
   const keys = Array.from(new Set(layout.flatMap(collectDatasetKeysFromBlock)));
   if (keys.length === 0) return {};

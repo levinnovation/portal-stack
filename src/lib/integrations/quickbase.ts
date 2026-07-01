@@ -23,6 +23,72 @@ export async function quickbaseFetchRecords(tableId: string, where?: string): Pr
   return (json as any).data || [];
 }
 
+function quickbaseToken(): { realm: string; token: string } {
+  const realm = process.env.QUICKBASE_REALM;
+  const token = resolveIntegrationToken("quickbase") || process.env.QUICKBASE_USER_TOKEN;
+  if (!realm || !token) throw new Error("QuickBase not configured (QUICKBASE_REALM + token)");
+  return { realm, token };
+}
+
+export async function quickbaseUpsert(
+  tableId: string,
+  record: Record<string, { value: unknown }>,
+): Promise<unknown> {
+  const { realm, token } = quickbaseToken();
+  const res = await fetch("https://api.quickbase.com/v1/records", {
+    method: "POST",
+    headers: {
+      "QB-Realm-Hostname": realm,
+      Authorization: `QB-USER-TOKEN ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      to: tableId,
+      data: [record],
+      fieldsToReturn: Object.keys(record).map((k) => Number(k)).filter((n) => Number.isFinite(n)),
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  const text = await res.text();
+  let json: unknown = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    json = { raw: text };
+  }
+  if (!res.ok) throw new Error(`QuickBase write HTTP ${res.status}: ${typeof json === "string" ? json : JSON.stringify(json).slice(0, 200)}`);
+  return json;
+}
+
+/**
+ * Safe record update by named fields. The caller supplies a logical field map
+ * (name -> fid) and the values keyed by those logical names; only mapped names
+ * are written, and the key field (default Record ID# = fid 3) pins the update to
+ * one existing row. This keeps magic FIDs out of UI code.
+ */
+export async function quickbaseUpdateRecord(args: {
+  tableId: string;
+  recordId: number | string;
+  fieldMap: Record<string, number>;
+  values: Record<string, unknown>;
+  keyFieldId?: number;
+}): Promise<unknown> {
+  const { tableId, recordId, fieldMap, values, keyFieldId = 3 } = args;
+  const id = Number(recordId);
+  if (!Number.isFinite(id) || id <= 0) throw new Error("quickbaseUpdateRecord requires a numeric recordId");
+
+  const entries = Object.entries(values).filter(([, v]) => v !== undefined);
+  if (!entries.length) throw new Error("quickbaseUpdateRecord requires at least one field to write");
+
+  const record: Record<string, { value: unknown }> = { [String(keyFieldId)]: { value: id } };
+  for (const [name, value] of entries) {
+    const fid = fieldMap[name];
+    if (!fid) throw new Error(`QuickBase field not allowed: ${name}`);
+    record[String(fid)] = { value };
+  }
+  return quickbaseUpsert(tableId, record);
+}
+
 /** Map QuickBase row → projects collection (core vertical). Extend field map per tenant. */
 export async function syncQuickbaseProjectRecord(
   payload: Payload,

@@ -1,3 +1,4 @@
+import type { CollectionSlug } from "payload";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { getSession } from "@/lib/session";
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
 
   const form = await req.formData();
   const file = form.get("file");
-  const collection = String(form.get("collection") || "projects");
+  const collection = String(form.get("collection") || "projects") as CollectionSlug;
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "file required" }, { status: 400 });
   }
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
 
   await payload.create({
     collection: "audit-logs",
-    data: { action: "excel.import", entityType: collection, details: { rows: created, file: file.name } },
+    data: { action: "excel.import", entityType: collection, metadata: { rows: created, file: file.name } },
     overrideAccess: true,
   });
 

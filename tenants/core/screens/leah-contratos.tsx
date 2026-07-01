@@ -19,7 +19,11 @@ export async function LeahContratosScreen() {
       <p className="text-sm text-muted-foreground">Ventas firmadas con su atribución de primer toque.</p>
       <SectionCard title="Contratos atribuidos" description="Filtra por fuente y ordena por monto o fecha">
         {contratos.length ? (
-          <ContratosTable contratos={contratos} portalId={env.HUBSPOT_PORTAL_ID || undefined} />
+          <ContratosTable
+            contratos={contratos}
+            portalId={env.HUBSPOT_PORTAL_ID || undefined}
+            quickbaseTableId={env.CORE_QB_CONTRATOS_TABLE_ID || undefined}
+          />
         ) : (
           <EmptyState message="Aún no hay contratos" hint="Aparecen cuando Leah procesa contratos en QuickBase" />
         )}

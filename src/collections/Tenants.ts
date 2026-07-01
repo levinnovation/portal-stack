@@ -124,5 +124,59 @@ export const Tenants: CollectionConfig = {
         { name: "secretRef", type: "text", admin: { description: "e.g. quickbase → INTEGRATION_CORE_QUICKBASE_TOKEN" } },
       ],
     },
+    {
+      name: "externalAgents",
+      type: "array",
+      admin: { description: "Reusable external agent connectors (run/status/schedule/actions)" },
+      fields: [
+        { name: "id", type: "text", required: true },
+        { name: "label", type: "text", required: true },
+        { name: "baseUrlEnv", type: "text", required: true },
+        { name: "apiKeyEnv", type: "text" },
+        { name: "runPath", type: "text" },
+        { name: "statusPath", type: "text" },
+        { name: "schedulePath", type: "text" },
+        { name: "statusAdapter", type: "text" },
+        {
+          name: "actions",
+          type: "array",
+          fields: [
+            { name: "name", type: "text", required: true },
+            { name: "label", type: "text" },
+            { name: "path", type: "text" },
+            {
+              name: "method",
+              type: "select",
+              options: [
+                { label: "GET", value: "GET" },
+                { label: "POST", value: "POST" },
+              ],
+            },
+            {
+              name: "inputs",
+              type: "array",
+              fields: [{ name: "name", type: "text", required: true }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "externalDatabases",
+      type: "array",
+      admin: { description: "Reusable external database connectors (read-only)" },
+      fields: [
+        { name: "id", type: "text", required: true },
+        { name: "label", type: "text", required: true },
+        { name: "urlEnv", type: "text", required: true },
+        {
+          name: "driver",
+          type: "select",
+          required: true,
+          defaultValue: "postgres",
+          options: [{ label: "Postgres", value: "postgres" }],
+        },
+      ],
+    },
   ],
 };

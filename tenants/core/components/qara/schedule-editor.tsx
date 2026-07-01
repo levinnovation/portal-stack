@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { Clock, Loader2, Save, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,6 @@ const fmtHour = (h: number) => `${String(h).padStart(2, "0")}:00`;
 // Editor de la hora del cron de Qara. Lee/guarda contra el BFF (que proxea a Qara).
 // Si el endpoint aún no existe (Track B sin desplegar), muestra "no disponible aún".
 export function ScheduleEditor() {
-  const { toast } = useToast();
   const [state, setState] = useState<"loading" | "ready" | "unavailable" | "saving">("loading");
   const [reason, setReason] = useState("");
   const [scan, setScan] = useState<number[]>([9, 10]);
@@ -48,10 +47,11 @@ export function ScheduleEditor() {
 
   async function save() {
     if (!scan.length) {
-      toast({ tone: "error", title: "Elegí al menos una hora de scan" });
+      toast.error("Elegí al menos una hora de scan");
       return;
     }
     setState("saving");
+    const tid = toast.loading("Guardando horario…");
     try {
       const res = await fetch("/api/agents/qara/schedule", {
         method: "POST",
@@ -60,14 +60,10 @@ export function ScheduleEditor() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.error || `Error ${res.status}`);
-      toast({ tone: "success", title: "Horario guardado", description: "Aplica en el próximo ciclo" });
+      toast.success("Horario guardado", { id: tid, description: "Aplica en el próximo ciclo" });
       setState("ready");
     } catch (e) {
-      toast({
-        tone: "error",
-        title: "No se pudo guardar",
-        description: e instanceof Error ? e.message : undefined,
-      });
+      toast.error("No se pudo guardar", { id: tid, description: e instanceof Error ? e.message : undefined });
       setState("ready");
     }
   }

@@ -12,7 +12,7 @@ import { env, requireEnv } from "@tenants/core/lib/env";
 const QB_BASE = "https://api.quickbase.com/v1";
 
 // FIDs de Contratos (ver scripts/provision_core_model.py / docs/DATA_SOURCES.md).
-const CONTRATO_FIDS = {
+export const CONTRATO_FIDS = {
   recordId: 3,
   fullName: 6,
   dealOwner: 7,

@@ -13,7 +13,7 @@ export async function ensureChat(
   const title = extractText(firstUser)?.slice(0, 80) || "Nueva conversación";
   const created = await payload.create({
     collection: "ai-chats",
-    data: { user: user.id, agentId, title },
+    data: { user: Number(user.id), agentId, title },
     overrideAccess: true,
   });
   return String((created as { id: string | number }).id);
@@ -28,7 +28,7 @@ export async function persistUserMessage(
   if (!lastUserText) return;
   await payload.create({
     collection: "ai-messages",
-    data: { chat: aiChatId, role: "user", content: lastUserText },
+    data: { chat: Number(aiChatId), role: "user", content: lastUserText },
     overrideAccess: true,
   });
 }
@@ -43,7 +43,7 @@ export async function persistAssistantMessage(
   await payload.create({
     collection: "ai-messages",
     data: {
-      chat: aiChatId,
+      chat: Number(aiChatId),
       role: "assistant",
       content: text,
       tokens: tokens ?? null,

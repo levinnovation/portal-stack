@@ -21,6 +21,7 @@ export interface RenderPageArgs {
   pageTitle?: string;
   portalPrefix?: string;
   draft?: boolean;
+  params?: Record<string, string | undefined>;
 }
 
 async function findPage(payload: Awaited<ReturnType<typeof getPayloadClient>>, slug: string, draft: boolean) {
@@ -35,7 +36,7 @@ async function findPage(payload: Awaited<ReturnType<typeof getPayloadClient>>, s
   return result.docs[0] as any;
 }
 
-export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = false }: RenderPageArgs) {
+export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = false, params }: RenderPageArgs) {
   const user = await getSession();
   if (!user) redirect("/portal/auth");
   const tenant = await getTenant();
@@ -66,7 +67,10 @@ export async function renderPage({ slugPath, pageTitle, portalPrefix, draft = fa
   }
 
   const layout = normalizeLayout(page.layout || []);
-  const data = await resolvePageDatasets(payload, layout as any[], { user: { id: user.id, role: user.role } });
+  const data = await resolvePageDatasets(payload, layout as any[], {
+    user: { id: user.id, role: user.role },
+    params,
+  });
 
   const navOverride =
     tenant.features.navFromDb

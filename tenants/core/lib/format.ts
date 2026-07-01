@@ -1,21 +1,27 @@
-// Formateadores compartidos — locale es-CR (Costa Rica). CORE vende en colones,
-// pero los montos de Quickbase pueden venir en CRC o USD según la config del cliente;
-// `money()` asume CRC por defecto y acepta override de moneda.
+// Formateadores compartidos. Todos los montos se muestran en USD con símbolo `$`
+// (locale en-US para garantizar `$` y separadores 1,234.56). Los valores que el
+// origen reporta en colones (ej. gasto Meta por anuncio) se convierten a USD en
+// la capa de datos (ver lib/fx.ts) antes de formatear; `money()` solo formatea.
+// Se mantiene el override de moneda para los pocos casos que deban mostrar ₡.
 
-export function money(n: number | string | null | undefined, currency = "CRC"): string {
+function localeFor(currency: string): string {
+  return currency === "CRC" ? "es-CR" : "en-US";
+}
+
+export function money(n: number | string | null | undefined, currency = "USD"): string {
   const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
   if (!isFinite(v as number)) return currency === "CRC" ? "₡0" : "$0";
-  return (v as number).toLocaleString("es-CR", {
+  return (v as number).toLocaleString(localeFor(currency), {
     style: "currency",
     currency,
     maximumFractionDigits: currency === "CRC" ? 0 : 2,
   });
 }
 
-export function compactMoney(n: number | string | null | undefined, currency = "CRC"): string {
+export function compactMoney(n: number | string | null | undefined, currency = "USD"): string {
   const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
   if (!isFinite(v as number)) return currency === "CRC" ? "₡0" : "$0";
-  return (v as number).toLocaleString("es-CR", {
+  return (v as number).toLocaleString(localeFor(currency), {
     style: "currency",
     currency,
     notation: "compact",

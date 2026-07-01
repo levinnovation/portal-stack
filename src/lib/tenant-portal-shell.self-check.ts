@@ -3,6 +3,7 @@ import { coreTenant } from "@tenants/core/config";
 import { toPortalShellTenant } from "./tenant-portal-shell";
 
 const shell = toPortalShellTenant(coreTenant);
+assert.equal(shell.id, "core");
 assert.equal(shell.theme.brand, "CORE");
 assert.ok(!("payloadCollections" in shell));
 assert.ok(JSON.stringify(shell).includes("CORE"));

@@ -22,7 +22,7 @@ export async function processWebhook(
         action: "webhook.quickbase",
         entityType: table || "quickbase",
         entityId: recordId,
-        details: body,
+        metadata: body,
       },
       overrideAccess: true,
     });
@@ -32,7 +32,7 @@ export async function processWebhook(
   if (source === "stripe" || source === "n8n" || source === "agentyx" || source === "other") {
     await payload.create({
       collection: "audit-logs",
-      data: { action: `webhook.${source}`, entityType: source, details: body },
+      data: { action: `webhook.${source}`, entityType: source, metadata: body },
       overrideAccess: true,
     });
     return { ok: true, message: "logged" };

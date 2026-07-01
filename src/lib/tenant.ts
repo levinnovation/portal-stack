@@ -25,6 +25,8 @@ export type {
   TenantAIConfig,
   TenantAuthConfig,
   TenantConfig,
+  TenantExternalAgentConfig,
+  TenantExternalDatabaseConfig,
   TenantFeatureFlags,
   TenantIntegrationConfig,
   TenantNavItem,
@@ -97,11 +99,14 @@ function mergeTenant(base: TenantConfig, override: any): TenantConfig {
       ...base.theme,
       ...(override.theme || {}),
       colors: { ...base.theme.colors, ...(override.theme?.colors || {}) },
+      colorsDark: { ...(base.theme.colorsDark || {}), ...(override.theme?.colorsDark || {}) },
     },
     features: { ...base.features, ...(override.features || {}) },
     ai: { ...base.ai, ...(override.ai || {}) },
     auth: { ...base.auth, ...(override.auth || {}) },
     integrations: override.integrations ?? base.integrations,
+    externalAgents: override.externalAgents ?? base.externalAgents,
+    externalDatabases: override.externalDatabases ?? base.externalDatabases,
   };
 }
 

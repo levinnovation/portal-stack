@@ -6,25 +6,30 @@ export type { AIBackend } from "./ai/backend";
 export type Vertical = "realestate" | "fintech" | "generic";
 export type AuthProviderKind = "local" | "agentyx";
 export type TenantNavKind = "page" | "custom" | "group";
+export type TenantThemeColors = {
+  background: string;
+  foreground: string;
+  primary: string;
+  primaryForeground: string;
+  primaryGlow: string;
+  accent: string;
+  accentForeground: string;
+  accentSoft: string;
+  success: string;
+  warning: string;
+  destructive: string;
+  border: string;
+  ring: string;
+};
 
 export interface TenantTheme {
   brand: string;
   logo?: string;
-  colors: {
-    background: string;
-    foreground: string;
-    primary: string;
-    primaryForeground: string;
-    primaryGlow: string;
-    accent: string;
-    accentForeground: string;
-    accentSoft: string;
-    success: string;
-    warning: string;
-    destructive: string;
-    border: string;
-    ring: string;
-  };
+  tagline?: string;
+  /** Default color mode when the user has no saved preference. Defaults to "system". */
+  defaultMode?: "light" | "dark" | "system";
+  colors: TenantThemeColors;
+  colorsDark?: TenantThemeColors;
   fonts: { display: string; sans: string };
   radius: string;
 }
@@ -84,6 +89,34 @@ export interface TenantIntegrationConfig {
   secretRef?: string;
 }
 
+export interface ExternalAgentActionConfig {
+  name: string;
+  label?: string;
+  path?: string;
+  method?: "GET" | "POST";
+  /** Optional form/input field names for action-driven UIs */
+  inputs?: string[];
+}
+
+export interface TenantExternalAgentConfig {
+  id: string;
+  label: string;
+  baseUrlEnv: string;
+  apiKeyEnv?: string;
+  runPath?: string;
+  statusPath?: string;
+  schedulePath?: string;
+  statusAdapter?: string;
+  actions?: ExternalAgentActionConfig[];
+}
+
+export interface TenantExternalDatabaseConfig {
+  id: string;
+  label: string;
+  urlEnv: string;
+  driver: "postgres";
+}
+
 export interface TenantConfig {
   id: string;
   name: string;
@@ -97,4 +130,6 @@ export interface TenantConfig {
   roles: TenantRole[];
   payloadCollections?: CollectionConfig[];
   integrations?: TenantIntegrationConfig[];
+  externalAgents?: TenantExternalAgentConfig[];
+  externalDatabases?: TenantExternalDatabaseConfig[];
 }

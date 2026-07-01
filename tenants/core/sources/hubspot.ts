@@ -217,3 +217,58 @@ function funnelAgg(rows: HsContact[]): Agg[] {
     .map(([k, v]) => ({ name: k, value: v }));
   return [...known, ...otros];
 }
+
+// ── Progreso de un lead puntual (para el status en vivo de una llamada/mensaje) ──
+// El detalle de una llamada vive en el worker de voz (otra traza), pero el RESULTADO
+// que importa lo escribe Qara en HubSpot al terminar. Sondeamos ese contacto para
+// reflejar el avance de forma confiable, sin depender de scrapear spans de Langfuse.
+export type LeadProgress = {
+  id: string;
+  name: string;
+  leadStatus: string;
+  score: number | null;
+  nextAction: string;
+  outreachMessage: string;
+  lastModifiedMs: number | null;
+};
+
+const PROGRESS_PROPS = [
+  "firstname",
+  "lastname",
+  "hs_lead_status",
+  "ai_score",
+  "ai_next_action",
+  "ai_outreach_message",
+  "lastmodifieddate",
+] as const;
+
+export async function getLeadProgress(contactId: string): Promise<LeadProgress | null> {
+  const token = requireEnv("HUBSPOT_TOKEN");
+  const id = contactId.trim();
+  if (!id) return null;
+  const url = `${HS_BASE}/crm/v3/objects/contacts/${encodeURIComponent(id)}?properties=${PROGRESS_PROPS.join(",")}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`HubSpot ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  const json = (await res.json()) as HsContact;
+  const p = json.properties || {};
+  const name = [p.firstname, p.lastname].filter(Boolean).join(" ").trim();
+  const scoreRaw = p.ai_score;
+  const score = scoreRaw != null && scoreRaw !== "" && isFinite(parseFloat(scoreRaw)) ? parseFloat(scoreRaw) : null;
+  const lm = p.lastmodifieddate ? Date.parse(p.lastmodifieddate) : NaN;
+  return {
+    id: json.id,
+    name: name || `Lead ${id}`,
+    leadStatus: (p.hs_lead_status || "").toUpperCase(),
+    score,
+    nextAction: p.ai_next_action || "",
+    outreachMessage: p.ai_outreach_message || "",
+    lastModifiedMs: isFinite(lm) ? lm : null,
+  };
+}

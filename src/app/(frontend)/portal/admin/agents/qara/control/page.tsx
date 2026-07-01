@@ -1,4 +1,5 @@
 import { renderCustomScreen } from "@/lib/blocks/render-custom-screen";
+import { AgentHeaderActions } from "@tenants/core/components/layout/agent-header-actions";
 import { AGENT_ADMIN_ROLES } from "@tenants/core/lib/screen-config";
 import { QaraControlScreen } from "@tenants/core/screens/qara-control";
 
@@ -9,6 +10,7 @@ export default async function QaraControlPage() {
     title: "Qara · Control",
     portalPrefix: "/portal/admin",
     roles: [...AGENT_ADMIN_ROLES],
+    action: <AgentHeaderActions />,
     children: <QaraControlScreen />,
   });
 }

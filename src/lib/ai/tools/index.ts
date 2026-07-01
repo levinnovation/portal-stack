@@ -13,6 +13,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import type { Payload } from "payload";
 import type { SessionUser } from "../../auth/provider";
+import type { TenantConfig } from "../../tenant-types";
 import {
   customerIdForUser,
   investmentIdsForInvestors,
@@ -21,11 +22,14 @@ import {
   projectIdsForCustomer,
   projectIdsForInvestors,
 } from "../scoping";
+import { buildBiTools } from "./bi";
+import { buildActionTools } from "./actions";
+import { shouldEnableExtendedTools } from "./availability";
 
 const isAdmin = (u: SessionUser) => isStaffRole(u.role);
 
-export function buildTools(payload: Payload, user: SessionUser) {
-  return {
+export function buildTools(payload: Payload, user: SessionUser, tenant: TenantConfig) {
+  const baseTools = {
     list_projects: tool({
       description: "List real-estate projects. Filter by status or limit count.",
       inputSchema: z.object({
@@ -348,5 +352,15 @@ export function buildTools(payload: Payload, user: SessionUser) {
         }
       },
     }),
+  };
+
+  if (!shouldEnableExtendedTools(user, tenant)) {
+    return baseTools;
+  }
+
+  return {
+    ...baseTools,
+    ...buildBiTools(user),
+    ...buildActionTools(user),
   };
 }

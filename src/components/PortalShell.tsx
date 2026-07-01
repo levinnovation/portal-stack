@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Building2, Users, ShoppingBag, Upload, RefreshCw, BarChart3, ShieldCheck,
   TrendingUp, Hammer, FileText, CreditCard, User as UserIcon, LogOut, Menu, Bell,
-  Briefcase, ChevronRight, FileSpreadsheet, MessageCircle,
+  Briefcase, ChevronRight, FileSpreadsheet, MessageCircle, BrainCircuit, PieChart, Radar,
+  SlidersHorizontal, Megaphone, ScanSearch, FlaskConical, ChartNoAxesCombined, Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +17,10 @@ import { resolveActiveNavPath } from "@/lib/nav-active";
 import type { TenantNavItem, TenantRole } from "@/lib/tenant";
 import type { PortalShellTenant } from "@/lib/tenant-portal-shell";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { EmptyState as PortalEmptyState } from "@/components/portal/empty-state";
 import { Card } from "@/components/ui/card";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 export interface PortalShellProps {
   user: { id: string; email: string; name: string; role: string };
@@ -33,7 +36,8 @@ export interface PortalShellProps {
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Building2, Users, ShoppingBag, Upload, RefreshCw, BarChart3, ShieldCheck,
   TrendingUp, Hammer, FileText, CreditCard, User: UserIcon, Briefcase, MessageCircle,
-  FileSpreadsheet,
+  FileSpreadsheet, BrainCircuit, PieChart, Radar, SlidersHorizontal, Megaphone, ScanSearch,
+  FlaskConical, ChartNoAxesCombined, Trophy,
 };
 
 function navItemVisible(item: TenantNavItem, tenant: PortalShellTenant, userRole: string): boolean {
@@ -120,7 +124,9 @@ function SidebarBody({
   return (
     <>
       <div className="px-6 py-7 border-b border-sidebar-border">
-        <Link href="/" className="font-display text-2xl text-accent tracking-tight">{tenant.theme.brand}</Link>
+        <Link href="/" className="text-sidebar-foreground">
+          <BrandLogo tenantId={tenant.id} brand={tenant.theme.brand} />
+        </Link>
         <div className="text-xs uppercase tracking-[0.2em] text-sidebar-foreground/60 mt-1">{role.label}</div>
       </div>
       <SidebarNav nav={nav} activePath={activePath} onNavigate={onNavigate} />
@@ -187,6 +193,7 @@ export function PortalShell({ user, tenant, role, title, action, children, unrea
                 </Link>
               </Button>
               <LocaleSwitcher />
+              <ThemeToggle />
               {action}
             </div>
           </header>

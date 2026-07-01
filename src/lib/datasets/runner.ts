@@ -5,7 +5,7 @@
  * Supported kinds: count, sum, avg, list, monthly, custom, http.
  */
 
-import type { Payload } from "payload";
+import type { CollectionSlug, Payload } from "payload";
 import { getDatasetHandler } from "./handlers";
 
 export interface DatasetQuery {
@@ -28,9 +28,14 @@ export interface DatasetDef {
   query: DatasetQuery;
 }
 
+export interface DatasetContext {
+  user?: { id: string; role: string };
+  params?: Record<string, string | undefined>;
+}
+
 export type DatasetResult = number | string | Record<string, unknown>[] | Record<string, unknown> | null;
 
-export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user?: { id: string; role: string } }): Promise<DatasetResult> {
+export async function runDataset(payload: Payload, def: DatasetDef, ctx?: DatasetContext): Promise<DatasetResult> {
   const { query } = def;
 
   if (query.kind === "custom" && query.handler) {
@@ -56,7 +61,7 @@ export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user
   }
 
   if (query.kind === "count") {
-    const r = await payload.find({ collection: query.collection, where, limit: 0, depth: 0, overrideAccess: true });
+    const r = await payload.find({ collection: query.collection as CollectionSlug, where, limit: 0, depth: 0, overrideAccess: true });
     return r.totalDocs;
   }
 
@@ -70,7 +75,7 @@ export async function runDataset(payload: Payload, def: DatasetDef, ctx?: { user
 
   if (query.kind === "list") {
     const r = await payload.find({
-      collection: query.collection,
+      collection: query.collection as CollectionSlug,
       where,
       limit: query.limit ?? 10,
       sort: query.sort,
@@ -101,7 +106,7 @@ async function fetchAllFor(payload: Payload, collection: string, where?: any) {
   let page = 1;
   const pageSize = 200;
   while (true) {
-    const r = await payload.find({ collection, where, limit: pageSize, page, depth: 0, overrideAccess: true });
+    const r = await payload.find({ collection: collection as CollectionSlug, where, limit: pageSize, page, depth: 0, overrideAccess: true });
     all.push(...r.docs);
     if (all.length >= r.totalDocs || r.docs.length < pageSize) break;
     page += 1;
@@ -110,7 +115,7 @@ async function fetchAllFor(payload: Payload, collection: string, where?: any) {
   return all;
 }
 
-async function applyUserScope(where: any, ctx?: { user?: { id: string; role: string } }) {
+async function applyUserScope(where: any, ctx?: DatasetContext) {
   if (!ctx?.user) return where;
   if (ctx.user.role === "admin" || ctx.user.role === "superadmin") return where;
   return where ? { and: [where, { user: { equals: ctx.user.id } }] } : { user: { equals: ctx.user.id } };
