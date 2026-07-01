@@ -74,6 +74,21 @@ export function mapSpan(obs: Observation): Step | null {
     };
   }
 
+  // Cierre del run (Qara terminó) — señal terminal explícita del flow.
+  if (name.includes("run_complete")) {
+    const processed = pickNum(o, "processed");
+    const scanned = pickNum(o, "scanned");
+    return {
+      id: obs.id,
+      kind: "ok",
+      text:
+        scanned != null
+          ? `Listo — Qara contactó ${processed ?? 0} de ${scanned} lead${scanned === 1 ? "" : "s"}`
+          : "Qara terminó",
+      at: obs.startTime,
+    };
+  }
+
   // Calificación / score.
   if (name.includes("score") || name.includes("califica") || pickNum(o, "score") != null) {
     const score = pickNum(o, "score");
