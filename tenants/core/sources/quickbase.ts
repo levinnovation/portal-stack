@@ -2,8 +2,9 @@ import "server-only";
 import { env, requireEnv } from "@tenants/core/lib/env";
 
 // ── Fuente de datos de Leah (Agent 8) — Quickbase REST v1 ───────────────────
-// App CORE sandbox `bv52fj77v`. Dos tablas: Contratos (ventas firmadas que Leah
-// atribuye) y Conversión (tasa por fuente de primer toque). Solo LECTURA.
+// App CORE sandbox `bv52q2gq2` (Core Ventas — Agent 12 Sync). Dos tablas:
+// Contratos `bv52rbufi` (ventas firmadas que Leah atribuye, columnas 12-23) y
+// Conversión `bv6sb3uza` (tasa por fuente de primer toque). Solo LECTURA.
 //
 // La REST de Quickbase devuelve cada fila como { "<fid>": { value } }. Aquí mapeamos
 // los FIDs (fijos al provisionar las tablas) a nombres TS. Si cambia el field-map del
@@ -14,21 +15,21 @@ const QB_BASE = "https://api.quickbase.com/v1";
 // FIDs de Contratos (ver scripts/provision_core_model.py / docs/DATA_SOURCES.md).
 export const CONTRATO_FIDS = {
   recordId: 3,
-  fullName: 6,
-  dealOwner: 7,
-  email: 8,
-  phone: 9,
-  fechaFirma: 10,
-  monto: 11,
-  firstTouchSource: 12,
-  firstTouchCampaign: 13,
-  firstTouchChannel: 14,
-  firstContactDate: 15,
-  leadSource: 16,
-  daysToClose: 17,
-  hubspotMatched: 18,
-  leahAttributed: 19,
-  hubspotDealId: 20,
+  fullName: 12,
+  dealOwner: 13,
+  email: 7,
+  phone: 6,
+  fechaFirma: 8,
+  monto: 10,
+  firstTouchSource: 14,
+  firstTouchCampaign: 15,
+  firstTouchChannel: 16,
+  firstContactDate: 17,
+  leadSource: 18,
+  daysToClose: 19,
+  hubspotMatched: 20,
+  leahAttributed: 21,
+  hubspotDealId: 11,
 } as const;
 
 // FIDs de Conversión.
