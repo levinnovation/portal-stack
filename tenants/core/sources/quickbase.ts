@@ -30,6 +30,7 @@ export const CONTRATO_FIDS = {
   hubspotMatched: 20,
   leahAttributed: 21,
   hubspotDealId: 11,
+  project: 24,
 } as const;
 
 // FIDs de Conversión.
@@ -58,6 +59,7 @@ export type Contrato = {
   hubspotMatched: boolean;
   leahAttributed: boolean;
   hubspotDealId: string;
+  project: string;
 };
 
 export type ConversionFuente = {
@@ -137,6 +139,7 @@ export async function getContratos(): Promise<Contrato[]> {
     hubspotMatched: asBool(cell(row, f.hubspotMatched)),
     leahAttributed: asBool(cell(row, f.leahAttributed)),
     hubspotDealId: asStr(cell(row, f.hubspotDealId)),
+    project: asStr(cell(row, f.project)),
   }));
 }
 
@@ -179,6 +182,8 @@ export async function getLeahData(): Promise<{
   porCanal: AtribAgg[];
   porCampaign: AtribAgg[];
   porFuenteMonto: AtribAgg[];
+  porAsesor: AtribAgg[];
+  porProyecto: AtribAgg[];
   diasACierre: { label: string; count: number }[];
   tendenciaMonto: { dia: string; valor: number }[];
 }> {
@@ -213,6 +218,8 @@ export async function getLeahData(): Promise<{
     porCanal: aggBy(contratos, (c) => c.firstTouchChannel || "Sin canal", () => 1),
     porCampaign: topN(aggBy(contratos, (c) => c.firstTouchCampaign || "Sin campaña", () => 1), 8),
     porFuenteMonto: aggBy(contratos, (c) => c.firstTouchSource || "Sin fuente", (c) => c.monto),
+    porAsesor: aggBy(contratos, (c) => c.dealOwner || "Sin asesor", () => 1),
+    porProyecto: aggBy(contratos, (c) => c.project || "Sin proyecto", () => 1),
     diasACierre: histogramaDias(dias),
     tendenciaMonto: tendenciaPorFecha(contratos),
   };
