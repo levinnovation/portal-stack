@@ -10,6 +10,7 @@ import { AutoRefresh } from "@/components/portal/auto-refresh";
 import { BarHorizontal } from "@/components/portal/charts/bar-horizontal";
 import { BarVertical } from "@/components/portal/charts/bar-vertical";
 import { Donut } from "@/components/portal/charts/donut";
+import { AgentRunTrigger } from "@tenants/core/components/agent-run-trigger";
 import { KpiCard } from "@tenants/core/components/kpi-card";
 import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
@@ -74,7 +75,7 @@ export async function FormalizacionesDashboardScreen() {
     <div className="space-y-6">
       <AutoRefresh intervalMs={60_000} />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Pipeline de formalización de crédito (Quickbase · Entrega de Unidad), mismo corte que el
           reporte diario por correo/PDF.
@@ -83,6 +84,14 @@ export async function FormalizacionesDashboardScreen() {
           Corte: {report.runDate} · se refresca cada minuto
         </p>
       </div>
+
+      <AgentRunTrigger
+        agentId="formalizaciones"
+        refreshInputs={{ event_type: "report_snapshot", force_refresh: true }}
+        realInputs={{ event_type: "core_formalizaciones_daily_scan" }}
+        confirmTitle="¿Ejecutar la corrida real de Formalizaciones?"
+        confirmDescription="Contactará clientes reales (WhatsApp/email) y escribirá en Quickbase. El kill switch CORE_FORMALIZACIONES_DRY_RUN, si está activo, seguirá aplicando."
+      />
 
       {/* KPIs con delta día-sobre-día */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">

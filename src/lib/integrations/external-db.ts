@@ -52,6 +52,49 @@ const TEMPLATE_REGISTRY: Record<string, ExternalDbTemplateFn> = {
     `,
     values: [workspaceId, runType, Math.max(1, Math.min(limit, 500))],
   }),
+  // Agent 5 (formalizaciones) — generic SDK append-only snapshot table
+  // (`lev_crewai/sdk/db/snapshots.py`). One row per cron/report_snapshot run.
+  "formalizaciones.latest": ({ workspaceId = DEFAULT_WORKSPACE }) => ({
+    text: `
+      select *
+      from agent_run_snapshots
+      where workspace_id = $1
+      order by generated_at desc
+      limit 1
+    `,
+    values: [workspaceId],
+  }),
+  "formalizaciones.history": ({ workspaceId = DEFAULT_WORKSPACE, limit = 200 }) => ({
+    text: `
+      select *
+      from agent_run_snapshots
+      where workspace_id = $1
+      order by generated_at desc
+      limit $2
+    `,
+    values: [workspaceId, Math.max(1, Math.min(limit, 2000))],
+  }),
+  // Eyal (PM cronograma) — bespoke append-only table (`eyal_report_snapshots`).
+  "eyal.latest": ({ workspaceId = DEFAULT_WORKSPACE }) => ({
+    text: `
+      select *
+      from eyal_report_snapshots
+      where workspace_id = $1
+      order by generated_at desc
+      limit 1
+    `,
+    values: [workspaceId],
+  }),
+  "eyal.history": ({ workspaceId = DEFAULT_WORKSPACE, limit = 200 }) => ({
+    text: `
+      select *
+      from eyal_report_snapshots
+      where workspace_id = $1
+      order by generated_at desc
+      limit $2
+    `,
+    values: [workspaceId, Math.max(1, Math.min(limit, 2000))],
+  }),
 };
 
 function requireTemplate(name: string): ExternalDbTemplateFn {

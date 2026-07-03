@@ -50,17 +50,6 @@ export const corePages = [
         ],
         pageSize: 5,
       },
-      {
-        blockType: "chat",
-        title: "Asistente Core",
-        agentId: "core-admin",
-        greeting: "Hola admin, ¿qué quieres consultar? Puedo listar proyectos, pagos pendientes, distribuciones, etc.",
-        suggestedPrompts: [
-          { prompt: "¿Cuántos proyectos están en construcción?" },
-          { prompt: "Lista los últimos 5 pagos registrados" },
-          { prompt: "Resume el capital total comprometido" },
-        ],
-      },
     ],
   },
   {
@@ -204,16 +193,6 @@ export const corePages = [
         dataset: "monthly:investments.amountInvested",
         kind: "area",
       },
-      {
-        blockType: "chat",
-        title: "Asistente de inversión",
-        agentId: "core-investor",
-        greeting: "Hola inversionista. Pregúntame sobre tu portafolio, distribuciones o proyectos.",
-        suggestedPrompts: [
-          { prompt: "¿Cuál es mi IRR estimada?" },
-          { prompt: "Lista mis inversiones activas" },
-        ],
-      },
     ],
   },
   {
@@ -282,12 +261,6 @@ export const corePages = [
           { key: "projectStatus", label: "Estado", format: "status" },
         ],
         pageSize: 10,
-      },
-      {
-        blockType: "chat",
-        title: "Asistente de cliente",
-        agentId: "core-customer",
-        greeting: "Hola, ¿en qué te ayudo?",
       },
     ],
   },

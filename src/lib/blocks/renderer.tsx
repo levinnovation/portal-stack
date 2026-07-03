@@ -7,7 +7,6 @@ import { FormBlock, type FormBlockProps } from "@/components/blocks/FormBlock";
 import { MarkdownBlock, type MarkdownBlockProps } from "@/components/blocks/MarkdownBlock";
 import { DividerBlock } from "@/components/blocks/DividerBlock";
 import { IframeBlock, type IframeBlockProps } from "@/components/blocks/IframeBlock";
-import { ChatBlock, type ChatBlockProps } from "@/components/blocks/ChatBlock";
 import { ColumnsBlock, type ColumnsBlockProps } from "@/components/blocks/ColumnsBlock";
 import type { DatasetResult } from "@/lib/datasets/runner";
 
@@ -55,11 +54,13 @@ export function BlockRenderer({ layout, data }: BlockRendererProps) {
             return <DividerBlock key={i} {...props} />;
           case "iframe":
             return <IframeBlock key={i} {...(props as IframeBlockProps)} />;
-          case "chat":
-            return <ChatBlock key={i} {...(props as ChatBlockProps)} />;
           case "columns":
             return <ColumnsBlock key={i} {...(props as ColumnsBlockProps)} data={data as any} />;
           default:
+            if (blockType === "chat") {
+              // Legacy page layouts may still contain chat blocks until reseeded.
+              return null;
+            }
             return (
               <div key={i} className="bg-card border border-dashed border-border rounded-lg p-6 text-center text-muted-foreground text-sm">
                 Unknown block: {blockType}

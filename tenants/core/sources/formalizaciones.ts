@@ -106,6 +106,88 @@ function mapCaseRow(raw: Record<string, unknown>): CaseRow {
   };
 }
 
+/** Un punto de la historia append-only (`agent_run_snapshots` en Postgres). */
+export type SnapshotHistoryPoint = {
+  id: string;
+  generatedAt: string;
+  runKind: "cron" | "report_snapshot" | "manual" | string;
+  triggerSource: string;
+  dryRun: boolean;
+  summary: FormalizacionesSummary;
+};
+
+/** Serie temporal por métrica: `{ scanned_cases: [{t, v}, ...], ... }`. */
+export type MetricTimeseries = Record<string, { t: string; v: number }[]>;
+
+function snapshotsAuth() {
+  return {
+    baseUrl: requireEnv("FORMALIZACIONES_API_URL").replace(/\/$/, ""),
+    apiKey: requireEnv("FORMALIZACIONES_API_KEY"),
+  };
+}
+
+/**
+ * Historia append-only del pipeline (no solo la última corrida) para las
+ * tarjetas de tendencia y la tabla drill-down de la vista "Histórico", con
+ * filtro de rango de tiempo (`from`/`to`, ISO 8601) manejado por
+ * <TimeRangeSlider>. Lee GET /api/v1/snapshots/history (api/snapshots.py).
+ */
+export async function getFormalizacionesHistory(params: {
+  from?: string | null;
+  to?: string | null;
+  runKind?: string;
+  limit?: number;
+} = {}): Promise<SnapshotHistoryPoint[]> {
+  const { baseUrl, apiKey } = snapshotsAuth();
+  const qs = new URLSearchParams();
+  if (params.from) qs.set("from", params.from);
+  if (params.to) qs.set("to", params.to);
+  if (params.runKind) qs.set("run_kind", params.runKind);
+  qs.set("limit", String(params.limit ?? 500));
+
+  const res = await fetch(`${baseUrl}/api/v1/snapshots/history?${qs.toString()}`, {
+    headers: { "X-API-Key": apiKey },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Formalizaciones snapshots API error ${res.status}: ${await res.text()}`);
+
+  const payload = (await res.json().catch(() => null)) as { history?: unknown[] } | null;
+  const rows = Array.isArray(payload?.history) ? (payload!.history as Record<string, unknown>[]) : [];
+  return rows.map((r) => ({
+    id: asStr(r.id),
+    generatedAt: asStr(r.generated_at),
+    runKind: asStr(r.run_kind) || "cron",
+    triggerSource: asStr(r.trigger_source),
+    dryRun: r.dry_run === true,
+    summary: mapSummary(r.summary),
+  }));
+}
+
+/**
+ * Series temporales de métricas escalares (extraídas de `summary_json`) para
+ * gráficos de tendencia — GET /api/v1/snapshots/timeseries.
+ */
+export async function getFormalizacionesTimeseries(
+  metrics: string[],
+  params: { from?: string | null; to?: string | null; runKind?: string } = {},
+): Promise<MetricTimeseries> {
+  const { baseUrl, apiKey } = snapshotsAuth();
+  const qs = new URLSearchParams();
+  qs.set("metrics", metrics.join(","));
+  if (params.from) qs.set("from", params.from);
+  if (params.to) qs.set("to", params.to);
+  if (params.runKind) qs.set("run_kind", params.runKind);
+
+  const res = await fetch(`${baseUrl}/api/v1/snapshots/timeseries?${qs.toString()}`, {
+    headers: { "X-API-Key": apiKey },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Formalizaciones timeseries API error ${res.status}: ${await res.text()}`);
+
+  const payload = (await res.json().catch(() => null)) as { series?: MetricTimeseries } | null;
+  return payload?.series ?? {};
+}
+
 /**
  * Snapshot en vivo del pipeline de formalizaciones (summary + casos con su
  * link seguro de carga). El agente lo sirve desde su caché Redis; usamos
