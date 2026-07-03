@@ -2,16 +2,16 @@ import type { TenantConfig } from "@/lib/tenant";
 import { realestateCollections } from "./domain";
 
 /**
- * Core Real Estate tenant.
- * 3 roles: admin, investor (inversionista), customer (comprador).
- * Vertical: realestate.
- * Brand: institutional navy + warm gold (Fraunces serif + Inter).
+ * Core client portal — customer-facing only (investor + customer).
+ * Deploy separately from Agentyx Platform (agentyx-generic-portal).
+ * Branch: client-core · see docs/CLIENT-CORE-DEPLOY.md
  */
 export const coreTenant: TenantConfig = {
   id: "core",
-  name: "Core Real Estate",
+  name: "Core Real Estate — Client Portal",
   domain: "portal.core.example",
-  description: "Plataforma institucional de inversión inmobiliaria. Acceso transparente a portafolio, distribuciones, avance de obra y pagos.",
+  description:
+    "Portal customer-facing para inversionistas y compradores. El equipo interno usa Agentyx Platform (deploy separado).",
   verticals: ["realestate"],
   theme: {
     brand: "CORE",
@@ -38,13 +38,13 @@ export const coreTenant: TenantConfig = {
   },
   features: {
     chat: true,
-    excel: true,
-    quickbase: true,
+    excel: false,
+    quickbase: false,
     documents: true,
     aiAgent: true,
     layoutBuilder: true,
-    auditLog: true,
-    impersonation: true,
+    auditLog: false,
+    impersonation: false,
   },
   ai: {
     enabled: true,
@@ -60,22 +60,6 @@ export const coreTenant: TenantConfig = {
     sessionDays: 7,
   },
   roles: [
-    {
-      key: "admin",
-      label: "Equipo Core",
-      homePath: "/portal/admin",
-      defaultLandingPageSlug: "admin-overview",
-      nav: [
-        { to: "/portal/admin", label: "Resumen", icon: "LayoutDashboard", end: true },
-        { to: "/portal/admin/projects", label: "Proyectos", icon: "Building2" },
-        { to: "/portal/admin/investors", label: "Inversionistas", icon: "Users" },
-        { to: "/portal/admin/customers", label: "Clientes", icon: "ShoppingBag" },
-        { to: "/portal/admin/excel", label: "Carga Excel", icon: "Upload" },
-        { to: "/portal/admin/quickbase", label: "QuickBase", icon: "RefreshCw" },
-        { to: "/portal/admin/reports", label: "Reportes", icon: "BarChart3" },
-        { to: "/portal/admin/audit", label: "Auditoría", icon: "ShieldCheck" },
-      ],
-    },
     {
       key: "investor",
       label: "Inversionistas",
