@@ -2,12 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
-import {
-  STAGE_LABELS,
-  STATUS_LABELS,
-  type CaseRow,
-  type CaseStatus,
-} from "@tenants/core/sources/formalizaciones";
+import type { CaseRow, CaseStatus } from "@tenants/core/sources/formalizaciones";
+import { STAGE_LABELS, STATUS_LABELS } from "@tenants/core/lib/formalizaciones-labels";
 import { cn } from "@/lib/utils";
 
 const STATUS_BADGE: Record<CaseStatus, string> = {

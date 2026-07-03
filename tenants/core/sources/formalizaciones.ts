@@ -1,6 +1,7 @@
 import "server-only";
 
 import { env, requireEnv } from "@tenants/core/lib/env";
+import { STAGE_LABELS, STATUS_LABELS } from "@tenants/core/lib/formalizaciones-labels";
 
 // ── Fuente de datos de Formalizaciones (Agent 5) ─────────────────────────────
 // Llama al worker `agent-5-core-formalizaciones` (POST /api/v1/run) con el
@@ -62,23 +63,6 @@ export type FormalizacionesReport = {
   summary: FormalizacionesSummary;
   previousSummary: FormalizacionesSummary | null;
   caseRows: CaseRow[];
-};
-
-export const STATUS_LABELS: Record<CaseStatus, string> = {
-  ready_for_bank: "Listo para banco",
-  contacted: "Contactado",
-  escalated: "Escalado",
-  throttled: "En espera",
-  pending: "Pendiente",
-  send_failed: "Envío fallido",
-};
-
-export const STAGE_LABELS: Record<CaseStage, string> = {
-  S1: "S1 · Inicio",
-  S2: "S2 · Docs",
-  S3: "S3 · Completo",
-  S4: "S4 · Banco",
-  S5: "S5 · Escalado",
 };
 
 const asNum = (v: unknown): number => {

@@ -16,10 +16,9 @@ import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
 import { num } from "@tenants/core/lib/format";
+import { STAGE_LABELS, STATUS_LABELS } from "@tenants/core/lib/formalizaciones-labels";
 import {
   getFormalizacionesReport,
-  STAGE_LABELS,
-  STATUS_LABELS,
   type CaseStage,
   type CaseStatus,
   type FormalizacionesReport,
