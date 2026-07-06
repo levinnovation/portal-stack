@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -42,14 +43,23 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-hero flex items-center justify-center px-4 py-12 relative">
+    <div className="min-h-screen bg-hero flex flex-col items-center justify-center px-4 py-12 relative">
       <div className="absolute top-4 right-4">
         <LocaleSwitcher />
       </div>
+      <Link href="/" className="mb-7" aria-label="CORE">
+        <Image
+          src="/brand/core-logo-wide.png"
+          alt="CORE"
+          width={900}
+          height={360}
+          priority
+          className="h-16 w-auto"
+        />
+      </Link>
       <Card className="w-full max-w-md bg-card">
         <CardHeader className="text-center">
-          <Link href="/" className="font-display text-3xl text-accent tracking-tight">PORTAL</Link>
-          <CardTitle className="mt-3">{t("auth.signIn.title")}</CardTitle>
+          <CardTitle>{t("auth.signIn.title")}</CardTitle>
           <CardDescription>{t("auth.signIn.help")} info@core.example</CardDescription>
         </CardHeader>
         <CardContent>
