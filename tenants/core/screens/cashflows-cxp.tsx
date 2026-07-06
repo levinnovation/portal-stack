@@ -12,7 +12,7 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
-import { compactMoney, money } from "@tenants/core/lib/format";
+import { money } from "@tenants/core/lib/format";
 import { getCashflowsReport, uniqueProjects, type CashflowsReport } from "@tenants/core/sources/cashflows";
 
 function fmtPct(v: number | null): string {
@@ -109,7 +109,7 @@ export async function CashflowsCxpScreen({ project }: { project?: string }) {
           }}
         >
           {cxp.gastoPorPartidaMes.length ? (
-            <StackedBar data={cxp.gastoPorPartidaMes} keys={[...cxp.topPartidas, "Otros"]} tickFormatter={compactMoney} />
+            <StackedBar data={cxp.gastoPorPartidaMes} keys={[...cxp.topPartidas, "Otros"]} moneyFormat />
           ) : (
             <EmptyState message="Sin movimientos de gasto" />
           )}

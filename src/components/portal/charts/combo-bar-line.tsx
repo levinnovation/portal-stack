@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { compactMoney } from "@tenants/core/lib/format";
 import { TOOLTIP_STYLE } from "./palette";
 
 export function ComboBarLine({
@@ -24,8 +25,7 @@ export function ComboBarLine({
   barColor = "hsl(var(--primary))",
   lineColor = "hsl(var(--chart-1))",
   height = 280,
-  leftTickFormatter,
-  rightTickFormatter,
+  leftMoneyFormat = false,
   showLabels = false,
 }: {
   data: Record<string, string | number>[];
@@ -36,12 +36,12 @@ export function ComboBarLine({
   barColor?: string;
   lineColor?: string;
   height?: number;
-  leftTickFormatter?: (v: number) => string;
-  rightTickFormatter?: (v: number) => string;
+  /** Format the left-axis ticks as compact currency instead of the raw number. */
+  leftMoneyFormat?: boolean;
   showLabels?: boolean;
 }) {
-  const lfmt = leftTickFormatter ?? ((v) => String(v));
-  const rfmt = rightTickFormatter ?? ((v) => `${(v * 100).toFixed(0)}%`);
+  const lfmt = leftMoneyFormat ? (v: number) => compactMoney(v) : (v: number) => String(v);
+  const rfmt = (v: number) => `${(v * 100).toFixed(0)}%`;
 
   return (
     <ResponsiveContainer width="100%" height={height}>

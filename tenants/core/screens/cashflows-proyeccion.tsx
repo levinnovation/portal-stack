@@ -10,7 +10,7 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
-import { compactMoney, fechaCorta, money } from "@tenants/core/lib/format";
+import { fechaCorta, money } from "@tenants/core/lib/format";
 import {
   getCashflowsReport,
   uniqueProjects,
@@ -112,7 +112,7 @@ export async function CashflowsProyeccionScreen({ project }: { project?: string 
           }}
         >
           {weeklyBars.length ? (
-            <StackedBar data={weeklyBars} keys={["Entradas (ponderadas por riesgo)", "Salidas"]} tickFormatter={compactMoney} />
+            <StackedBar data={weeklyBars} keys={["Entradas (ponderadas por riesgo)", "Salidas"]} moneyFormat />
           ) : (
             <EmptyState message="Sin cartera abierta ni movimiento para proyectar" />
           )}

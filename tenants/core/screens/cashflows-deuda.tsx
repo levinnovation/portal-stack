@@ -11,7 +11,7 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
-import { compactMoney, fechaCorta, money } from "@tenants/core/lib/format";
+import { fechaCorta, money } from "@tenants/core/lib/format";
 import { getCashflowsReport, uniqueProjects, type CashflowsReport } from "@tenants/core/sources/cashflows";
 
 export async function CashflowsDeudaScreen({ project }: { project?: string }) {
@@ -121,7 +121,7 @@ export async function CashflowsDeudaScreen({ project }: { project?: string }) {
         }}
       >
         {deuda.debtServiceMensual.length ? (
-          <StackedBar data={deuda.debtServiceMensual} keys={["Cuota", "Intereses"]} tickFormatter={compactMoney} />
+          <StackedBar data={deuda.debtServiceMensual} keys={["Cuota", "Intereses"]} moneyFormat />
         ) : (
           <EmptyState message="Sin pagos de servicio de deuda registrados" />
         )}
