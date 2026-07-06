@@ -162,7 +162,7 @@ export async function CashflowsDashboardScreen({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:[&>*]:min-w-0">
         <SectionCard
           title="Top desviaciones por partida"
           description="Diferencia actual − plan, ordenada por magnitud absoluta (USD)"
@@ -259,9 +259,9 @@ export async function CashflowsDashboardScreen({
         }}
       >
         {accounts.length ? (
-          <div className="overflow-x-auto">
+          <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-card">
                 <tr className="border-b border-border text-xs uppercase text-muted-foreground">
                   <th className="py-2 pr-4">Fideicomiso / Cuenta</th>
                   <th className="py-2 pr-4">Proyecto</th>

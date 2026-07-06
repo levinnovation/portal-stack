@@ -3,6 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { TOOLTIP_STYLE } from "./palette";
 import { resolveFormat, type FormatKind } from "@/components/portal/chart-format";
+import { compactMoney } from "@tenants/core/lib/format";
 import type { Datum } from "./bar-horizontal";
 
 type WaterfallRow = Datum & { base: number; positive: number; negative: number };
@@ -61,10 +62,10 @@ export function VarianceWaterfall({
         />
         <YAxis
           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-          tickFormatter={(v: number) => fmt(v)}
+          tickFormatter={(v: number) => compactMoney(v)}
           axisLine={false}
           tickLine={false}
-          width={56}
+          width={64}
         />
         <Tooltip
           {...TOOLTIP_STYLE}
