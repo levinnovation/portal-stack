@@ -13,19 +13,6 @@ import type { Payload } from "payload";
 import { getAuthCookieName, parseAuthCookie } from "./cookie-name";
 import { normalizeThemePreference, type ThemePreference } from "@/lib/theme/preference";
 
-// #region agent log
-function decodeJwtClaims(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const json = Buffer.from(parts[1], "base64").toString("utf8");
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-// #endregion
-
 export interface AuthSession {
   token: string;
   user: SessionUser;
@@ -55,67 +42,25 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     const cookieHeader = req.headers.get("cookie") ?? "";
     const cookieName = getAuthCookieName();
     const token = parseAuthCookie(cookieHeader, cookieName);
-    if (!token) {
-      // #region agent log
-      console.log(
-        "[DEBUG-AUTH] getSession no cookie",
-        JSON.stringify({ hypothesisId: "H-no-cookie", cookieHeaderPresent: cookieHeader.length > 0, cookieHeaderLen: cookieHeader.length, cookieName }),
-      );
-      // #endregion
-      return null;
-    }
-    // #region agent log
-    const claims = decodeJwtClaims(token);
-    console.log(
-      "[DEBUG-AUTH] getSession decoded incoming token claims (unverified)",
-      JSON.stringify({ hypothesisId: "H-usesessions", claims, tokenLen: token.length }),
-    );
-    if (claims && (claims as any).id) {
-      try {
-        const dbUser = await this.payload.findByID({ collection: "users", id: (claims as any).id as string, depth: 0 });
-        console.log(
-          "[DEBUG-AUTH] getSession db user sessions snapshot",
-          JSON.stringify({ hypothesisId: "H-usesessions", sessions: (dbUser as any)?.sessions ?? null }),
-        );
-      } catch (dbErr: any) {
-        console.log(
-          "[DEBUG-AUTH] getSession db lookup for sessions failed",
-          JSON.stringify({ hypothesisId: "H-usesessions", error: dbErr?.message || String(dbErr) }),
-        );
-      }
-    }
-    // #endregion
+    if (!token) return null;
     try {
+      // Pass JWT via Authorization header: Payload 3.85 cookie extraction enforces
+      // CSRF on synthetic server-side requests that lack Origin / Sec-Fetch-Site.
       const result = await this.payload.auth({
         headers: new Headers({
           Authorization: `JWT ${token}`,
           cookie: `${cookieName}=${token}`,
         }),
       });
-      if (!result.user) {
-        // #region agent log
-        console.log("[DEBUG-AUTH] getSession payload.auth returned no user", JSON.stringify({ hypothesisId: "H-auth-no-user" }));
-        // #endregion
-        return null;
-      }
-      const resolved = {
+      if (!result.user) return null;
+      return {
         id: String(result.user.id),
         email: result.user.email!,
         name: ((result.user as any).name ?? result.user.email)!,
         role: ((result.user as any).role ?? "member") as string,
         themePreference: normalizeThemePreference((result.user as any).themePreference),
       };
-      // #region agent log
-      console.log("[DEBUG-AUTH] getSession resolved user", JSON.stringify({ hypothesisId: "H-role-mismatch", ...resolved }));
-      // #endregion
-      return resolved;
-    } catch (err: any) {
-      // #region agent log
-      console.log(
-        "[DEBUG-AUTH] getSession payload.auth threw",
-        JSON.stringify({ hypothesisId: "H-auth-throws", error: err?.message || String(err) }),
-      );
-      // #endregion
+    } catch {
       return null;
     }
   }
@@ -127,13 +72,6 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     });
     if (!result.token) throw new Error("Invalid credentials");
     if (!result.user) throw new Error("No user returned");
-    // #region agent log
-    const claims = decodeJwtClaims(result.token);
-    console.log(
-      "[DEBUG-AUTH] signIn issued token claims (unverified)",
-      JSON.stringify({ hypothesisId: "H-usesessions", claims, userSessionsOnLoginResult: (result.user as any)?.sessions ?? null }),
-    );
-    // #endregion
     return {
       token: result.token,
       user: {

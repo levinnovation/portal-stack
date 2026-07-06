@@ -21,20 +21,6 @@ export async function POST(req: Request) {
       );
     }
     const redirect = role.homePath;
-    // #region agent log
-    console.log(
-      "[DEBUG-AUTH] login success",
-      JSON.stringify({
-        hypothesisId: "H-role-mismatch",
-        email: session.user.email,
-        userRole: session.user.role,
-        tenantRoleKeys: tenant.roles.map((r) => r.key),
-        matchedRole: role.key ?? null,
-        redirect,
-        nodeEnv: process.env.NODE_ENV,
-      }),
-    );
-    // #endregion
 
     const res = NextResponse.json({ ok: true, redirect });
     res.cookies.set(tenant.auth.cookieName, session.token, {
@@ -53,12 +39,6 @@ export async function POST(req: Request) {
     });
     return res;
   } catch (err: any) {
-    // #region agent log
-    console.log(
-      "[DEBUG-AUTH] login failed",
-      JSON.stringify({ hypothesisId: "H-signin-error", email, error: err?.message || String(err) }),
-    );
-    // #endregion
     return NextResponse.json({ error: err?.message || "Error de autenticación" }, { status: 401 });
   }
 }
