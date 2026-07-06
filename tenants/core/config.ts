@@ -93,6 +93,7 @@ export const coreTenant: TenantConfig = {
         { to: "/portal/admin/agents/leah/contratos", label: "Contratos", icon: "FileText", kind: "custom" },
         { to: "", label: "Qara · Leads", icon: "Radar", kind: "group" },
         { to: "/portal/admin/agents/qara", label: "Analítica", icon: "Radar", kind: "custom" },
+        { to: "/portal/admin/agents/qara/citas", label: "Citas", icon: "CalendarDays", kind: "custom" },
         { to: "/portal/admin/agents/qara/control", label: "Control", icon: "SlidersHorizontal", kind: "custom" },
         { to: "", label: "Inteligencia · Ventas BI", icon: "BrainCircuit", kind: "group" },
         { to: "/portal/admin/agents/inteligencia", label: "Comando", icon: "BrainCircuit", kind: "custom" },
