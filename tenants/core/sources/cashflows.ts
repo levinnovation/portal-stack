@@ -24,6 +24,16 @@ export type CashflowsSummary = {
   deviationCount: number;
   movementsNeedingReview: number;
   generatedAt: string;
+  // Treasury KPIs merged in from `_build_treasury_sections`' `summary_extra`.
+  arTotalUsd: number;
+  arVencidoUsd: number;
+  arRiskWeightedUsd: number;
+  apGastoMesUsd: number;
+  saldoPrestamoTotalUsd: number;
+  pctDesembolsadoAvg: number | null;
+  runwayWeeksP10: number | null;
+  forecastNet3mP50: number | null;
+  anomalyCount: number;
 };
 
 export type VarianceStatus = "ok" | "warning" | "breach";
@@ -51,12 +61,164 @@ export type TrustAccount = {
   source: string;
 };
 
+// ── Treasury tabs (Flujo / Proyección / CxC / CxP / Deuda / Cuentas&FX / Proyectos) ──
+
+export type NamedValue = { name: string; value: number };
+export type ParetoRow = { name: string; value: number; cumulative: number };
+export type TrendPoint = { dia: string; valor: number };
+
+export type FlujoSection = {
+  monthlySeries: { name: string; ingresos: number; egresos: number; neto: number }[];
+  cumulativeNetCurve: TrendPoint[];
+  bridgeMom: NamedValue[];
+  varianceHeatmap: { x: string; y: string; value: number }[];
+};
+
+export type ForecastPoint = { date: string; p10: number; p50: number; p90: number };
+export type ForecastResult = {
+  available: boolean;
+  reason?: string;
+  model?: string;
+  trainPoints: number;
+  history: { date: string; actual: number }[];
+  forecast: ForecastPoint[];
+};
+
+export type WeeklyProjectionRow = {
+  week: number;
+  inflowNominalUsd: number;
+  inflowRiskWeightedUsd: number;
+  outflowUsd: number;
+  cumulativeP50Usd: number;
+  cumulativeP10Usd: number;
+};
+
+export type ProyeccionSection = {
+  weeks: WeeklyProjectionRow[];
+  runwayWeeksP10: number | null;
+  startingCashUsd: number;
+  avgWeeklyOutflowUsd: number;
+  forecast6m: ForecastResult;
+};
+
+export type CollectionPriorityRow = {
+  pagoRid: string;
+  negociacionRid: string;
+  cliente: string;
+  project: string;
+  unidad: string;
+  tipoPago: string;
+  saldoUsd: number;
+  fechaEstimada: string | null;
+  diasAtraso: number | null;
+  agingBucket: string;
+  riskWeight: number;
+  riskWeightedSaldoUsd: number;
+  priorityScore: number;
+};
+
+export type CxcSection = {
+  kpis: {
+    arTotalUsd: number;
+    arVencidoUsd: number;
+    arVencidoPct: number | null;
+    arVencido90Usd: number;
+    hhi: number | null;
+    openLines: number;
+  };
+  agingByProject: Record<string, string | number>[];
+  agingByTipoPago: Record<string, string | number>[];
+  paretoClientes: ParetoRow[];
+  concentracionTop5: NamedValue[];
+  recuperacion: { name: string; plan: number; recibos: number; recuperacionPct: number | null }[];
+  dsoDays: number | null;
+  priorityList: CollectionPriorityRow[];
+  notes: string[];
+};
+
+export type CxpSection = {
+  kpis: {
+    gastoMesActualUsd: number;
+    pctTopProveedor: number | null;
+    proveedoresActivos: number;
+    presupuestoRestanteUsd: number | null;
+  };
+  paretoProveedores: ParetoRow[];
+  concentracionHhi: number | null;
+  gastoPorPartidaMes: Record<string, string | number>[];
+  topPartidas: string[];
+  presupuestoVsEjecutado: { name: string; plan: number; actual: number }[];
+  histogramaPagos: { label: string; count: number }[];
+  notes: string[];
+};
+
+export type Fideicomiso = {
+  fideicomisoRid: string;
+  nombre: string;
+  project: string;
+  banco: string;
+  montoInicialUsd: number | null;
+  montoLiberacionesUsd: number | null;
+  saldoTotalUsd: number | null;
+  excedenteGarantiaUsd: number | null;
+  pctDesembolsado: number | null;
+};
+
+export type DeudaSection = {
+  kpis: {
+    saldoTotalPrestamoUsd: number;
+    excedenteGarantiaTotalUsd: number;
+    interesesYtdUsd: number;
+    fideicomisosActivos: number;
+  };
+  fideicomisos: Fideicomiso[];
+  saldoPorFideicomiso: NamedValue[];
+  desembolsosAcumulados: TrendPoint[];
+  debtServiceMensual: { name: string; Cuota: number; Intereses: number }[];
+  desembolsosRecientes: { fecha: string; fideicomisoRid: string; montoUsd: number }[];
+  notes: string[];
+};
+
+export type CuentasFxSection = {
+  flujoPorBanco: NamedValue[];
+  flujoPorMoneda: NamedValue[];
+  flujoPorProyecto: NamedValue[];
+  flujoPorCuenta: NamedValue[];
+  tipoCambioDiario: TrendPoint[];
+  mezclaMonedaMensual: Record<string, string | number>[];
+  cuentas: TrustAccount[];
+  notes: string[];
+};
+
+export type ProyectoRollup = {
+  project: string;
+  netPositionUsd: number;
+  arTotalUsd: number;
+  arVencidoUsd: number;
+  saldoPrestamoUsd: number;
+};
+
+export type AnomaliesSection = {
+  available: boolean;
+  series: { date: string; value: number }[];
+  trend: { date: string; value: number }[];
+  anomalies: { date: string; value: number; severity: "medium" | "high"; metric: string }[];
+};
+
 export type CashflowsReport = {
   summary: CashflowsSummary;
   varianceRows: VarianceRow[];
   topVariances: VarianceRow[];
   accounts: TrustAccount[];
   dryRun: boolean;
+  flujo: FlujoSection;
+  proyeccion: ProyeccionSection;
+  cxc: CxcSection;
+  cxp: CxpSection;
+  deuda: DeudaSection;
+  cuentasFx: CuentasFxSection;
+  proyectos: ProyectoRollup[];
+  anomalies: AnomaliesSection;
 };
 
 const asNum = (v: unknown): number => {
@@ -83,6 +245,243 @@ function mapSummary(raw: unknown): CashflowsSummary {
     deviationCount: asNum(s.deviation_count),
     movementsNeedingReview: asNum(s.movements_needing_review),
     generatedAt: asStr(s.generated_at),
+    arTotalUsd: asNum(s.ar_total_usd),
+    arVencidoUsd: asNum(s.ar_vencido_usd),
+    arRiskWeightedUsd: asNum(s.ar_risk_weighted_usd),
+    apGastoMesUsd: asNum(s.ap_gasto_mes_usd),
+    saldoPrestamoTotalUsd: asNum(s.saldo_prestamo_total_usd),
+    pctDesembolsadoAvg: asOptNum(s.pct_desembolsado_avg),
+    runwayWeeksP10: asOptNum(s.runway_weeks_p10),
+    forecastNet3mP50: asOptNum(s.forecast_net_3m_p50),
+    anomalyCount: asNum(s.anomaly_count),
+  };
+}
+
+function asRecordArray(raw: unknown): Record<string, unknown>[] {
+  return Array.isArray(raw) ? (raw as Record<string, unknown>[]) : [];
+}
+
+function mapNamedValue(raw: Record<string, unknown>): NamedValue {
+  return { name: asStr(raw.name), value: asNum(raw.value) };
+}
+
+function mapParetoRow(raw: Record<string, unknown>): ParetoRow {
+  return { name: asStr(raw.name), value: asNum(raw.value), cumulative: asNum(raw.cumulative) };
+}
+
+function mapTrendPoint(raw: Record<string, unknown>): TrendPoint {
+  return { dia: asStr(raw.dia), valor: asNum(raw.valor) };
+}
+
+/** Bucket/partida stacked-bar rows have a dynamic `name` + arbitrary numeric
+ * keys (aging buckets, tipo de pago, partida names) — pass through as-is. */
+function mapBucketRow(raw: Record<string, unknown>): Record<string, string | number> {
+  const out: Record<string, string | number> = { name: asStr(raw.name) };
+  for (const [k, v] of Object.entries(raw)) {
+    if (k === "name") continue;
+    out[k] = typeof v === "number" ? v : asNum(v);
+  }
+  return out;
+}
+
+function mapForecastResult(raw: unknown): ForecastResult {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    available: r.available === true,
+    reason: asOptStr(r.reason) ?? undefined,
+    model: asOptStr(r.model) ?? undefined,
+    trainPoints: asNum(r.train_points),
+    history: asRecordArray(r.history).map((h) => ({ date: asStr(h.date), actual: asNum(h.actual) })),
+    forecast: asRecordArray(r.forecast).map((f) => ({
+      date: asStr(f.date),
+      p10: asNum(f.p10),
+      p50: asNum(f.p50),
+      p90: asNum(f.p90),
+    })),
+  };
+}
+
+function mapFlujoSection(raw: unknown): FlujoSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    monthlySeries: asRecordArray(r.monthly_series).map((m) => ({
+      name: asStr(m.name),
+      ingresos: asNum(m.ingresos),
+      egresos: asNum(m.egresos),
+      neto: asNum(m.neto),
+    })),
+    cumulativeNetCurve: asRecordArray(r.cumulative_net_curve).map(mapTrendPoint),
+    bridgeMom: asRecordArray(r.bridge_mom).map(mapNamedValue),
+    varianceHeatmap: asRecordArray(r.variance_heatmap).map((c) => ({ x: asStr(c.x), y: asStr(c.y), value: asNum(c.value) })),
+  };
+}
+
+function mapProyeccionSection(raw: unknown): ProyeccionSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    weeks: asRecordArray(r.weeks).map((w) => ({
+      week: asNum(w.week),
+      inflowNominalUsd: asNum(w.inflow_nominal_usd),
+      inflowRiskWeightedUsd: asNum(w.inflow_risk_weighted_usd),
+      outflowUsd: asNum(w.outflow_usd),
+      cumulativeP50Usd: asNum(w.cumulative_p50_usd),
+      cumulativeP10Usd: asNum(w.cumulative_p10_usd),
+    })),
+    runwayWeeksP10: asOptNum(r.runway_weeks_p10),
+    startingCashUsd: asNum(r.starting_cash_usd),
+    avgWeeklyOutflowUsd: asNum(r.avg_weekly_outflow_usd),
+    forecast6m: mapForecastResult(r.forecast_6m),
+  };
+}
+
+function mapCollectionPriorityRow(raw: Record<string, unknown>): CollectionPriorityRow {
+  return {
+    pagoRid: asStr(raw.pago_rid),
+    negociacionRid: asStr(raw.negociacion_rid),
+    cliente: asStr(raw.cliente),
+    project: asStr(raw.project),
+    unidad: asStr(raw.unidad),
+    tipoPago: asStr(raw.tipo_pago),
+    saldoUsd: asNum(raw.saldo_usd),
+    fechaEstimada: asOptStr(raw.fecha_estimada),
+    diasAtraso: asOptNum(raw.dias_atraso),
+    agingBucket: asStr(raw.aging_bucket),
+    riskWeight: asNum(raw.risk_weight),
+    riskWeightedSaldoUsd: asNum(raw.risk_weighted_saldo_usd),
+    priorityScore: asNum(raw.priority_score),
+  };
+}
+
+function mapCxcSection(raw: unknown): CxcSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const kpis = (r.kpis && typeof r.kpis === "object" ? r.kpis : {}) as Record<string, unknown>;
+  return {
+    kpis: {
+      arTotalUsd: asNum(kpis.ar_total_usd),
+      arVencidoUsd: asNum(kpis.ar_vencido_usd),
+      arVencidoPct: asOptNum(kpis.ar_vencido_pct),
+      arVencido90Usd: asNum(kpis.ar_vencido_90_usd),
+      hhi: asOptNum(kpis.hhi),
+      openLines: asNum(kpis.open_lines),
+    },
+    agingByProject: asRecordArray(r.aging_by_project).map(mapBucketRow),
+    agingByTipoPago: asRecordArray(r.aging_by_tipo_pago).map(mapBucketRow),
+    paretoClientes: asRecordArray(r.pareto_clientes).map(mapParetoRow),
+    concentracionTop5: asRecordArray(r.concentracion_top5).map(mapNamedValue),
+    recuperacion: asRecordArray(r.recuperacion).map((v) => ({
+      name: asStr(v.name),
+      plan: asNum(v.plan),
+      recibos: asNum(v.recibos),
+      recuperacionPct: asOptNum(v.recuperacion_pct),
+    })),
+    dsoDays: asOptNum(r.dso_days),
+    priorityList: asRecordArray(r.priority_list).map(mapCollectionPriorityRow),
+    notes: Array.isArray(r.notes) ? (r.notes as unknown[]).map((n) => String(n)) : [],
+  };
+}
+
+function mapCxpSection(raw: unknown): CxpSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const kpis = (r.kpis && typeof r.kpis === "object" ? r.kpis : {}) as Record<string, unknown>;
+  return {
+    kpis: {
+      gastoMesActualUsd: asNum(kpis.gasto_mes_actual_usd),
+      pctTopProveedor: asOptNum(kpis.pct_top_proveedor),
+      proveedoresActivos: asNum(kpis.proveedores_activos),
+      presupuestoRestanteUsd: asOptNum(kpis.presupuesto_restante_usd),
+    },
+    paretoProveedores: asRecordArray(r.pareto_proveedores).map(mapParetoRow),
+    concentracionHhi: asOptNum(r.concentracion_hhi),
+    gastoPorPartidaMes: asRecordArray(r.gasto_por_partida_mes).map(mapBucketRow),
+    topPartidas: Array.isArray(r.top_partidas) ? (r.top_partidas as unknown[]).map((p) => String(p)) : [],
+    presupuestoVsEjecutado: asRecordArray(r.presupuesto_vs_ejecutado).map((v) => ({
+      name: asStr(v.name),
+      plan: asNum(v.plan),
+      actual: asNum(v.actual),
+    })),
+    histogramaPagos: asRecordArray(r.histograma_pagos).map((h) => ({ label: asStr(h.label), count: asNum(h.count) })),
+    notes: Array.isArray(r.notes) ? (r.notes as unknown[]).map((n) => String(n)) : [],
+  };
+}
+
+function mapFideicomiso(raw: Record<string, unknown>): Fideicomiso {
+  return {
+    fideicomisoRid: asStr(raw.fideicomiso_rid),
+    nombre: asStr(raw.nombre),
+    project: asStr(raw.project),
+    banco: asStr(raw.banco),
+    montoInicialUsd: asOptNum(raw.monto_inicial_usd),
+    montoLiberacionesUsd: asOptNum(raw.monto_liberaciones_usd),
+    saldoTotalUsd: asOptNum(raw.saldo_total_usd),
+    excedenteGarantiaUsd: asOptNum(raw.excedente_garantia_usd),
+    pctDesembolsado: asOptNum(raw.pct_desembolsado),
+  };
+}
+
+function mapDeudaSection(raw: unknown): DeudaSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const kpis = (r.kpis && typeof r.kpis === "object" ? r.kpis : {}) as Record<string, unknown>;
+  return {
+    kpis: {
+      saldoTotalPrestamoUsd: asNum(kpis.saldo_total_prestamo_usd),
+      excedenteGarantiaTotalUsd: asNum(kpis.excedente_garantia_total_usd),
+      interesesYtdUsd: asNum(kpis.intereses_ytd_usd),
+      fideicomisosActivos: asNum(kpis.fideicomisos_activos),
+    },
+    fideicomisos: asRecordArray(r.fideicomisos).map(mapFideicomiso),
+    saldoPorFideicomiso: asRecordArray(r.saldo_por_fideicomiso).map(mapNamedValue),
+    desembolsosAcumulados: asRecordArray(r.desembolsos_acumulados).map(mapTrendPoint),
+    debtServiceMensual: asRecordArray(r.debt_service_mensual).map((v) => ({
+      name: asStr(v.name),
+      Cuota: asNum(v.Cuota),
+      Intereses: asNum(v.Intereses),
+    })),
+    desembolsosRecientes: asRecordArray(r.desembolsos_recientes).map((v) => ({
+      fecha: asStr(v.fecha),
+      fideicomisoRid: asStr(v.fideicomiso_rid),
+      montoUsd: asNum(v.monto_usd),
+    })),
+    notes: Array.isArray(r.notes) ? (r.notes as unknown[]).map((n) => String(n)) : [],
+  };
+}
+
+function mapCuentasFxSection(raw: unknown): CuentasFxSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    flujoPorBanco: asRecordArray(r.flujo_por_banco).map(mapNamedValue),
+    flujoPorMoneda: asRecordArray(r.flujo_por_moneda).map(mapNamedValue),
+    flujoPorProyecto: asRecordArray(r.flujo_por_proyecto).map(mapNamedValue),
+    flujoPorCuenta: asRecordArray(r.flujo_por_cuenta).map(mapNamedValue),
+    tipoCambioDiario: asRecordArray(r.tipo_cambio_diario).map(mapTrendPoint),
+    mezclaMonedaMensual: asRecordArray(r.mezcla_moneda_mensual).map(mapBucketRow),
+    cuentas: asRecordArray(r.cuentas).map(mapAccount),
+    notes: Array.isArray(r.notes) ? (r.notes as unknown[]).map((n) => String(n)) : [],
+  };
+}
+
+function mapProyectoRollup(raw: Record<string, unknown>): ProyectoRollup {
+  return {
+    project: asStr(raw.project),
+    netPositionUsd: asNum(raw.net_position_usd),
+    arTotalUsd: asNum(raw.ar_total_usd),
+    arVencidoUsd: asNum(raw.ar_vencido_usd),
+    saldoPrestamoUsd: asNum(raw.saldo_prestamo_usd),
+  };
+}
+
+function mapAnomaliesSection(raw: unknown): AnomaliesSection {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const severityOf = (v: unknown): "medium" | "high" => (v === "high" ? "high" : "medium");
+  return {
+    available: r.available === true,
+    series: asRecordArray(r.series).map((s) => ({ date: asStr(s.date), value: asNum(s.value) })),
+    trend: asRecordArray(r.trend).map((s) => ({ date: asStr(s.date), value: asNum(s.value) })),
+    anomalies: asRecordArray(r.anomalies).map((a) => ({
+      date: asStr(a.date),
+      value: asNum(a.value),
+      severity: severityOf(a.severity),
+      metric: asStr(a.metric),
+    })),
   };
 }
 
@@ -169,11 +568,26 @@ export async function getCashflowsReport(
 
   return {
     summary: mapSummary(result.summary),
-    varianceRows: Array.isArray(result.variance_rows) ? (result.variance_rows as Record<string, unknown>[]).map(mapVarianceRow) : [],
-    topVariances: Array.isArray(result.top_variances) ? (result.top_variances as Record<string, unknown>[]).map(mapVarianceRow) : [],
-    accounts: Array.isArray(result.accounts) ? (result.accounts as Record<string, unknown>[]).map(mapAccount) : [],
+    varianceRows: asRecordArray(result.variance_rows).map(mapVarianceRow),
+    topVariances: asRecordArray(result.top_variances).map(mapVarianceRow),
+    accounts: asRecordArray(result.accounts).map(mapAccount),
     dryRun: result.dry_run !== false,
+    flujo: mapFlujoSection(result.flujo),
+    proyeccion: mapProyeccionSection(result.proyeccion),
+    cxc: mapCxcSection(result.cxc),
+    cxp: mapCxpSection(result.cxp),
+    deuda: mapDeudaSection(result.deuda),
+    cuentasFx: mapCuentasFxSection(result.cuentas_fx),
+    proyectos: asRecordArray(result.proyectos).map(mapProyectoRollup),
+    anomalies: mapAnomaliesSection(result.anomalies),
   };
+}
+
+/** `accounts` is always loaded unfiltered (see `_load_existing_accounts`), so
+ * it's the one section every treasury screen can use to populate the
+ * `?project=` dropdown regardless of the current filter. */
+export function uniqueProjects(accounts: TrustAccount[]): string[] {
+  return Array.from(new Set(accounts.map((a) => a.project).filter(Boolean))).sort();
 }
 
 /**
