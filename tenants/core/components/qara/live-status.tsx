@@ -22,6 +22,8 @@ const SCAN_TIMEOUT_MS = 8 * 60_000;
 //            evento flow.core_ventas.scored (corre en otra traza → se busca por contacto+tiempo),
 //            o por HubSpot (OPEN_DEAL/UNQUALIFIED) como respaldo. Siempre llega a estado terminal.
 function initialStep(run: QaraRun): Step {
+  if (run.mode === "cleanup")
+    return { id: "start", text: "🧹 Qara está revisando leads sin respuesta…", kind: "info" };
   if (run.mode === "scan")
     return { id: "start", text: "🔍 Qara está revisando y contactando leads nuevos…", kind: "info" };
   if (run.channel === "CALL")
@@ -50,7 +52,8 @@ export function LiveStatus({ run, onClear }: { run: QaraRun | null; onClear?: ()
     let settled = false;
     let timer: ReturnType<typeof setTimeout>;
     const isCall = run.channel === "CALL";
-    const timeoutMs = run.mode === "scan" ? SCAN_TIMEOUT_MS : isCall ? CALL_TIMEOUT_MS : MSG_TIMEOUT_MS;
+    const isBatch = run.mode === "scan" || run.mode === "cleanup";
+    const timeoutMs = isBatch ? SCAN_TIMEOUT_MS : isCall ? CALL_TIMEOUT_MS : MSG_TIMEOUT_MS;
 
     function finish(p: Phase, sum: string, step: Step) {
       settled = true;
@@ -181,6 +184,16 @@ export function LiveStatus({ run, onClear }: { run: QaraRun | null; onClear?: ()
           // si el poll cae en otro proceso/réplica que nunca corrió el run.
           const complete = trace.events.find((e: { kind: string }) => e.kind === "run_complete");
           if (complete) {
+            if (complete.mode === "cleanup") {
+              const retried = complete.retried ?? 0;
+              const archived = complete.archived ?? 0;
+              finish(
+                "done",
+                `Listo — Qara reintentó ${retried} lead${retried === 1 ? "" : "s"} sin respuesta y archivó ${archived}.`,
+                { id: "done", text: `✅ Limpieza completada — ${retried} reintentados, ${archived} archivados`, kind: "ok" }
+              );
+              return;
+            }
             const proc = complete.processed ?? 0;
             const scanned = complete.scanned ?? 0;
             finish("done", `Listo — Qara contactó ${proc} de ${scanned} lead${scanned === 1 ? "" : "s"} nuevos.`, {
@@ -206,7 +219,7 @@ export function LiveStatus({ run, onClear }: { run: QaraRun | null; onClear?: ()
       });
     }
 
-    const tick = run.mode === "scan" ? tickScan : tickSingle;
+    const tick = isBatch ? tickScan : tickSingle;
     timer = setTimeout(tick, 1500);
 
     const hardStop = setTimeout(() => {
@@ -216,8 +229,8 @@ export function LiveStatus({ run, onClear }: { run: QaraRun | null; onClear?: ()
       setSummary(
         isCall
           ? "La llamada sigue en curso o tardó más de lo normal. El resultado quedará en HubSpot al terminar."
-          : run!.mode === "scan"
-            ? "El scan está tardando más de lo normal. Revisá los resultados en la pestaña Analítica."
+          : isBatch
+            ? "El proceso está tardando más de lo normal. Revisá los resultados en la pestaña Analítica."
             : "El envío está tardando más de lo normal. Revisá el lead en HubSpot."
       );
       setPhase("warn");
@@ -306,7 +319,7 @@ export function LiveStatus({ run, onClear }: { run: QaraRun | null; onClear?: ()
 function StepIcon({ kind, mode, channel }: { kind: Step["kind"]; mode: string; channel?: string }) {
   if (kind === "error") return <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />;
   if (kind === "ok") return <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />;
-  if (mode === "scan") return <Search className="mt-0.5 h-4 w-4 shrink-0 text-primary" />;
+  if (mode === "scan" || mode === "cleanup") return <Search className="mt-0.5 h-4 w-4 shrink-0 text-primary" />;
   if (channel === "CALL") return <Phone className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" />;
   return <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />;
 }

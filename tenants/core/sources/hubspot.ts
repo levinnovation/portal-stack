@@ -280,3 +280,128 @@ export async function getLeadProgress(contactId: string): Promise<LeadProgress |
     lastModifiedMs: isFinite(lm) ? lm : null,
   };
 }
+
+// ── Citas agendadas por Qara (población: ai_meeting_datetime HAS_PROPERTY) ──
+// Regla durable del tenant: la población de Qara se define por props ai_*, no
+// por hs_lead_status. Qara escribe ai_meeting_datetime/mode/advisor al crear el
+// meeting en HubSpot; Murphy (agent_11) maneja el ciclo de vida de la cita.
+
+const CITA_PROPS = [
+  "firstname",
+  "lastname",
+  "phone",
+  "email",
+  "ai_meeting_datetime",
+  "ai_meeting_mode",
+  "ai_meeting_advisor",
+  "proyecto_de_interes",
+  "ai_score",
+] as const;
+
+export type QaraCita = {
+  contactId: string;
+  nombre: string;
+  fechaIso: string;
+  fechaMs: number | null;
+  modo: "virtual" | "presencial" | "";
+  asesor: string;
+  proyecto: string;
+  score: number | null;
+  telefono: string;
+  email: string;
+};
+
+export type QaraCitasData = {
+  kpis: {
+    total: number;
+    proximas: number;
+    estaSemana: number;
+    virtuales: number;
+    presenciales: number;
+  };
+  proximas: QaraCita[];
+  recientes: QaraCita[];
+  porAsesor: { name: string; value: number }[];
+  porModo: { name: string; value: number }[];
+};
+
+export async function getQaraCitas(): Promise<QaraCitasData> {
+  const filterGroups = [
+    { filters: [{ propertyName: "ai_meeting_datetime", operator: "HAS_PROPERTY" }] },
+  ];
+  const all: HsContact[] = [];
+  let after: string | undefined;
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const body: Record<string, unknown> = {
+      filterGroups,
+      properties: CITA_PROPS,
+      limit: PAGE_SIZE,
+      sorts: [{ propertyName: "lastmodifieddate", direction: "DESCENDING" }],
+    };
+    if (after) body.after = after;
+    const json = await postSearch(body);
+    all.push(...(json.results ?? []));
+    after = json.paging?.next?.after;
+    if (!after) break;
+  }
+
+  const citas: QaraCita[] = all.map((c) => {
+    const p = c.properties || {};
+    const iso = p.ai_meeting_datetime || "";
+    const ms = iso ? Date.parse(iso) : NaN;
+    const scoreRaw = p.ai_score;
+    const modoRaw = (p.ai_meeting_mode || "").toLowerCase();
+    return {
+      contactId: c.id,
+      nombre: [p.firstname, p.lastname].filter(Boolean).join(" ").trim() || `Lead ${c.id}`,
+      fechaIso: iso,
+      fechaMs: isFinite(ms) ? ms : null,
+      modo: modoRaw === "virtual" ? "virtual" : modoRaw === "presencial" ? "presencial" : "",
+      asesor: p.ai_meeting_advisor || "",
+      proyecto: p.proyecto_de_interes || "",
+      score:
+        scoreRaw != null && scoreRaw !== "" && isFinite(parseFloat(scoreRaw))
+          ? parseFloat(scoreRaw)
+          : null,
+      telefono: p.phone || "",
+      email: p.email || "",
+    };
+  });
+
+  const now = Date.now();
+  const weekEnd = now + 7 * 24 * 60 * 60 * 1000;
+  const conFecha = citas.filter((c) => c.fechaMs != null) as (QaraCita & { fechaMs: number })[];
+  const proximas = conFecha.filter((c) => c.fechaMs >= now).sort((a, b) => a.fechaMs - b.fechaMs);
+  const recientes = conFecha
+    .filter((c) => c.fechaMs < now)
+    .sort((a, b) => b.fechaMs - a.fechaMs)
+    .slice(0, 20);
+
+  const counts = (items: QaraCita[], key: (c: QaraCita) => string) => {
+    const m = new Map<string, number>();
+    for (const c of items) {
+      const k = key(c) || "Sin dato";
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return [...m.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  };
+
+  return {
+    kpis: {
+      total: citas.length,
+      proximas: proximas.length,
+      estaSemana: proximas.filter((c) => c.fechaMs <= weekEnd).length,
+      virtuales: citas.filter((c) => c.modo === "virtual").length,
+      presenciales: citas.filter((c) => c.modo === "presencial").length,
+    },
+    proximas: proximas.slice(0, 50),
+    recientes,
+    porAsesor: counts(citas, (c) => c.asesor),
+    porModo: counts(
+      citas.filter((c) => c.modo),
+      (c) => (c.modo === "virtual" ? "Virtual (Teams)" : "Presencial")
+    ),
+  };
+}
