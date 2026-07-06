@@ -11,6 +11,19 @@
 
 import type { Payload } from "payload";
 
+// #region agent log
+function decodeJwtClaims(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const json = Buffer.from(parts[1], "base64").toString("utf8");
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+// #endregion
+
 export interface AuthSession {
   token: string;
   user: SessionUser;
@@ -47,6 +60,27 @@ export class LocalPayloadAuthProvider implements AuthProvider {
       // #endregion
       return null;
     }
+    // #region agent log
+    const claims = decodeJwtClaims(m[1]);
+    console.log(
+      "[DEBUG-AUTH] getSession decoded incoming token claims (unverified)",
+      JSON.stringify({ hypothesisId: "H-usesessions", claims, tokenLen: m[1].length }),
+    );
+    if (claims && (claims as any).id) {
+      try {
+        const dbUser = await this.payload.findByID({ collection: "users", id: (claims as any).id as string, depth: 0 });
+        console.log(
+          "[DEBUG-AUTH] getSession db user sessions snapshot",
+          JSON.stringify({ hypothesisId: "H-usesessions", sessions: (dbUser as any)?.sessions ?? null }),
+        );
+      } catch (dbErr: any) {
+        console.log(
+          "[DEBUG-AUTH] getSession db lookup for sessions failed",
+          JSON.stringify({ hypothesisId: "H-usesessions", error: dbErr?.message || String(dbErr) }),
+        );
+      }
+    }
+    // #endregion
     try {
       const result = await this.payload.auth({
         headers: new Headers({ cookie: `payload-token=${m[1]}` }),
@@ -85,6 +119,13 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     });
     if (!result.token) throw new Error("Invalid credentials");
     if (!result.user) throw new Error("No user returned");
+    // #region agent log
+    const claims = decodeJwtClaims(result.token);
+    console.log(
+      "[DEBUG-AUTH] signIn issued token claims (unverified)",
+      JSON.stringify({ hypothesisId: "H-usesessions", claims, userSessionsOnLoginResult: (result.user as any)?.sessions ?? null }),
+    );
+    // #endregion
     return {
       token: result.token,
       user: {
