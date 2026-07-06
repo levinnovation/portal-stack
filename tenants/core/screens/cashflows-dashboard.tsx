@@ -1,8 +1,9 @@
-import { AlertTriangle, ClipboardList, Landmark, Percent, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { AlertTriangle, ClipboardList, Percent, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { AutoRefresh } from "@/components/portal/auto-refresh";
 import { Donut } from "@/components/portal/charts/donut";
 import { VarianceWaterfall } from "@/components/portal/charts/variance-waterfall";
 import { AgentRunTrigger } from "@tenants/core/components/agent-run-trigger";
+import { AccountsTable } from "@tenants/core/components/cashflows/accounts-table";
 import { KpiCard } from "@tenants/core/components/kpi-card";
 import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
@@ -259,35 +260,7 @@ export async function CashflowsDashboardScreen({
         }}
       >
         {accounts.length ? (
-          <div className="max-h-[420px] overflow-y-auto overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 z-10 bg-card">
-                <tr className="border-b border-border text-xs uppercase text-muted-foreground">
-                  <th className="py-2 pr-4">Fideicomiso / Cuenta</th>
-                  <th className="py-2 pr-4">Proyecto</th>
-                  <th className="py-2 pr-4">Banco</th>
-                  <th className="py-2 pr-4">Moneda</th>
-                  <th className="py-2 pr-4">Fuente</th>
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.map((a, i) => (
-                  <tr key={`${a.accountNumber}-${i}`} className="border-b border-border/50 last:border-0">
-                    <td className="py-2 pr-4">
-                      <div className="flex items-center gap-1.5">
-                        <Landmark className="h-3.5 w-3.5 text-muted-foreground/60" />
-                        {a.trustName || a.accountNumber}
-                      </div>
-                    </td>
-                    <td className="py-2 pr-4 text-muted-foreground">{a.project || "—"}</td>
-                    <td className="py-2 pr-4 text-muted-foreground">{a.bank || "—"}</td>
-                    <td className="py-2 pr-4 text-muted-foreground">{a.currency || "—"}</td>
-                    <td className="py-2 pr-4 text-muted-foreground">{a.source}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AccountsTable accounts={accounts} />
         ) : (
           <EmptyState message="Sin cuentas registradas" hint="Corre el backfill inicial o el pipeline de ingestión" />
         )}

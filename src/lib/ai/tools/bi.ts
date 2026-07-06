@@ -6,6 +6,7 @@ import { runExternalDbTemplate } from "@/lib/integrations/external-db";
 import { getInteligenciaDataOrNull } from "@tenants/core/sources/inteligencia";
 import { getLeahData } from "@tenants/core/sources/quickbase";
 import { getQaraData } from "@tenants/core/sources/hubspot";
+import { getCashflowsReport, getCashflowsHistory } from "@tenants/core/sources/cashflows";
 import * as marketing from "@/lib/integrations/meta/marketing";
 
 const runTypeSchema = z.enum(["today", "weekly", "monthly", "7d", "1m", "3m", "6m", "12m", "full"]);
@@ -107,6 +108,49 @@ export function buildBiTools(user: SessionUser) {
           };
         } catch (e: any) {
           return { error: e?.message || "Failed to read Qara leads data" };
+        }
+      },
+    }),
+
+    cashflows_overview: tool({
+      description:
+        "Fetch Cashflows actuals-vs-presupuesto snapshot (KPIs, variance por partida, cuentas fideicomiso) for a period/project. Admin-only.",
+      inputSchema: z.object({
+        periodMonth: z.string().optional().describe("YYYY-MM, defaults to the current period"),
+        project: z.string().optional().describe("Nombre exacto del proyecto, o vacío para todos"),
+      }),
+      execute: async ({ periodMonth, project }) => {
+        if (!isStaffRole(user.role)) return forbidden();
+        try {
+          const report = await getCashflowsReport({ periodMonth, project });
+          return {
+            summary: report.summary,
+            topVariances: report.topVariances,
+            varianceRowCount: report.varianceRows.length,
+            varianceRows: report.varianceRows.slice(0, 30),
+            accountsCount: report.accounts.length,
+          };
+        } catch (e: any) {
+          return { error: e?.message || "Failed to read Cashflows overview" };
+        }
+      },
+    }),
+
+    cashflows_history: tool({
+      description:
+        "Fetch Cashflows pipeline run history (append-only snapshots) to answer questions about past runs/trend over time. Admin-only.",
+      inputSchema: z.object({
+        from: z.string().optional().describe("ISO date, start of range"),
+        to: z.string().optional().describe("ISO date, end of range"),
+        limit: z.number().min(1).max(200).default(20),
+      }),
+      execute: async ({ from, to, limit }) => {
+        if (!isStaffRole(user.role)) return forbidden();
+        try {
+          const history = await getCashflowsHistory({ from, to, limit });
+          return { count: history.length, history };
+        } catch (e: any) {
+          return { error: e?.message || "Failed to read Cashflows history" };
         }
       },
     }),
