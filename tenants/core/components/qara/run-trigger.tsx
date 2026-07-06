@@ -17,7 +17,18 @@ const CANCEL_WINDOW_S = 5;
 // Despierta a Qara desde el UI. "Escanear leads ahora" = scan completo; el formulario
 // colapsable corre un solo lead (para pruebas). Al iniciar, entrega el contexto del run
 // al padre para que <LiveStatus> muestre el progreso correcto.
-export function RunTrigger({ onStarted }: { onStarted: (run: QaraRun) => void }) {
+export function RunTrigger({
+  onStarted,
+  hasActiveRun = false,
+}: {
+  onStarted: (run: QaraRun) => void;
+  // Hay un run en curso (o recién terminado, sin "Limpiar" todavía) en el panel de
+  // Progreso en vivo. El POST a Qara responde en segundos (async_execution), pero el
+  // scan real tarda minutos — sin este guard, un segundo click mientras el primero
+  // sigue corriendo dispara OTRO scan que se reparte los leads nuevos con el primero
+  // (cada uno encuentra los que el otro no alcanzó a tomar todavía).
+  hasActiveRun?: boolean;
+}) {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [contactId, setContactId] = useState("");
@@ -87,7 +98,7 @@ export function RunTrigger({ onStarted }: { onStarted: (run: QaraRun) => void })
     });
   }
 
-  const locked = busy || pending !== null;
+  const locked = busy || pending !== null || hasActiveRun;
 
   function onScan() {
     schedule(
@@ -121,6 +132,14 @@ export function RunTrigger({ onStarted }: { onStarted: (run: QaraRun) => void })
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
         Escanear leads ahora
       </button>
+
+      {/* Ya hay un run en curso (o recién terminado): explica por qué el botón no
+          responde en vez de dejarlo mudo — evita el reintento que dispara un scan duplicado. */}
+      {hasActiveRun && !pending && (
+        <p className="text-xs text-muted-foreground">
+          Qara ya está trabajando — mirá el progreso a la derecha. Dale <span className="font-medium">Limpiar</span> ahí cuando termine para lanzar otro.
+        </p>
+      )}
 
       {/* Ventana de cancelación: Qara aún NO se ha despertado. */}
       {pending && (

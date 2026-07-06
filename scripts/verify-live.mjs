@@ -10,6 +10,7 @@ const PAGES = [
   "/portal/admin/agents/leah",
   "/portal/admin/agents/leah/contratos",
   "/portal/admin/agents/qara",
+  "/portal/admin/agents/qara/citas",
   "/portal/admin/agents/qara/control",
   "/portal/admin/agents/inteligencia",
   "/portal/admin/agents/inteligencia/segmentos",
@@ -25,6 +26,7 @@ const APIS = [
   "/api/health",
   "/api/agents/leah/kpis",
   "/api/agents/qara/kpis",
+  "/api/agents/qara/citas",
   "/api/agents/inteligencia/latest?run_type=weekly",
 ];
 

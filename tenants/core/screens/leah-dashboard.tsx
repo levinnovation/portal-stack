@@ -23,7 +23,7 @@ export async function LeahDashboardScreen() {
     );
   }
 
-  const { kpis, conversion, porCanal, porCampaign, porFuenteMonto, diasACierre, tendenciaMonto } = data;
+  const { kpis, conversion, porCanal, porCampaign, porFuenteMonto, porAsesor, porProyecto, diasACierre, tendenciaMonto } = data;
 
   return (
     <div className="space-y-6">
@@ -113,6 +113,25 @@ export async function LeahDashboardScreen() {
             <Histogram data={diasACierre} color="#fbbf24" />
           ) : (
             <EmptyState message="Sin días a cierre calculados" />
+          )}
+        </SectionCard>
+      </div>
+
+      {/* Atribución por asesor / proyecto */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <SectionCard title="Contratos por asesor" description="Ventas firmadas cerradas por cada asesor">
+          {porAsesor.length ? (
+            <BarHorizontal data={porAsesor} format="num" color="#38bdf8" />
+          ) : (
+            <EmptyState message="Sin contratos atribuidos" />
+          )}
+        </SectionCard>
+
+        <SectionCard title="Atribución por proyecto" description="Contratos firmados por proyecto">
+          {porProyecto.length ? (
+            <Donut data={porProyecto} format="num" />
+          ) : (
+            <EmptyState message="Sin proyecto atribuido" />
           )}
         </SectionCard>
       </div>

@@ -10,7 +10,6 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
-import { compactMoney } from "@tenants/core/lib/format";
 import { getCashflowsReport, uniqueProjects, type CashflowsReport } from "@tenants/core/sources/cashflows";
 
 export async function CashflowsCuentasScreen({ project }: { project?: string }) {
@@ -97,7 +96,7 @@ export async function CashflowsCuentasScreen({ project }: { project?: string }) 
         aiExplain={{ kind: "chart", description: "Composición mensual del movimiento absoluto por moneda.", formula: "Σ |amount_usd| agrupado por (mes, moneda)", data: cuentasFx.mezclaMonedaMensual }}
       >
         {cuentasFx.mezclaMonedaMensual.length ? (
-          <StackedBar data={cuentasFx.mezclaMonedaMensual} keys={currencyKeys} tickFormatter={compactMoney} />
+          <StackedBar data={cuentasFx.mezclaMonedaMensual} keys={currencyKeys} moneyFormat />
         ) : (
           <EmptyState message="Sin movimientos" />
         )}

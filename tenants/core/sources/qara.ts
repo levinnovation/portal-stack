@@ -73,6 +73,28 @@ export async function getJob(traceId: string): Promise<JobStatus> {
   };
 }
 
+export type ActiveRun =
+  | { active: true; trace_id: string; mode: string; started_at: number }
+  | { active: false };
+
+/**
+ * Corrida disparada por el cron de Qara, si hay una en curso/reciente. El botón manual
+ * conoce su trace_id porque lo recibe en la respuesta del POST; un cron server-side no
+ * tiene forma de avisarle al navegador — así que el dashboard sondea este endpoint para
+ * descubrirla y mostrar el mismo panel de "Progreso en vivo".
+ */
+export async function getActiveRun(): Promise<ActiveRun> {
+  const res = await fetch(`${base()}/api/v1/config/active_run`, {
+    headers: headers(),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`Qara active_run ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as ActiveRun;
+}
+
 export type Schedule = {
   scan_hours: number[];
   cleanup_hours: number[];

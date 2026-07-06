@@ -7,6 +7,7 @@ import {
   TrendingUp, Hammer, FileText, CreditCard, User as UserIcon, LogOut, Menu, Bell,
   Briefcase, ChevronRight, FileSpreadsheet, MessageCircle, BrainCircuit, PieChart, Radar,
   SlidersHorizontal, Megaphone, ScanSearch, FlaskConical, ChartNoAxesCombined, Trophy,
+  CalendarDays,
   Landmark, FolderOpen, FileInput, ClipboardList, History, Wallet, CalendarClock,
   ArrowLeftRight, Receipt, CircleDollarSign, Banknote,
 } from "lucide-react";
@@ -39,7 +40,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Building2, Users, ShoppingBag, Upload, RefreshCw, BarChart3, ShieldCheck,
   TrendingUp, Hammer, FileText, CreditCard, User: UserIcon, Briefcase, MessageCircle,
   FileSpreadsheet, BrainCircuit, PieChart, Radar, SlidersHorizontal, Megaphone, ScanSearch,
-  FlaskConical, ChartNoAxesCombined, Trophy, Landmark, FolderOpen, FileInput, ClipboardList, History, Wallet,
+  FlaskConical, ChartNoAxesCombined, Trophy, CalendarDays, Landmark, FolderOpen, FileInput, ClipboardList, History, Wallet,
   CalendarClock, ArrowLeftRight, Receipt, CircleDollarSign, Banknote,
 };
 

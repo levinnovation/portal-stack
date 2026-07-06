@@ -36,26 +36,15 @@ type SearchResp = {
   total?: number;
 };
 
-async function hsSearch(after?: string): Promise<SearchResp> {
-  const token = requireEnv("HUBSPOT_TOKEN");
-  const body: Record<string, unknown> = {
-    properties: PROPS,
-    limit: PAGE_SIZE,
-    // Ordenamos por última modificación (no creación): así los leads que Qara acaba de
-    // trabajar (score/llamada) entran primero y se reflejan en los gráficos sin esperar,
-    // aunque su createdate sea viejo y queden fuera del tope por antigüedad.
-    sorts: [{ propertyName: "lastmodifieddate", direction: "DESCENDING" }],
-  };
-  if (after) body.after = after;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  // Backoff simple ante 429 (rate-limit de HubSpot).
+// POST genérico al Search API con backoff ante 429.
+async function postSearch(body: Record<string, unknown>): Promise<SearchResp> {
+  const token = requireEnv("HUBSPOT_TOKEN");
   for (let attempt = 0; attempt < 4; attempt++) {
     const res = await fetch(`${HS_BASE}/crm/v3/objects/contacts/search`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
       next: { revalidate: 60 },
     });
@@ -72,19 +61,36 @@ async function hsSearch(after?: string): Promise<SearchResp> {
   throw new Error("HubSpot 429: rate-limit excedido tras reintentos");
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Total EXACTO que cumple un filtro, sin traer los contactos (el portal tiene 70k+). */
+async function searchTotal(filterGroups: unknown[]): Promise<number> {
+  const json = await postSearch({ filterGroups, limit: 1 });
+  return json.total ?? 0;
+}
 
-/** Trae hasta MAX_PAGES*PAGE_SIZE contactos. Lanza si la API falla. */
-async function getContacts(): Promise<HsContact[]> {
+/** Trae TODOS los contactos que cumplen un filtro (para sets chicos de Qara). */
+async function fetchMatching(filterGroups: unknown[], maxPages = MAX_PAGES): Promise<HsContact[]> {
   const all: HsContact[] = [];
   let after: string | undefined;
-  for (let i = 0; i < MAX_PAGES; i++) {
-    const page = await hsSearch(after);
+  for (let i = 0; i < maxPages; i++) {
+    const body: Record<string, unknown> = {
+      filterGroups,
+      properties: PROPS,
+      limit: PAGE_SIZE,
+      sorts: [{ propertyName: "lastmodifieddate", direction: "DESCENDING" }],
+    };
+    if (after) body.after = after;
+    const page = await postSearch(body);
     all.push(...(page.results ?? []));
     after = page.paging?.next?.after;
     if (!after) break;
   }
   return all;
+}
+
+// Inicio de HOY en Costa Rica (UTC-6, sin DST) en epoch-ms → filtro createdate.
+function startOfTodayCRms(): number {
+  const cr = new Date(Date.now() - 6 * 3600 * 1000);
+  return Date.UTC(cr.getUTCFullYear(), cr.getUTCMonth(), cr.getUTCDate(), 6, 0, 0, 0);
 }
 
 const prop = (c: HsContact, k: string): string => c.properties[k] ?? "";
@@ -95,22 +101,11 @@ const numProp = (c: HsContact, k: string): number | null => {
   return isFinite(n) ? n : null;
 };
 
-function esHoy(iso: string): boolean {
-  if (!iso) return false;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return false;
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
 export type QaraKpis = {
   totalLeads: number;
-  nuevosHoy: number;
-  contactados: number; // hs_lead_status != NEW/blank
+  nuevosNew: number; // hs_lead_status = NEW (esperando ser escaneados por Qara)
+  nuevosHoy: number; // createdate = hoy (Costa Rica)
+  contactados: number; // Qara realmente los contactó (ai_outreach_message presente)
   scoreados: number; // ai_score presente
   scorePromedio: number | null;
   altaIntencion: number; // score >= 8
@@ -140,20 +135,33 @@ const FUNNEL_LABEL: Record<string, string> = {
   UNQUALIFIED: "Descartado",
 };
 
+// CLAVE: el portal de CORE tiene 70k+ contactos con un funnel inmobiliario legacy propio
+// (UNQUALIFIED, COMPRADOR, CITA, RE-CONVERSION…) que Qara NUNCA tocó — así que "estado != NEW"
+// NO significa "contactado por Qara". Definimos la población de Qara por las props que Qara
+// escribe: `ai_outreach_message` (contactó) y `ai_score` (puntuó). Los CONTEOS salen de
+// búsquedas con filtro (searchTotal, exactos sobre los 70k); las DISTRIBUCIONES se agregan
+// sobre los sets chicos de Qara (decenas de filas).
 export async function getQaraData(): Promise<QaraData> {
-  const contacts = await getContacts();
+  const has = (p: string) => [{ filters: [{ propertyName: p, operator: "HAS_PROPERTY" }] }];
+  const [totalLeads, nuevosNew, nuevosHoy, contactados, scoreados, scoredContacts, contactedContacts] =
+    await Promise.all([
+      searchTotal([]),
+      searchTotal([{ filters: [{ propertyName: "hs_lead_status", operator: "EQ", value: "NEW" }] }]),
+      searchTotal([{ filters: [{ propertyName: "createdate", operator: "GTE", value: String(startOfTodayCRms()) }] }]),
+      searchTotal(has("ai_outreach_message")),
+      searchTotal(has("ai_score")),
+      fetchMatching(has("ai_score")),
+      fetchMatching(has("ai_outreach_message")),
+    ]);
 
-  const scores = contacts.map((c) => numProp(c, "ai_score")).filter((s): s is number => s != null);
-  const contactados = contacts.filter((c) => {
-    const st = prop(c, "hs_lead_status").toUpperCase();
-    return st && st !== "NEW";
-  }).length;
+  const scores = scoredContacts.map((c) => numProp(c, "ai_score")).filter((s): s is number => s != null);
 
   const kpis: QaraKpis = {
-    totalLeads: contacts.length,
-    nuevosHoy: contacts.filter((c) => esHoy(prop(c, "ingreso_de_lead") || prop(c, "createdate"))).length,
+    totalLeads,
+    nuevosNew,
+    nuevosHoy,
     contactados,
-    scoreados: scores.length,
+    scoreados,
     scorePromedio: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null,
     altaIntencion: scores.filter((s) => s >= 8).length,
   };
@@ -161,13 +169,13 @@ export async function getQaraData(): Promise<QaraData> {
   return {
     kpis,
     scoreHistograma: scoreHistograma(scores),
-    porProyecto: topN(aggCount(contacts, (c) => prop(c, "proyecto_de_interes") || "Sin proyecto"), 8),
-    llamadaVsMensaje: callVsMessage(contacts),
-    funnel: funnelAgg(contacts),
-    engagement: aggCount(contacts, (c) => prop(c, "ai_engagement") || "Sin dato"),
-    useType: topN(aggCount(contacts, (c) => prop(c, "ai_use_type") || "Sin dato"), 8),
-    budget: aggCount(contacts, (c) => prop(c, "ai_budget") || "Sin dato"),
-    timeline: aggCount(contacts, (c) => prop(c, "ai_timeline") || "Sin dato"),
+    porProyecto: topN(aggCount(contactedContacts, (c) => prop(c, "proyecto_de_interes") || "Sin proyecto"), 8),
+    llamadaVsMensaje: callVsMessage(contactedContacts),
+    funnel: funnelAgg(contactedContacts), // solo el pipeline de Qara, no el legacy de 54k
+    engagement: aggCount(scoredContacts, (c) => prop(c, "ai_engagement") || "Sin dato"),
+    useType: topN(aggCount(scoredContacts, (c) => prop(c, "ai_use_type") || "Sin dato"), 8),
+    budget: aggCount(scoredContacts, (c) => prop(c, "ai_budget") || "Sin dato"),
+    timeline: aggCount(scoredContacts, (c) => prop(c, "ai_timeline") || "Sin dato"),
   };
 }
 
@@ -270,5 +278,130 @@ export async function getLeadProgress(contactId: string): Promise<LeadProgress |
     nextAction: p.ai_next_action || "",
     outreachMessage: p.ai_outreach_message || "",
     lastModifiedMs: isFinite(lm) ? lm : null,
+  };
+}
+
+// ── Citas agendadas por Qara (población: ai_meeting_datetime HAS_PROPERTY) ──
+// Regla durable del tenant: la población de Qara se define por props ai_*, no
+// por hs_lead_status. Qara escribe ai_meeting_datetime/mode/advisor al crear el
+// meeting en HubSpot; Murphy (agent_11) maneja el ciclo de vida de la cita.
+
+const CITA_PROPS = [
+  "firstname",
+  "lastname",
+  "phone",
+  "email",
+  "ai_meeting_datetime",
+  "ai_meeting_mode",
+  "ai_meeting_advisor",
+  "proyecto_de_interes",
+  "ai_score",
+] as const;
+
+export type QaraCita = {
+  contactId: string;
+  nombre: string;
+  fechaIso: string;
+  fechaMs: number | null;
+  modo: "virtual" | "presencial" | "";
+  asesor: string;
+  proyecto: string;
+  score: number | null;
+  telefono: string;
+  email: string;
+};
+
+export type QaraCitasData = {
+  kpis: {
+    total: number;
+    proximas: number;
+    estaSemana: number;
+    virtuales: number;
+    presenciales: number;
+  };
+  proximas: QaraCita[];
+  recientes: QaraCita[];
+  porAsesor: { name: string; value: number }[];
+  porModo: { name: string; value: number }[];
+};
+
+export async function getQaraCitas(): Promise<QaraCitasData> {
+  const filterGroups = [
+    { filters: [{ propertyName: "ai_meeting_datetime", operator: "HAS_PROPERTY" }] },
+  ];
+  const all: HsContact[] = [];
+  let after: string | undefined;
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const body: Record<string, unknown> = {
+      filterGroups,
+      properties: CITA_PROPS,
+      limit: PAGE_SIZE,
+      sorts: [{ propertyName: "lastmodifieddate", direction: "DESCENDING" }],
+    };
+    if (after) body.after = after;
+    const json = await postSearch(body);
+    all.push(...(json.results ?? []));
+    after = json.paging?.next?.after;
+    if (!after) break;
+  }
+
+  const citas: QaraCita[] = all.map((c) => {
+    const p = c.properties || {};
+    const iso = p.ai_meeting_datetime || "";
+    const ms = iso ? Date.parse(iso) : NaN;
+    const scoreRaw = p.ai_score;
+    const modoRaw = (p.ai_meeting_mode || "").toLowerCase();
+    return {
+      contactId: c.id,
+      nombre: [p.firstname, p.lastname].filter(Boolean).join(" ").trim() || `Lead ${c.id}`,
+      fechaIso: iso,
+      fechaMs: isFinite(ms) ? ms : null,
+      modo: modoRaw === "virtual" ? "virtual" : modoRaw === "presencial" ? "presencial" : "",
+      asesor: p.ai_meeting_advisor || "",
+      proyecto: p.proyecto_de_interes || "",
+      score:
+        scoreRaw != null && scoreRaw !== "" && isFinite(parseFloat(scoreRaw))
+          ? parseFloat(scoreRaw)
+          : null,
+      telefono: p.phone || "",
+      email: p.email || "",
+    };
+  });
+
+  const now = Date.now();
+  const weekEnd = now + 7 * 24 * 60 * 60 * 1000;
+  const conFecha = citas.filter((c) => c.fechaMs != null) as (QaraCita & { fechaMs: number })[];
+  const proximas = conFecha.filter((c) => c.fechaMs >= now).sort((a, b) => a.fechaMs - b.fechaMs);
+  const recientes = conFecha
+    .filter((c) => c.fechaMs < now)
+    .sort((a, b) => b.fechaMs - a.fechaMs)
+    .slice(0, 20);
+
+  const counts = (items: QaraCita[], key: (c: QaraCita) => string) => {
+    const m = new Map<string, number>();
+    for (const c of items) {
+      const k = key(c) || "Sin dato";
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return [...m.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  };
+
+  return {
+    kpis: {
+      total: citas.length,
+      proximas: proximas.length,
+      estaSemana: proximas.filter((c) => c.fechaMs <= weekEnd).length,
+      virtuales: citas.filter((c) => c.modo === "virtual").length,
+      presenciales: citas.filter((c) => c.modo === "presencial").length,
+    },
+    proximas: proximas.slice(0, 50),
+    recientes,
+    porAsesor: counts(citas, (c) => c.asesor),
+    porModo: counts(
+      citas.filter((c) => c.modo),
+      (c) => (c.modo === "virtual" ? "Virtual (Teams)" : "Presencial")
+    ),
   };
 }

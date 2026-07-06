@@ -11,7 +11,7 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
-import { compactMoney, dias, money } from "@tenants/core/lib/format";
+import { dias, money } from "@tenants/core/lib/format";
 import { getCashflowsReport, uniqueProjects, type CashflowsReport } from "@tenants/core/sources/cashflows";
 
 const AGING_ORDER = ["corriente", "1-30", "31-60", "61-90", "90+", "sin_fecha"];
@@ -92,7 +92,7 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
           }}
         >
           {agingByProject.length ? (
-            <StackedBar data={agingByProject} keys={agingKeys} tickFormatter={compactMoney} />
+            <StackedBar data={agingByProject} keys={agingKeys} moneyFormat />
           ) : (
             <EmptyState message="Sin cartera abierta" />
           )}
@@ -108,7 +108,7 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
           }}
         >
           {agingByTipoPago.length ? (
-            <StackedBar data={agingByTipoPago} keys={agingKeys} tickFormatter={compactMoney} />
+            <StackedBar data={agingByTipoPago} keys={agingKeys} moneyFormat />
           ) : (
             <EmptyState message="Sin cartera abierta" />
           )}
@@ -167,7 +167,7 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
             lineKey="recuperacion_pct"
             barLabel="Recibos"
             lineLabel="% Recuperación"
-            leftTickFormatter={compactMoney}
+            leftMoneyFormat
           />
         ) : (
           <EmptyState message="Sin datos de Flujo de Cajas" />
