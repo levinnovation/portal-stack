@@ -102,6 +102,9 @@ export const coreTenant: TenantConfig = {
         { to: "", label: "Eyal · PM Cronograma", icon: "CalendarClock", kind: "group" },
         { to: "/portal/admin/agents/eyal", label: "Dashboard", icon: "CalendarClock", kind: "custom" },
         { to: "/portal/admin/agents/eyal/historico", label: "Histórico", icon: "History", kind: "custom" },
+        { to: "", label: "Cashflows · Finanzas", icon: "Wallet", kind: "group" },
+        { to: "/portal/admin/agents/cashflows", label: "Dashboard", icon: "Wallet", kind: "custom" },
+        { to: "/portal/admin/agents/cashflows/historico", label: "Histórico", icon: "History", kind: "custom" },
         { to: "", label: "Inteligencia · Ventas BI", icon: "BrainCircuit", kind: "group" },
         { to: "/portal/admin/agents/inteligencia", label: "Comando", icon: "BrainCircuit", kind: "custom" },
         { to: "/portal/admin/agents/inteligencia/segmentos", label: "Segmentos", icon: "PieChart", kind: "custom" },
@@ -192,6 +195,14 @@ export const coreTenant: TenantConfig = {
       runPath: "/api/v1/run",
       statusPath: "/api/v1/jobs",
     },
+    {
+      id: "cashflows",
+      label: "Cashflows — Actuals vs. Presupuesto",
+      baseUrlEnv: "CASHFLOWS_API_URL",
+      apiKeyEnv: "CASHFLOWS_API_KEY",
+      runPath: "/api/v1/run",
+      statusPath: "/api/v1/jobs",
+    },
   ],
   externalDatabases: [
     {
@@ -210,6 +221,12 @@ export const coreTenant: TenantConfig = {
       id: "eyal",
       label: "Eyal — PM Cronograma (eyal_report_snapshots)",
       urlEnv: "EYAL_DB_URL",
+      driver: "postgres",
+    },
+    {
+      id: "cashflows",
+      label: "Cashflows — Finanzas (agent_run_snapshots)",
+      urlEnv: "CASHFLOWS_DB_URL",
       driver: "postgres",
     },
   ],

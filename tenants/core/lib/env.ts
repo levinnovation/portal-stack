@@ -31,6 +31,8 @@ export const env = {
   FORMALIZACIONES_API_KEY: process.env.FORMALIZACIONES_API_KEY || "",
   EYAL_API_URL: process.env.EYAL_API_URL || "",
   EYAL_API_KEY: process.env.EYAL_API_KEY || "",
+  CASHFLOWS_API_URL: process.env.CASHFLOWS_API_URL || "",
+  CASHFLOWS_API_KEY: process.env.CASHFLOWS_API_KEY || "",
   INTELIGENCIA_WORKSPACE_ID:
     process.env.INTELIGENCIA_WORKSPACE_ID ||
     process.env.WORKSPACE_ID ||
