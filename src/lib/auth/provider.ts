@@ -44,6 +44,8 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     const token = parseAuthCookie(cookieHeader, cookieName);
     if (!token) return null;
     try {
+      // Pass JWT via Authorization header: Payload 3.85 cookie extraction enforces
+      // CSRF on synthetic server-side requests that lack Origin / Sec-Fetch-Site.
       const result = await this.payload.auth({
         headers: new Headers({
           Authorization: `JWT ${token}`,

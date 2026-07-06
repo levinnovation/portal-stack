@@ -7,6 +7,8 @@ export const extendedToolNames = [
   "inteligencia_overview",
   "leah_attribution",
   "qara_leads",
+  "cashflows_overview",
+  "cashflows_history",
   "meta_list",
   "list_portal_actions",
   "execute_portal_action",

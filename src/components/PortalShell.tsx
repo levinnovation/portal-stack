@@ -8,6 +8,8 @@ import {
   Briefcase, ChevronRight, FileSpreadsheet, MessageCircle, BrainCircuit, PieChart, Radar,
   SlidersHorizontal, Megaphone, ScanSearch, FlaskConical, ChartNoAxesCombined, Trophy,
   CalendarDays,
+  Landmark, FolderOpen, FileInput, ClipboardList, History, Wallet, CalendarClock,
+  ArrowLeftRight, Receipt, CircleDollarSign, Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +40,8 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Building2, Users, ShoppingBag, Upload, RefreshCw, BarChart3, ShieldCheck,
   TrendingUp, Hammer, FileText, CreditCard, User: UserIcon, Briefcase, MessageCircle,
   FileSpreadsheet, BrainCircuit, PieChart, Radar, SlidersHorizontal, Megaphone, ScanSearch,
-  FlaskConical, ChartNoAxesCombined, Trophy, CalendarDays,
+  FlaskConical, ChartNoAxesCombined, Trophy, CalendarDays, Landmark, FolderOpen, FileInput, ClipboardList, History, Wallet,
+  CalendarClock, ArrowLeftRight, Receipt, CircleDollarSign, Banknote,
 };
 
 function navItemVisible(item: TenantNavItem, tenant: PortalShellTenant, userRole: string): boolean {
