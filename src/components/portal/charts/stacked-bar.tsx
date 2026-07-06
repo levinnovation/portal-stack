@@ -11,18 +11,22 @@ import {
   YAxis,
 } from "recharts";
 
+import { compactMoney } from "@tenants/core/lib/format";
 import { CHART_COLORS, TOOLTIP_STYLE } from "./palette";
 
 export function StackedBar({
   data,
   keys,
   height = 280,
-  tickFormatter,
+  moneyFormat = false,
 }: {
   data: Record<string, string | number>[];
   keys: string[];
   height?: number;
-  tickFormatter?: (v: number) => string;
+  /** Format Y-axis ticks as compact currency (e.g. "$1.2M"). A plain
+   * function prop can't cross the server→client boundary from an async
+   * server-component screen, so callers pass this flag instead. */
+  moneyFormat?: boolean;
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -31,7 +35,7 @@ export function StackedBar({
         <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
         <YAxis
           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-          tickFormatter={tickFormatter ?? ((v) => String(v))}
+          tickFormatter={moneyFormat ? (v: number) => compactMoney(v) : (v: number) => String(v)}
         />
         <Tooltip {...TOOLTIP_STYLE} />
         <Legend />

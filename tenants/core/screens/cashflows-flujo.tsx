@@ -12,7 +12,7 @@ import { SectionCard } from "@tenants/core/components/section-card";
 import { EmptyState } from "@tenants/core/components/states/empty-state";
 import { ErrorState } from "@tenants/core/components/states/error-state";
 import { errMsg } from "@tenants/core/lib/errors";
-import { compactMoney, money } from "@tenants/core/lib/format";
+import { money } from "@tenants/core/lib/format";
 import { getCashflowsReport, uniqueProjects, type CashflowsReport } from "@tenants/core/sources/cashflows";
 
 export async function CashflowsFlujoScreen({ project }: { project?: string }) {
@@ -78,7 +78,7 @@ export async function CashflowsFlujoScreen({ project }: { project?: string }) {
           }}
         >
           {compositionData.length ? (
-            <StackedBar data={compositionData} keys={["Ingresos", "Egresos"]} tickFormatter={compactMoney} />
+            <StackedBar data={compositionData} keys={["Ingresos", "Egresos"]} moneyFormat />
           ) : (
             <EmptyState message="Sin movimientos clasificados" />
           )}
