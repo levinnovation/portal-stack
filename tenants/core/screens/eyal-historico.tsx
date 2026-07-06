@@ -9,12 +9,73 @@ import { errMsg } from "@tenants/core/lib/errors";
 import { num } from "@tenants/core/lib/format";
 import { getEyalReport, type EyalHistoryPoint, type EyalWindow } from "@tenants/core/sources/eyal";
 
-const TREND_METRICS: { key: keyof EyalHistoryPoint["kpis"]; label: string }[] = [
-  { key: "avgProgress", label: "Avance %" },
-  { key: "urgentCount", label: "Urgentes" },
-  { key: "overdueCount", label: "Atrasados" },
-  { key: "riskQueueCount", label: "Cola de riesgo" },
+type MetricDef = { key: keyof EyalHistoryPoint["kpis"]; label: string };
+
+// Grupos separados para no mezclar escalas (conteos vs USD vs %): cada grupo es
+// un chart propio, mismo criterio de secciones que el reporte email/PDF.
+const TREND_GROUPS: { title: string; description: string; metrics: MetricDef[] }[] = [
+  {
+    title: "Cronograma",
+    description: "Avance, urgentes, atrasados y cola de riesgo por corrida",
+    metrics: [
+      { key: "avgProgress", label: "Avance %" },
+      { key: "urgentCount", label: "Urgentes" },
+      { key: "overdueCount", label: "Atrasados" },
+      { key: "riskQueueCount", label: "Cola de riesgo" },
+    ],
+  },
+  {
+    title: "Financiero (USD)",
+    description: "AR/AP 30 días, neto y exposición OC por corrida",
+    metrics: [
+      { key: "arNext30", label: "AR 30d" },
+      { key: "apNext30", label: "AP 30d" },
+      { key: "net30", label: "Neto 30d" },
+      { key: "ocExposure", label: "Exposición OC" },
+    ],
+  },
+  {
+    title: "Inventario CRM (unidades)",
+    description: "Vendidas, reservadas, disponibles y total por corrida",
+    metrics: [
+      { key: "soldUnits", label: "Vendidas" },
+      { key: "reservedUnits", label: "Reservadas" },
+      { key: "availableUnits", label: "Disponibles" },
+      { key: "totalUnits", label: "Total" },
+    ],
+  },
+  {
+    title: "Absorción CRM (%)",
+    description: "Porcentaje vendido / reservado / disponible por corrida",
+    metrics: [
+      { key: "soldPct", label: "Vendido %" },
+      { key: "reservedPct", label: "Reservado %" },
+      { key: "availablePct", label: "Disponible %" },
+    ],
+  },
+  {
+    title: "Salud de proyectos y OC",
+    description: "Proyectos por semáforo + órdenes de cambio activas",
+    metrics: [
+      { key: "projectsRed", label: "Rojos" },
+      { key: "projectsYellow", label: "Amarillos" },
+      { key: "projectsGreen", label: "Verdes" },
+      { key: "ocTotalCount", label: "OC activas" },
+    ],
+  },
 ];
+
+function buildSeries(history: EyalHistoryPoint[], metrics: MetricDef[]) {
+  return metrics
+    .map((m) => ({
+      key: String(m.key),
+      label: m.label,
+      data: history
+        .filter((point) => point.kpis[m.key] !== null && point.kpis[m.key] !== undefined)
+        .map((point) => ({ t: point.generatedAt, v: Number(point.kpis[m.key]) })),
+    }))
+    .filter((s) => s.data.length > 0);
+}
 
 export async function EyalHistoricoScreen({ window }: { window: EyalWindow }) {
   let history: EyalHistoryPoint[];
@@ -24,13 +85,9 @@ export async function EyalHistoricoScreen({ window }: { window: EyalWindow }) {
     return <ErrorState title="No se pudo leer la historia de Eyal" detail={errMsg(e)} />;
   }
 
-  const series = TREND_METRICS.map((m) => ({
-    key: String(m.key),
-    label: m.label,
-    data: history
-      .filter((point) => point.kpis[m.key] !== null && point.kpis[m.key] !== undefined)
-      .map((point) => ({ t: point.generatedAt, v: Number(point.kpis[m.key]) })),
-  })).filter((s) => s.data.length > 0);
+  const groups = TREND_GROUPS.map((g) => ({ ...g, series: buildSeries(history, g.metrics) })).filter(
+    (g) => g.series.length > 0,
+  );
 
   return (
     <div className="space-y-6">
@@ -50,9 +107,19 @@ export async function EyalHistoricoScreen({ window }: { window: EyalWindow }) {
 
       <EyalWindowToggle window={window} />
 
-      <SectionCard title="Tendencia de KPIs" description="Extraídos de cada snapshot en la ventana seleccionada">
-        {series.length ? <MultiLineTrend series={series} /> : <EmptyState message="Sin historia en esta ventana" />}
-      </SectionCard>
+      {groups.length ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {groups.map((g) => (
+            <SectionCard key={g.title} title={g.title} description={g.description}>
+              <MultiLineTrend series={g.series} />
+            </SectionCard>
+          ))}
+        </div>
+      ) : (
+        <SectionCard title="Tendencia de KPIs" description="Extraídos de cada snapshot en la ventana seleccionada">
+          <EmptyState message="Sin historia en esta ventana" />
+        </SectionCard>
+      )}
 
       <SectionCard title="Corridas" description={`${history.length} snapshot(s) en la ventana — más reciente primero`}>
         {history.length ? (
