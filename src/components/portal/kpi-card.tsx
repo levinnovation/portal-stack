@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { InfoHint } from "@/components/ui/info-hint";
+import { AiExplain, type AiExplainSpec } from "@/components/portal/ai-explain";
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 
 type Props = {
@@ -15,9 +16,11 @@ type Props = {
   invertDelta?: boolean;
   /** Explicación (qué mide + fórmula) mostrada como tooltip junto a la etiqueta. */
   info?: React.ReactNode;
+  /** "Explicar con IA": descripción/fórmula + interpretación del valor actual generada por LLM. */
+  aiExplain?: AiExplainSpec;
 };
 
-export function KpiCard({ label, value, icon: Icon, delta, deltaLabel, hint, status, invertDelta, info }: Props) {
+export function KpiCard({ label, value, icon: Icon, delta, deltaLabel, hint, status, invertDelta, info, aiExplain }: Props) {
   const hasDelta = delta !== null && delta !== undefined && isFinite(delta);
   const up = (delta ?? 0) >= 0;
   const bad = invertDelta ? up : !up;
@@ -37,6 +40,7 @@ export function KpiCard({ label, value, icon: Icon, delta, deltaLabel, hint, sta
           {status && <span className={`h-2 w-2 rounded-full ${statusClass}`} />}
           {label}
           {info && <InfoHint content={info} />}
+          {aiExplain && <AiExplain label={label} spec={{ ...aiExplain, kind: aiExplain.kind ?? "kpi" }} />}
         </span>
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary/70 text-primary">
           <Icon className="h-4 w-4" />
