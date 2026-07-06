@@ -82,8 +82,16 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     }
     // #endregion
     try {
+      // Pass the token via `Authorization: JWT <token>` instead of a cookie.
+      // Payload 3.85+'s cookie extraction enforces CSRF: with `csrf` configured
+      // and no Origin header, it requires Sec-Fetch-Site (same-origin/none) —
+      // headers our synthetic server-side Request doesn't have — so the token
+      // was silently discarded before verification and auth() returned no user.
+      // The JWT extraction path (first in the default jwtOrder) skips those
+      // browser-only CSRF checks, which is safe here because the cookie was
+      // already read from the genuine first-party request by Next.js.
       const result = await this.payload.auth({
-        headers: new Headers({ cookie: `payload-token=${m[1]}` }),
+        headers: new Headers({ Authorization: `JWT ${m[1]}` }),
       });
       if (!result.user) {
         // #region agent log

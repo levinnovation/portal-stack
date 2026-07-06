@@ -61,6 +61,19 @@ export const coreTenant: TenantConfig = {
   },
   roles: [
     {
+      // Internal team accounts (Users.role = "admin") were locked out of
+      // /portal entirely: PortalRoot/AdminHome bounce any session whose role
+      // has no entry here back to /portal/auth. The customer-facing portal
+      // still exists for admins as a thin ops view (/portal/admin pages
+      // rendered from the Pages layout builder); the full internal suite
+      // stays on Agentyx Platform.
+      key: "admin",
+      label: "Equipo Core",
+      homePath: "/portal/admin",
+      defaultLandingPageSlug: "admin-overview",
+      nav: [{ to: "/portal/admin", label: "Resumen", icon: "LayoutDashboard", end: true }],
+    },
+    {
       key: "investor",
       label: "Inversionistas",
       homePath: "/portal/investor",
