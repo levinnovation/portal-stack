@@ -13,15 +13,56 @@ import {
   type SnapshotHistoryPoint,
 } from "@tenants/core/sources/cashflows";
 
-const TREND_METRICS: { key: string; label: string }[] = [
-  { key: "total_income_usd", label: "Ingresos" },
-  { key: "total_outflow_usd", label: "Egresos" },
-  { key: "net_position_usd", label: "Posición neta" },
-  { key: "deviation_count", label: "Desviaciones" },
+type MetricGroup = { id: string; label: string; metrics: { key: string; label: string }[] };
+
+// Grouped by scale (plan §"Histórico extend") so mixing USD, %, and counts on
+// one axis doesn't flatten the smaller series — each group gets its own chart.
+const METRIC_GROUPS: MetricGroup[] = [
+  {
+    id: "usd",
+    label: "USD",
+    metrics: [
+      { key: "total_income_usd", label: "Ingresos" },
+      { key: "total_outflow_usd", label: "Egresos" },
+      { key: "net_position_usd", label: "Posición neta" },
+      { key: "ar_total_usd", label: "AR total" },
+      { key: "ar_vencido_usd", label: "AR vencido" },
+      { key: "ar_risk_weighted_usd", label: "AR ponderado por riesgo" },
+      { key: "ap_gasto_mes_usd", label: "Gasto del mes (CxP)" },
+      { key: "saldo_prestamo_total_usd", label: "Saldo préstamo" },
+    ],
+  },
+  {
+    id: "pct",
+    label: "Porcentajes",
+    metrics: [
+      { key: "recovery_pct", label: "Recuperación" },
+      { key: "pct_desembolsado_avg", label: "% desembolsado (promedio)" },
+    ],
+  },
+  {
+    id: "counts",
+    label: "Conteos",
+    metrics: [
+      { key: "deviation_count", label: "Desviaciones" },
+      { key: "movements_needing_review", label: "Movimientos por revisar" },
+      { key: "anomaly_count", label: "Anomalías" },
+    ],
+  },
+  {
+    id: "forecast",
+    label: "Forecast",
+    metrics: [
+      { key: "forecast_net_3m_p50", label: "Forecast neto 3m (P50)" },
+      { key: "runway_weeks_p10", label: "Runway (semanas, P10)" },
+    ],
+  },
 ];
 
-function seriesFromTimeseries(raw: MetricTimeseries) {
-  return TREND_METRICS.filter((m) => (raw[m.key] || []).length > 0).map((m) => ({
+const TREND_METRICS = METRIC_GROUPS.flatMap((g) => g.metrics);
+
+function seriesFromTimeseries(raw: MetricTimeseries, metrics: { key: string; label: string }[]) {
+  return metrics.filter((m) => (raw[m.key] || []).length > 0).map((m) => ({
     key: m.key,
     label: m.label,
     data: raw[m.key] || [],
@@ -52,7 +93,7 @@ export async function CashflowsHistoricoScreen({
   const oldest = history[0]?.generatedAt ? new Date(history[0].generatedAt).getTime() : NaN;
   const minTs = Number.isFinite(oldest) ? oldest : Date.now() - 180 * 24 * 60 * 60 * 1000;
   const latest = history[history.length - 1];
-  const series = seriesFromTimeseries(timeseries);
+  const groupSeries = METRIC_GROUPS.map((g) => ({ ...g, series: seriesFromTimeseries(timeseries, g.metrics) }));
 
   return (
     <div className="space-y-6">
@@ -72,22 +113,25 @@ export async function CashflowsHistoricoScreen({
 
       <TimeRangeSlider minTs={minTs} />
 
-      <SectionCard
-        title="Tendencia de caja e ingresos"
-        description="Métricas escalares extraídas de cada snapshot en el rango seleccionado"
-        aiExplain={{
-          kind: "chart",
-          description: "Una línea por métrica (ingresos, egresos, posición neta, desviaciones) a través del tiempo, un punto por snapshot persistido.",
-          formula: "Series extraídas de summary_json de agent_run_snapshots, filtradas por el rango de fecha seleccionado",
-          data: series.map((s) => ({ key: s.key, points: s.data.length, last: s.data[s.data.length - 1] })),
-        }}
-      >
-        {series.length ? (
-          <MultiLineTrend series={series} />
-        ) : (
-          <EmptyState message="Sin historia en este rango" hint="Ajusta el rango de tiempo o corre el agente" />
-        )}
-      </SectionCard>
+      {groupSeries.map((g) => (
+        <SectionCard
+          key={g.id}
+          title={`Tendencia — ${g.label}`}
+          description="Métricas escalares extraídas de cada snapshot en el rango seleccionado"
+          aiExplain={{
+            kind: "chart",
+            description: `Una línea por métrica del grupo "${g.label}" a través del tiempo, un punto por snapshot persistido.`,
+            formula: "Series extraídas de summary_json de agent_run_snapshots, filtradas por el rango de fecha seleccionado",
+            data: g.series.map((s) => ({ key: s.key, points: s.data.length, last: s.data[s.data.length - 1] })),
+          }}
+        >
+          {g.series.length ? (
+            <MultiLineTrend series={g.series} />
+          ) : (
+            <EmptyState message="Sin historia en este rango" hint="Ajusta el rango de tiempo o corre el agente" />
+          )}
+        </SectionCard>
+      ))}
 
       <SectionCard
         title="Corridas"
