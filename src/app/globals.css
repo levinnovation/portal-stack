@@ -21,9 +21,21 @@
     --popover: 0 0% 11%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 0 0% 96%;
-    --primary-foreground: 0 0% 9%;
-    --primary-glow: 0 0% 78%;
+    /*
+     * NOTE: this branch's markup (src/app/(frontend)/page.tsx hero) uses
+     * `text-primary-foreground` standalone directly on the dark hero
+     * gradient (no bg-primary pairing), so --primary-foreground must stay
+     * LIGHT for contrast there. --primary stays dark so bg-primary +
+     * text-primary-foreground button/badge pairs (button.tsx, badge.tsx,
+     * ChatBlock.tsx) still contrast with each other. Do not copy the
+     * `.dark` block orientation from clients-core-impl here — that
+     * codebase's admin dashboard never uses text-primary-foreground
+     * standalone against a dark hero, so its inverted (light primary /
+     * dark primary-foreground) dark-mode orientation doesn't apply.
+     */
+    --primary: 0 0% 11%;
+    --primary-foreground: 0 0% 97%;
+    --primary-glow: 0 0% 25%;
 
     --accent: 66 95% 52%;
     --accent-foreground: 0 0% 8%;

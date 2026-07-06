@@ -18,9 +18,9 @@ export const coreTenant: TenantConfig = {
     colors: {
       background: "0 0% 7%",
       foreground: "0 0% 95%",
-      primary: "0 0% 96%",
-      primaryForeground: "0 0% 9%",
-      primaryGlow: "0 0% 78%",
+      primary: "0 0% 11%",
+      primaryForeground: "0 0% 97%",
+      primaryGlow: "0 0% 25%",
       accent: "66 95% 52%",
       accentForeground: "0 0% 8%",
       accentSoft: "0 0% 16%",

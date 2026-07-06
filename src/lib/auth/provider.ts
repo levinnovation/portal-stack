@@ -38,19 +38,42 @@ export class LocalPayloadAuthProvider implements AuthProvider {
   async getSession(req: Request): Promise<SessionUser | null> {
     const cookieHeader = req.headers.get("cookie") ?? "";
     const m = cookieHeader.match(/payload-token=([^;]+)/);
-    if (!m) return null;
+    if (!m) {
+      // #region agent log
+      console.log(
+        "[DEBUG-AUTH] getSession no cookie",
+        JSON.stringify({ hypothesisId: "H-no-cookie", cookieHeaderPresent: cookieHeader.length > 0, cookieHeaderLen: cookieHeader.length }),
+      );
+      // #endregion
+      return null;
+    }
     try {
       const result = await this.payload.auth({
         headers: new Headers({ cookie: `payload-token=${m[1]}` }),
       });
-      if (!result.user) return null;
-      return {
+      if (!result.user) {
+        // #region agent log
+        console.log("[DEBUG-AUTH] getSession payload.auth returned no user", JSON.stringify({ hypothesisId: "H-auth-no-user" }));
+        // #endregion
+        return null;
+      }
+      const resolved = {
         id: String(result.user.id),
         email: result.user.email!,
         name: ((result.user as any).name ?? result.user.email)!,
         role: ((result.user as any).role ?? "member") as string,
       };
-    } catch {
+      // #region agent log
+      console.log("[DEBUG-AUTH] getSession resolved user", JSON.stringify({ hypothesisId: "H-role-mismatch", ...resolved }));
+      // #endregion
+      return resolved;
+    } catch (err: any) {
+      // #region agent log
+      console.log(
+        "[DEBUG-AUTH] getSession payload.auth threw",
+        JSON.stringify({ hypothesisId: "H-auth-throws", error: err?.message || String(err) }),
+      );
+      // #endregion
       return null;
     }
   }
