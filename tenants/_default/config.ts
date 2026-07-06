@@ -49,6 +49,7 @@ export const defaultTenant: TenantConfig = {
     systemPromptFile: "tenants/_default/ai/prompts.ts",
     maxStepsPerTurn: 5,
     temperature: 0.3,
+    backend: "local",
   },
   auth: {
     provider: "local",

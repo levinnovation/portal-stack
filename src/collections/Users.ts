@@ -1,4 +1,17 @@
 import type { CollectionConfig, Access } from "payload";
+import { coreTenant } from "@tenants/core/config";
+import { finuTenant } from "@tenants/finu/config";
+import { defaultTenant } from "@tenants/_default/config";
+
+// JWT lifetime must match the login cookie maxAge (sessionDays). Without this,
+// Payload's 2h default token expires while the 7d cookie persists, so requests
+// after 2h hit "unauthorized" with a stale-but-present cookie.
+function sessionTokenSeconds(): number {
+  const id = process.env.TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID || "core";
+  const tenant = ({ core: coreTenant, finu: finuTenant } as Record<string, typeof coreTenant>)[id] ?? defaultTenant;
+  const days = tenant.auth.sessionDays ?? 7;
+  return days * 24 * 60 * 60;
+}
 
 const isAdmin: Access = ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin";
 const isAdminOrSelf: Access = ({ req }) => {
@@ -15,7 +28,7 @@ const isAdminOrSelf: Access = ({ req }) => {
  */
 export const Users: CollectionConfig = {
   slug: "users",
-  auth: true,
+  auth: { tokenExpiration: sessionTokenSeconds() },
   admin: { useAsTitle: "email" },
   access: {
     create: isAdmin,
@@ -40,6 +53,17 @@ export const Users: CollectionConfig = {
       access: {
         update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
       },
+    },
+    {
+      name: "themePreference",
+      type: "select",
+      required: true,
+      defaultValue: "system",
+      options: [
+        { label: "Sistema", value: "system" },
+        { label: "Claro", value: "light" },
+        { label: "Oscuro", value: "dark" },
+      ],
     },
     { name: "phone", type: "text" },
     { name: "avatar", type: "upload", relationTo: "media" },

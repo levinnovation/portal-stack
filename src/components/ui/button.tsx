@@ -3,12 +3,13 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+// ponytail: default=primary CTA, outline=secondary, ghost=nav/toggles, gold=accent CTA, destructive=confirm delete
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-glow",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
         gold: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-gold",
         outline: "border border-input bg-background hover:bg-accent-soft/40 hover:text-foreground",
         ghost: "hover:bg-accent-soft/40 hover:text-foreground",

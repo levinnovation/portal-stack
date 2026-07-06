@@ -6,12 +6,72 @@
 
 @layer base {
   /*
-   * CORE brand palette (dark-first): near-black charcoal base, light-gray
-   * text, sparing lime-yellow accent. Kept in sync with the CORE palette on
-   * clients-core-impl (src/app/globals.css); this branch has no light/dark
-   * toggle, so we use the dark variant as the single always-on theme.
+   * CORE brand palette. Dark-first (near-black charcoal + light text + sparing
+   * lime-yellow accent); the sidebar stays near-black in both modes so the logo
+   * reads consistently. Light mode is a clean inverse for users who prefer it.
    */
   :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    --primary: 0 0% 11%;
+    --primary-foreground: 0 0% 97%;
+    --primary-glow: 0 0% 25%;
+
+    --accent: 66 90% 48%;
+    --accent-foreground: 0 0% 8%;
+    --accent-soft: 66 70% 90%;
+
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 42%;
+
+    --success: 147 54% 34%;
+    --warning: 35 90% 46%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 11%;
+
+    --radius: 0.625rem;
+
+    --chart-1: 66 80% 42%;
+    --chart-2: 0 0% 18%;
+    --chart-3: 199 85% 44%;
+    --chart-4: 0 0% 55%;
+    --chart-5: 35 88% 46%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 6%) 0%, hsl(0 0% 12%) 60%, hsl(0 0% 18%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(66 95% 54%) 0%, hsl(72 90% 44%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 96%) 100%);
+
+    --shadow-elegant: 0 10px 40px -12px hsl(0 0% 0% / 0.22);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.07), 0 8px 24px -12px hsl(0 0% 0% / 0.12);
+    --shadow-gold: 0 8px 28px -10px hsl(66 90% 48% / 0.4);
+
+    --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 82%;
+    --sidebar-primary: 66 90% 50%;
+    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 66 90% 50%;
+  }
+
+  .dark {
     --background: 0 0% 7%;
     --foreground: 0 0% 95%;
 
@@ -21,21 +81,9 @@
     --popover: 0 0% 11%;
     --popover-foreground: 0 0% 95%;
 
-    /*
-     * NOTE: this branch's markup (src/app/(frontend)/page.tsx hero) uses
-     * `text-primary-foreground` standalone directly on the dark hero
-     * gradient (no bg-primary pairing), so --primary-foreground must stay
-     * LIGHT for contrast there. --primary stays dark so bg-primary +
-     * text-primary-foreground button/badge pairs (button.tsx, badge.tsx,
-     * ChatBlock.tsx) still contrast with each other. Do not copy the
-     * `.dark` block orientation from clients-core-impl here — that
-     * codebase's admin dashboard never uses text-primary-foreground
-     * standalone against a dark hero, so its inverted (light primary /
-     * dark primary-foreground) dark-mode orientation doesn't apply.
-     */
-    --primary: 0 0% 11%;
-    --primary-foreground: 0 0% 97%;
-    --primary-glow: 0 0% 25%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 9%;
+    --primary-glow: 0 0% 78%;
 
     --accent: 66 95% 52%;
     --accent-foreground: 0 0% 8%;
@@ -56,8 +104,6 @@
     --input: 0 0% 18%;
     --ring: 66 95% 52%;
 
-    --radius: 0.625rem;
-
     --chart-1: 66 95% 52%;
     --chart-2: 0 0% 92%;
     --chart-3: 199 89% 60%;
@@ -71,8 +117,6 @@
     --shadow-elegant: 0 10px 40px -12px hsl(0 0% 0% / 0.6);
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.5), 0 8px 24px -12px hsl(0 0% 0% / 0.7);
     --shadow-gold: 0 8px 28px -10px hsl(66 95% 52% / 0.35);
-
-    --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 82%;

@@ -10,6 +10,8 @@
  */
 
 import type { Payload } from "payload";
+import { getAuthCookieName, parseAuthCookie } from "./cookie-name";
+import { normalizeThemePreference, type ThemePreference } from "@/lib/theme/preference";
 
 // #region agent log
 function decodeJwtClaims(token: string): Record<string, unknown> | null {
@@ -34,6 +36,7 @@ export interface SessionUser {
   email: string;
   name: string;
   role: string;
+  themePreference: ThemePreference;
 }
 
 export interface AuthProvider {
@@ -50,21 +53,22 @@ export class LocalPayloadAuthProvider implements AuthProvider {
 
   async getSession(req: Request): Promise<SessionUser | null> {
     const cookieHeader = req.headers.get("cookie") ?? "";
-    const m = cookieHeader.match(/payload-token=([^;]+)/);
-    if (!m) {
+    const cookieName = getAuthCookieName();
+    const token = parseAuthCookie(cookieHeader, cookieName);
+    if (!token) {
       // #region agent log
       console.log(
         "[DEBUG-AUTH] getSession no cookie",
-        JSON.stringify({ hypothesisId: "H-no-cookie", cookieHeaderPresent: cookieHeader.length > 0, cookieHeaderLen: cookieHeader.length }),
+        JSON.stringify({ hypothesisId: "H-no-cookie", cookieHeaderPresent: cookieHeader.length > 0, cookieHeaderLen: cookieHeader.length, cookieName }),
       );
       // #endregion
       return null;
     }
     // #region agent log
-    const claims = decodeJwtClaims(m[1]);
+    const claims = decodeJwtClaims(token);
     console.log(
       "[DEBUG-AUTH] getSession decoded incoming token claims (unverified)",
-      JSON.stringify({ hypothesisId: "H-usesessions", claims, tokenLen: m[1].length }),
+      JSON.stringify({ hypothesisId: "H-usesessions", claims, tokenLen: token.length }),
     );
     if (claims && (claims as any).id) {
       try {
@@ -83,7 +87,10 @@ export class LocalPayloadAuthProvider implements AuthProvider {
     // #endregion
     try {
       const result = await this.payload.auth({
-        headers: new Headers({ cookie: `payload-token=${m[1]}` }),
+        headers: new Headers({
+          Authorization: `JWT ${token}`,
+          cookie: `${cookieName}=${token}`,
+        }),
       });
       if (!result.user) {
         // #region agent log
@@ -96,6 +103,7 @@ export class LocalPayloadAuthProvider implements AuthProvider {
         email: result.user.email!,
         name: ((result.user as any).name ?? result.user.email)!,
         role: ((result.user as any).role ?? "member") as string,
+        themePreference: normalizeThemePreference((result.user as any).themePreference),
       };
       // #region agent log
       console.log("[DEBUG-AUTH] getSession resolved user", JSON.stringify({ hypothesisId: "H-role-mismatch", ...resolved }));
@@ -133,6 +141,7 @@ export class LocalPayloadAuthProvider implements AuthProvider {
         email: result.user.email!,
         name: ((result.user as any).name ?? result.user.email)!,
         role: ((result.user as any).role ?? "member") as string,
+        themePreference: normalizeThemePreference((result.user as any).themePreference),
       },
     };
   }
@@ -152,10 +161,9 @@ export async function getAuthProvider(): Promise<AuthProvider> {
   const payload = await getPayloadClient();
 
   if (tenant.auth.provider === "agentyx") {
-    // Future: load AgentyxAuthProvider here. For now, fall back to local with a warning.
-    console.warn(
-      `[auth] Tenant "${tenant.id}" declares agentyx provider but no adapter is implemented yet. Falling back to LocalPayloadAuthProvider.`,
-    );
+    const { AgentyxAuthProvider } = await import("./agentyx-provider");
+    cached = new AgentyxAuthProvider(payload, tenant.auth.agentyxJwksUrl);
+    return cached;
   }
   cached = new LocalPayloadAuthProvider(payload);
   return cached;

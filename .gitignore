@@ -18,3 +18,5 @@ src/payload-types.ts
 public/media/
 !public/media/.gitkeep
 tsconfig.tsbuildinfo
+/test-results/
+/playwright-report/

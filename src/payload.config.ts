@@ -1,6 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { resendAdapter } from "@payloadcms/email-resend";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { buildConfig, type CollectionConfig } from "payload";
 import { en } from "@payloadcms/translations/languages/en";
@@ -19,8 +20,9 @@ import { Datasets } from "./collections/Datasets";
 import { Dashboards } from "./collections/Dashboards";
 import { AIChats } from "./collections/AIChats";
 import { AIMessages } from "./collections/AIMessages";
+import { CreativeAssets } from "./collections/CreativeAssets";
 
-import { getTenant } from "./lib/tenant";
+import { getTenantCollectionsSync, getTenantId } from "./lib/tenant-registry";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -32,7 +34,6 @@ const dirname = path.dirname(filename);
  * but collections themselves are fixed at boot.
  */
 function buildCollections(): CollectionConfig[] {
-  const tenantId = process.env.TENANT_ID || "core";
   const baseCollections: CollectionConfig[] = [
     Users,
     Media,
@@ -46,18 +47,17 @@ function buildCollections(): CollectionConfig[] {
     Dashboards,
     AIChats,
     AIMessages,
+    CreativeAssets,
   ];
-  if (tenantId === "core") {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { realestateCollections } = require("../tenants/core/domain/collections");
-    return [...baseCollections, ...realestateCollections];
-  }
-  return baseCollections;
+  const tenantId = getTenantId();
+  const verticalCollections = getTenantCollectionsSync(tenantId);
+  return [...baseCollections, ...verticalCollections];
 }
 
 export default buildConfig({
   admin: {
     user: Users.slug,
+    suppressHydrationWarning: true,
     meta: {
       titleSuffix: " · Portal Stack",
     },
@@ -81,6 +81,13 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || "",
     },
+  }),
+  email: resendAdapter({
+    // ponytail: if RESEND_API_KEY is missing, the adapter falls back to
+    // console-log mode (Payload's default), so dev still works without it.
+    defaultFromAddress: process.env.EMAIL_FROM || "no-reply@portal.local",
+    defaultFromName: process.env.EMAIL_FROM_NAME || "Portal Stack",
+    apiKey: process.env.RESEND_API_KEY || "",
   }),
   sharp,
   cors: [process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"],

@@ -1,20 +1,22 @@
 /**
- * Seed script — runs after first boot to create demo Pages for the Core tenant.
+ * Seed script — inserts layout-builder Pages for the active tenant.
  *
- * Usage:  pnpm seed
+ * Usage:  TENANT_ID=core pnpm seed   (defaults to core)
  *
- * Reads tenants/core/pages.ts and inserts (or upserts) the layout-builder
- * pages into Payload. Idempotent: re-running updates existing pages.
+ * Reads tenants/<id>/pages.ts (${id}Pages export) and upserts into Payload.
+ * Idempotent: re-running updates existing pages.
  */
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { corePages } from "../tenants/core/pages";
+import { loadTenantPages } from "./load-tenant-pages";
 
 async function run() {
+  const tenantId = process.env.TENANT_ID || "core";
+  const pages = await loadTenantPages(tenantId);
   const payload = await getPayload({ config });
-  console.log(`[seed] Seeding ${corePages.length} pages for tenant=core…`);
+  console.log(`[seed] Seeding ${pages.length} pages for tenant=${tenantId}…`);
 
-  for (const page of corePages) {
+  for (const page of pages) {
     const existing = await payload.find({
       collection: "pages",
       where: { slug: { equals: page.slug } },

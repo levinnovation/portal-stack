@@ -44,22 +44,11 @@ export const corePages = [
         dataset: "list:projects",
         columns: [
           { key: "name", label: "Proyecto" },
-          { key: "status", label: "Estado", format: "status" },
+          { key: "projectStatus", label: "Estado", format: "status" },
           { key: "location", label: "Ubicación" },
           { key: "totalUnits", label: "Unidades", format: "number" },
         ],
         pageSize: 5,
-      },
-      {
-        blockType: "chat",
-        title: "Asistente Core",
-        agentId: "core-admin",
-        greeting: "Hola admin, ¿qué quieres consultar? Puedo listar proyectos, pagos pendientes, distribuciones, etc.",
-        suggestedPrompts: [
-          { prompt: "¿Cuántos proyectos están en construcción?" },
-          { prompt: "Lista los últimos 5 pagos registrados" },
-          { prompt: "Resume el capital total comprometido" },
-        ],
       },
     ],
   },
@@ -74,7 +63,7 @@ export const corePages = [
         dataset: "list:projects",
         columns: [
           { key: "name", label: "Proyecto" },
-          { key: "status", label: "Estado", format: "status" },
+          { key: "projectStatus", label: "Estado", format: "status" },
           { key: "location", label: "Ubicación" },
           { key: "totalUnits", label: "Unidades", format: "number" },
           { key: "budgetTotal", label: "Presupuesto", format: "usd" },
@@ -204,16 +193,6 @@ export const corePages = [
         dataset: "monthly:investments.amountInvested",
         kind: "area",
       },
-      {
-        blockType: "chat",
-        title: "Asistente de inversión",
-        agentId: "core-investor",
-        greeting: "Hola inversionista. Pregúntame sobre tu portafolio, distribuciones o proyectos.",
-        suggestedPrompts: [
-          { prompt: "¿Cuál es mi IRR estimada?" },
-          { prompt: "Lista mis inversiones activas" },
-        ],
-      },
     ],
   },
   {
@@ -223,7 +202,7 @@ export const corePages = [
     layout: [
       { blockType: "table", title: "Proyectos vinculados", dataset: "list:projects", columns: [
         { key: "name", label: "Proyecto" },
-        { key: "status", label: "Estado", format: "status" },
+        { key: "projectStatus", label: "Estado", format: "status" },
         { key: "location", label: "Ubicación" },
       ]},
     ],
@@ -279,15 +258,9 @@ export const corePages = [
         columns: [
           { key: "dueDate", label: "Vencimiento", format: "date" },
           { key: "amount", label: "Monto", format: "usd" },
-          { key: "status", label: "Estado", format: "status" },
+          { key: "projectStatus", label: "Estado", format: "status" },
         ],
         pageSize: 10,
-      },
-      {
-        blockType: "chat",
-        title: "Asistente de cliente",
-        agentId: "core-customer",
-        greeting: "Hola, ¿en qué te ayudo?",
       },
     ],
   },
@@ -302,7 +275,7 @@ export const corePages = [
         { key: "sqft", label: "m²" },
         { key: "bedrooms", label: "Habitaciones" },
         { key: "priceTotal", label: "Precio", format: "usd" },
-        { key: "status", label: "Estado", format: "status" },
+        { key: "projectStatus", label: "Estado", format: "status" },
       ]},
     ],
   },
@@ -322,7 +295,7 @@ export const corePages = [
       { blockType: "table", title: "Cuotas", dataset: "list:payments", columns: [
         { key: "dueDate", label: "Vencimiento", format: "date" },
         { key: "amount", label: "Monto", format: "usd" },
-        { key: "status", label: "Estado", format: "status" },
+        { key: "projectStatus", label: "Estado", format: "status" },
       ]},
     ],
   },

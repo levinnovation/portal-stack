@@ -1,7 +1,9 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAuthCookieName } from "./auth/cookie-name";
 import { getAuthProvider } from "./auth/provider";
+import { resolveTenantRole } from "./auth/resolve-tenant-role";
 import { getTenant } from "./tenant";
 import type { SessionUser } from "./auth/provider";
 
@@ -26,7 +28,7 @@ export async function requireRole(roles: string[]): Promise<SessionUser> {
   const user = await requireSession();
   if (!roles.includes(user.role)) {
     const tenant = await getTenant();
-    const role = tenant.roles.find((r) => r.key === user.role);
+    const role = resolveTenantRole(tenant, user.role);
     redirect(role?.homePath || "/portal/auth");
   }
   return user;
@@ -40,5 +42,5 @@ export async function signOut() {
     headers: { cookie },
   });
   await provider.signOut(fakeReq);
-  (await cookies()).delete("payload-token");
+  (await cookies()).delete(getAuthCookieName());
 }

@@ -12,7 +12,7 @@ export const Media: CollectionConfig = {
     adminThumbnail: "thumbnail",
   },
   access: {
-    read: () => true,
+    read: ({ req }) => !!req.user,
     create: ({ req }) => !!req.user,
     update: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",
     delete: ({ req }) => req.user?.role === "admin" || req.user?.role === "superadmin",

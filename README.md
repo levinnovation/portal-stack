@@ -156,10 +156,10 @@ Open:
 After creating your first admin user:
 
 ```bash
-pnpm seed
+TENANT_ID=core pnpm seed   # or omit TENANT_ID (defaults to core)
 ```
 
-This inserts 14 Pages into the `pages` collection (admin, investor, customer + shared). Re-run anytime to update them.
+This reads `tenants/<id>/pages.ts` and upserts Pages into Payload. Re-run anytime to update them.
 
 ## Multi-tenant workflow
 
@@ -179,32 +179,57 @@ tenants/core/
 
 ### Adding a new tenant
 
+See **[docs/FORK.md](docs/FORK.md)** for the full fork checklist (docker-compose, custom screens, deploy).
+
+See **[Nuevo cliente en 10 minutos](#nuevo-cliente-en-10-minutos)** below for the quick reference.
+
 ```bash
 pnpm tenant:new -- --id=finu --name="Finu" --vertical=fintech
 ```
 
-This scaffolds `tenants/finu/`. Then:
+This scaffolds `tenants/finu/` with `config.ts`, stub `pages.ts` (`finuPages`), and `domain/index.ts` (`finuCollections`). Then:
 
 1. Edit `tenants/finu/config.ts` (theme, roles, features, AI model)
 2. Edit `tenants/finu/ai/prompts.ts` (persona)
-3. Add collections to `tenants/finu/domain/collections/`
-4. Register in `src/lib/tenant.ts` `TENANT_REGISTRY`:
-   ```ts
-   import { finuTenant } from "../tenants/finu/config";
-   const TENANT_REGISTRY: Record<string, TenantConfig> = {
-     core: coreTenant,
-     finu: finuTenant,
-     _default: defaultTenant,
-   };
-   ```
-5. If the tenant ships its own vertical collections, add a branch in `src/payload.config.ts` `buildCollections()`:
-   ```ts
-   if (tenantId === "finu") {
-     const { fintechCollections } = require("../tenants/finu/domain/collections");
-     return [...baseCollections, ...fintechCollections];
-   }
-   ```
-6. Deploy a new Railway service with `TENANT_ID=finu` and a separate Postgres plugin.
+3. Add collections to `tenants/finu/domain/index.ts` and wire `payloadCollections` in config
+4. Register in `src/lib/tenant.ts` `TENANT_REGISTRY` (the CLI prints the exact diff)
+5. Run `pnpm self-check` — fails if a `tenants/<id>/` folder is not registered
+6. Seed pages: `TENANT_ID=finu pnpm seed`
+7. Deploy a new Railway service with `TENANT_ID=finu` and a separate Postgres plugin
+
+Vertical collections are resolved automatically from `TenantConfig.payloadCollections` at boot — no manual branch in `payload.config.ts`.
+
+### Nuevo cliente en 10 minutos
+
+Flujo repetible para un deploy aislado por cliente:
+
+| Paso | Comando / archivo | ~min |
+|---|---|---|
+| 1 | `pnpm tenant:new -- --id=<id> --name="<Nombre>" --vertical=<realestate\|fintech\|generic>` | 1 |
+| 2 | Editar `tenants/<id>/config.ts` — theme, features, roles, `payloadCollections` | 3 |
+| 3 | Editar `tenants/<id>/pages.ts` — slugs alineados con nav y `defaultLandingPageSlug` | 2 |
+| 4 | `pnpm tenant:new` registra en `tenants/registry.ts` automáticamente | 0 |
+| 5 | `pnpm self-check` | 1 |
+| 6 | Crear superadmin en `/admin`, luego `TENANT_ID=<id> pnpm seed` | 1 |
+| 7 | Railway: nuevo servicio + Postgres, `TENANT_ID=<id>` | 1 |
+
+**Sincronía roles ↔ páginas:** cada rol con layout builder necesita un `defaultLandingPageSlug` que exista en `tenants/<id>/pages.ts`. Los ítems de `nav` con `end: true` apuntan al home del rol; el resto son sub-rutas bajo `/portal/<role>/…`.
+
+| Tenant | Rol | `defaultLandingPageSlug` | Nav home (`end: true`) | Otros nav → slug esperado |
+|---|---|---|---|---|
+| **core** | admin | `admin-overview` | `/portal/admin` | `/portal/admin/projects` → page slug `projects` (cuando exista) |
+| **core** | investor | `investor-portfolio` | `/portal/investor` | `/portal/investor/distributions` → `distributions` |
+| **core** | customer | `customer-overview` | `/portal/customer` | `/portal/customer/payments` → `payments` |
+| **core** | *(todos)* | — | `/portal/profile` | slug compartido `profile` |
+| **finu** | admin | `finu-admin-overview` | `/portal/admin` | `/portal/admin/loans` → `loans` (stub futuro) |
+| **finu** | customer | `finu-customer-overview` | `/portal/customer` | `/portal/customer/payments` → `payments` |
+| **\<nuevo\>** | admin | `<id>-admin-overview` | `/portal/admin` | `/portal/profile` → `profile` (generado por `tenant:new`) |
+
+Convención de exports:
+
+- `tenants/<id>/pages.ts` → `export const <id>Pages`
+- `tenants/<id>/domain/index.ts` → `export const <id>Collections`
+- `tenants/<id>/config.ts` → `export const <id>Tenant` con `payloadCollections: <id>Collections`
 
 ### DB-driven overrides
 
@@ -212,34 +237,57 @@ Each tenant can be partially overridden in the DB via the `tenants` collection (
 
 ## Layout builder
 
-Dashboards are composed in the Payload admin (no code). A `Page` has:
+Pages are the dashboard primitive. Compose them in Payload `/admin` (blocks field) or seed from `tenants/<id>/pages.ts`.
 
-- `slug` — URL path under `/portal/<role>/`
-- `allowedRoles` — which roles can view
-- `layout` — array of typed blocks
+- **URL resolution**: `/portal/admin/projects` tries slugs `projects`, then `admin-projects` (see `src/lib/blocks/page-slug.ts`).
+- **Nav validation**: `pnpm self-check` includes `nav-slugs` — core nav links must resolve to seeded page slugs.
+- **Nav from DB**: set `features.navFromDb: true` and `showInNav` on Pages records (optional; default uses `tenants/<id>/config.ts` nav).
+- **Draft preview**: `/portal/preview/<slug>?draft=1` (admin only). Live preview URL configured on Pages admin.
+- **Self-checks**: `pnpm self-check` before deploy.
 
 Available blocks:
 
-| Block | Purpose | Key props |
-|---|---|---|
-| `hero` | Top banner with CTA | title, subtitle, image, ctaLabel, ctaHref, background |
-| `kpi-grid` | Grid of metric cards | cards: [{ label, dataset, format, icon }] |
-| `chart` | Line/bar/pie/area chart (recharts) | dataset, kind, height |
-| `table` | Tabular data with paging & formatting | dataset, columns: [{ key, label, format }], pageSize |
-| `form` | Submit-to-endpoint form | endpoint, fields: [...] |
-| `markdown` | Lexical rich text | body |
-| `divider` | Spacer | size |
-| `iframe` | Embedded URL | src, height |
-| `chat` | AI agent widget | agentId, greeting, suggestedPrompts |
+| Block | Purpose |
+|---|---|
+| `hero` | Top banner with CTA |
+| `kpi-grid` | Metric cards from datasets |
+| `chart` | recharts line/bar/pie/area |
+| `table` | Tabular data |
+| `form` | POST to API (e.g. Excel upload) |
+| `markdown` | Lexical rich text (rendered) |
+| `columns` | Two-column layout with optional table datasets |
+| `chat` | AI agent widget |
+| `divider` | Spacer |
+| `iframe` | Embedded external URL |
 
 ### Datasets
 
-A block's `dataset` string points to a query. Two forms:
+Block `dataset` props accept:
 
-1. **Inline**: `"count:projects"`, `"sum:investments.amountInvested"`, `"list:units"`, `"monthly:payments.amount"`. Format is `<kind>:<collection>` or `<kind>:<collection>.<field>` for sum/avg.
-2. **Named**: any string key. Looked up in the `datasets` Payload collection, which lets admins define reusable queries with `where` filters, sorts, custom handlers.
+1. **Inline**: `count:projects`, `sum:payments.amount`, `list:units`, `monthly:investments.amountInvested`
+2. **Named**: key looked up in the `datasets` collection (`pnpm seed:datasets` for core defaults)
 
-Supported query kinds: `count`, `sum`, `avg`, `list`, `monthly`, `custom` (handler in `src/lib/datasets/handlers/<name>.ts`).
+Query kinds: `count`, `sum`, `avg`, `list`, `monthly`, `custom` (handler registry in `src/lib/datasets/handlers/`), `http` (REST with optional `tokenSource`).
+
+Handlers shipped: `payload-count`, `rest-json` (60s in-memory cache).
+
+### External data (hybrid)
+
+| Path | Use case | Entry |
+|---|---|---|
+| **Sync → Postgres** | Master data (ERP/CRM/Excel) | `POST /api/webhooks/[source]`, `POST /api/forms/excel-upload` |
+| **Live read** | Point KPIs | Dataset `kind: http` or `custom` + `rest-json` handler |
+| **Credentials** | Per-tenant secrets | Env `INTEGRATION_<TENANT>_<SOURCE>_TOKEN` (see `.env.example`) |
+
+Webhook receiver: `POST /api/webhooks/quickbase|stripe|n8n|agentyx|other` with optional `WEBHOOK_SECRET` header `x-webhook-secret`.
+
+User invite (admin): `POST /api/auth/invite` with `{ email, password, name, role }`.
+
+Password reset stub: `POST /api/auth/reset-request` (logs until email wired).
+
+QuickBase client stub: `src/lib/integrations/quickbase.ts` (needs `QUICKBASE_REALM` + token).
+
+RAG stub: `src/lib/ai/rag.ts` — enable with `FEATURE_RAG=true` when pgvector ships.
 
 ## AI agent
 
@@ -273,6 +321,23 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 Set the model in `tenants/<id>/config.ts → ai.model`. Common values: `gpt-4o-mini`, `gpt-4o`, `claude-3-5-sonnet-latest`.
 
+### FastAPI backend (optional)
+
+Tenants can route chat to an external FastAPI agent instead of the in-process AI SDK. Set `ai.backend = "fastapi"` in `tenants/<id>/config.ts`, or `AI_BACKEND=fastapi` globally. Full contract and curl examples: **[docs/API_INTEGRATION.md](docs/API_INTEGRATION.md)**.
+
+Contract:
+
+```
+POST {FASTAPI_AGENT_URL}/v1/chat
+Headers: Authorization: Bearer <FASTAPI_AGENT_SECRET>, Content-Type: application/json
+Body: { tenantId, userId, role, agentId, chatId, messages, sessionToken? }
+Response: text/event-stream (AI SDK UIMessage stream, passthrough to client)
+```
+
+Next.js still persists chats and messages in Payload for both backends. Types live in `src/lib/ai/fastapi-types.ts`.
+
+On network/config failure the proxy returns **503** (no silent fallback). Set `AI_BACKEND_FALLBACK=local` to opt into retrying with the in-process AI SDK.
+
 ## Auth: local today, Agentyx-ready
 
 Current implementation (`LocalPayloadAuthProvider`) issues a JWT cookie via Payload's built-in auth. To plug in the Lev Innovation Agentyx stack:
@@ -283,7 +348,20 @@ Current implementation (`LocalPayloadAuthProvider`) issues a JWT cookie via Payl
 
 The rest of the app (server components, AI agent scoping, access control) is provider-agnostic.
 
+### Portal security (phase 1)
+
+- **Middleware** (`src/middleware.ts`): unauthenticated `/portal/*` requests redirect to `/portal/auth` (cookie presence only; JWT validated server-side).
+- **Route prefix guards** (`src/lib/auth/portal-access.ts`): e.g. `customer` users cannot render `/portal/admin/*` pages (redirect to their `homePath`).
+- **Payload REST**: `pages`, `datasets`, `media`, `dashboards` require auth; `tenants` is admin-only read.
+- **AI tools**: role-scoped queries in `src/lib/ai/scoping.ts` (admins see all; investors/customers see own data).
+- **Admin portal switcher**: sidebar links to other role portals are UI convenience; data access is enforced by route guards + Payload ACL.
+- **Self-checks**: `pnpm self-check` runs assert-based checks (no test framework).
+
+Custom auth cookie names: set `AUTH_COOKIE_NAME` env to match `tenants/<id>/config.ts → auth.cookieName` so middleware and login stay in sync.
+
 ## Deploy to Railway (one per tenant)
+
+Guía detallada: **[docs/RAILWAY.md](docs/RAILWAY.md)**. Integraciones FastAPI y REST: **[docs/API_INTEGRATION.md](docs/API_INTEGRATION.md)**.
 
 1. Push to GitHub.
 2. Railway → **New Project → Deploy from GitHub** → select `levinnovation/portal-stack`.
@@ -309,18 +387,21 @@ For a second tenant, repeat steps 1-5 with a different `TENANT_ID`, a separate R
 | `pnpm start` | Start the production server |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm lint` | ESLint |
-| `pnpm seed` | Insert/update seed Pages for the active tenant |
+| `pnpm seed` | Insert/update seed Pages for the active tenant (`TENANT_ID`, default `core`) |
+| `pnpm seed:datasets` | Upsert named datasets (core defaults) |
 | `pnpm tenant:new` | Scaffold a new tenant under `tenants/` |
+| `pnpm self-check` | Run assert checks (nav, datasets, auth, tenant registry, …) |
 
 ## Roadmap
 
 - [ ] Agentyx `AuthProvider` adapter (JWT validation)
-- [ ] Server-side webhooks for QuickBase (bidirectional sync)
-- [ ] Excel upload endpoint (`/api/forms/excel-upload`)
+- [x] Webhook receiver (`POST /api/webhooks/[source]`) — processor extensible per source
+- [x] Excel upload endpoint (`/api/forms/excel-upload`)
+- [ ] QuickBase bidirectional sync (client stub exists)
 - [ ] S3 / Vercel Blob media storage per-tenant
 - [ ] Per-tenant custom domains
-- [ ] RAG over `documents` (pgvector)
-- [ ] Vertical `fintech` collection set
+- [ ] RAG over `documents` (pgvector) — stub in `src/lib/ai/rag.ts`
+- [ ] Vertical `fintech` collection set (Finu)
 - [ ] Voice integration via LiveKit (`agentyx-core-voice`)
 
 ## License

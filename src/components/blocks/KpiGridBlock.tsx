@@ -1,8 +1,9 @@
 "use client";
 import * as React from "react";
 import * as Icons from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { fmtUSD, fmtCOP, fmtDate } from "@/lib/utils";
+import { KpiCard } from "@/components/portal/kpi-card";
+import { fmtUSD, fmtCOP } from "@/lib/utils";
+import { DollarSign } from "lucide-react";
 
 export interface KpiCardDef {
   label: string;
@@ -15,7 +16,6 @@ export interface KpiGridBlockProps {
   title?: string;
   subtitle?: string;
   cards: KpiCardDef[];
-  /** Map<datasetKey, value> provided by the BlockRenderer */
   data?: Record<string, unknown>;
 }
 
@@ -31,6 +31,7 @@ function formatValue(format: KpiCardDef["format"], value: unknown): string {
   return String(value);
 }
 
+
 export function KpiGridBlock({ title, subtitle, cards, data = {} }: KpiGridBlockProps) {
   return (
     <section>
@@ -38,18 +39,14 @@ export function KpiGridBlock({ title, subtitle, cards, data = {} }: KpiGridBlock
       {subtitle && <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {cards.map((card, i) => {
-          const Icon = card.icon && (Icons as any)[card.icon] ? (Icons as any)[card.icon] : null;
-          const value = data[card.dataset];
+          const Icon = (card.icon && (Icons as any)[card.icon]) ? (Icons as any)[card.icon] : DollarSign;
           return (
-            <Card key={i}>
-              <CardContent className="p-5">
-                {Icon && <Icon className="h-5 w-5 text-accent mb-3" />}
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{card.label}</div>
-                <div className="font-display text-2xl xl:text-3xl text-foreground">
-                  {formatValue(card.format, value)}
-                </div>
-              </CardContent>
-            </Card>
+            <KpiCard
+              key={i}
+              label={card.label}
+              value={formatValue(card.format, data[card.dataset])}
+              icon={Icon}
+            />
           );
         })}
       </div>

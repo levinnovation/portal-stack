@@ -28,7 +28,8 @@ export const Projects: CollectionConfig = {
     { name: "totalSqft", type: "number" },
     { name: "budgetTotal", type: "number" },
     {
-      name: "status",
+      // ponytail: not "status" — Payload drafts use _status on the same enum name
+      name: "projectStatus",
       type: "select",
       defaultValue: "planning",
       required: true,
