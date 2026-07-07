@@ -47,10 +47,47 @@ export async function CashflowsDeudaScreen({ project }: { project?: string }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Saldo total de préstamo" value={money(deuda.kpis.saldoTotalPrestamoUsd)} icon={Landmark} />
-        <KpiCard label="Excedente de garantía" value={money(deuda.kpis.excedenteGarantiaTotalUsd)} icon={ShieldCheck} status={deuda.kpis.excedenteGarantiaTotalUsd >= 0 ? "green" : "red"} />
-        <KpiCard label="Intereses YTD" value={money(deuda.kpis.interesesYtdUsd)} icon={TrendingUp} />
-        <KpiCard label="Fideicomisos activos" value={String(deuda.kpis.fideicomisosActivos)} icon={PiggyBank} />
+        <KpiCard
+          label="Saldo total de préstamo"
+          value={money(deuda.kpis.saldoTotalPrestamoUsd)}
+          icon={Landmark}
+          aiExplain={{
+            description: "Suma del saldo pendiente de préstamo (Fideicomisos, Quickbase) de todos los fideicomisos del proyecto/portafolio filtrado.",
+            formula: "Σ Saldo Total de Prestamo por fideicomiso",
+            data: { saldoTotalPrestamoUsd: deuda.kpis.saldoTotalPrestamoUsd, fideicomisosActivos: deuda.kpis.fideicomisosActivos },
+          }}
+        />
+        <KpiCard
+          label="Excedente de garantía"
+          value={money(deuda.kpis.excedenteGarantiaTotalUsd)}
+          icon={ShieldCheck}
+          status={deuda.kpis.excedenteGarantiaTotalUsd >= 0 ? "green" : "red"}
+          aiExplain={{
+            description: "Colchón entre el valor de garantía del fideicomiso y el saldo de préstamo pendiente. Negativo = el préstamo excede la garantía disponible (riesgo para el banco/fideicomiso).",
+            formula: "Σ Excedente de Garantia por fideicomiso (Quickbase)",
+            data: { excedenteGarantiaTotalUsd: deuda.kpis.excedenteGarantiaTotalUsd },
+          }}
+        />
+        <KpiCard
+          label="Intereses YTD"
+          value={money(deuda.kpis.interesesYtdUsd)}
+          icon={TrendingUp}
+          aiExplain={{
+            description: "Intereses pagados acumulados en lo que va del año actual, sobre todos los fideicomisos filtrados.",
+            formula: "Σ Monto Intereses (Pagos Fideicomisos) del año en curso",
+            data: { interesesYtdUsd: deuda.kpis.interesesYtdUsd },
+          }}
+        />
+        <KpiCard
+          label="Fideicomisos activos"
+          value={String(deuda.kpis.fideicomisosActivos)}
+          icon={PiggyBank}
+          aiExplain={{
+            description: "Cantidad de fideicomisos de garantía registrados en Quickbase para el proyecto/portafolio filtrado.",
+            formula: "count(fideicomisos)",
+            data: { fideicomisosActivos: deuda.kpis.fideicomisosActivos },
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:[&>*]:min-w-0">

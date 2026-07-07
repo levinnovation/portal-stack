@@ -49,13 +49,37 @@ export async function CashflowsFlujoScreen({ project }: { project?: string }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Posición neta" value={money(summary.netPositionUsd)} icon={ArrowLeftRight} status={summary.netPositionUsd >= 0 ? "green" : "red"} />
-        <KpiCard label="Recuperación de ingresos" value={summary.recoveryPct === null ? "—" : `${summary.recoveryPct.toFixed(1)}%`} icon={Percent} />
+        <KpiCard
+          label="Posición neta"
+          value={money(summary.netPositionUsd)}
+          icon={ArrowLeftRight}
+          status={summary.netPositionUsd >= 0 ? "green" : "red"}
+          aiExplain={{
+            description: "Caja neta generada en el periodo filtrado: todos los movimientos excepto traslados internos/CXC/CXP (categorías neutrales).",
+            formula: "Σ amount_usd de movimientos con categoría.flow_type ≠ 'neutral'",
+            data: { netPositionUsd: summary.netPositionUsd, periodMonth: summary.periodMonth },
+          }}
+        />
+        <KpiCard
+          label="Recuperación de ingresos"
+          value={summary.recoveryPct === null ? "—" : `${summary.recoveryPct.toFixed(1)}%`}
+          icon={Percent}
+          aiExplain={{
+            description: "Qué porcentaje del ingreso presupuestado (partidas de tipo ingreso) se recuperó realmente este periodo.",
+            formula: "(Σ actual_amount_usd ingreso / Σ planned_amount_usd ingreso) × 100",
+            data: { recoveryPct: summary.recoveryPct },
+          }}
+        />
         <KpiCard
           label="Forecast neto (3m, P50)"
           value={summary.forecastNet3mP50 === null ? "—" : money(summary.forecastNet3mP50)}
           icon={TrendingUp}
           hint="modelo tendencia+estacional"
+          aiExplain={{
+            description: "Proyección de neto acumulado a 3 meses (mediana, P50) usando tendencia lineal + componente estacional sobre el histórico mensual de neto.",
+            formula: "p50 = slope × t + intercept + estacional[mes], acumulado a 3 meses desde el último mes con datos",
+            data: { forecastNet3mP50: summary.forecastNet3mP50 },
+          }}
         />
         <KpiCard
           label="Anomalías detectadas"
@@ -63,6 +87,11 @@ export async function CashflowsFlujoScreen({ project }: { project?: string }) {
           icon={AlertTriangle}
           status={summary.anomalyCount > 0 ? "amber" : "green"}
           hint="meses fuera del rango esperado"
+          aiExplain={{
+            description: "Cantidad de meses cuyo neto mensual se desvía significativamente de sus meses vecinos (detección robusta de outliers).",
+            formula: "z = 0.6745 × (valor − mediana_vecindad) / MAD_vecindad; se cuenta si |z| ≥ 2",
+            data: { anomalyCount: summary.anomalyCount },
+          }}
         />
       </div>
 
