@@ -8,10 +8,17 @@ function localeFor(currency: string): string {
   return currency === "CRC" ? "es-CR" : "en-US";
 }
 
+// `-0` survives float subtraction (e.g. a "excedente − usado" that nets to
+// zero) and `toLocaleString` renders it as "-$0.00", which reads as a real
+// negative balance. Normalize to `+0` before formatting.
+function stripNegativeZero(v: number): number {
+  return v === 0 ? 0 : v;
+}
+
 export function money(n: number | string | null | undefined, currency = "USD"): string {
-  const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
-  if (!isFinite(v as number)) return currency === "CRC" ? "₡0" : "$0";
-  return (v as number).toLocaleString(localeFor(currency), {
+  const v = stripNegativeZero(typeof n === "string" ? parseFloat(n) : n ?? 0);
+  if (!isFinite(v)) return currency === "CRC" ? "₡0" : "$0";
+  return v.toLocaleString(localeFor(currency), {
     style: "currency",
     currency,
     maximumFractionDigits: currency === "CRC" ? 0 : 2,
@@ -19,9 +26,9 @@ export function money(n: number | string | null | undefined, currency = "USD"): 
 }
 
 export function compactMoney(n: number | string | null | undefined, currency = "USD"): string {
-  const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
-  if (!isFinite(v as number)) return currency === "CRC" ? "₡0" : "$0";
-  return (v as number).toLocaleString(localeFor(currency), {
+  const v = stripNegativeZero(typeof n === "string" ? parseFloat(n) : n ?? 0);
+  if (!isFinite(v)) return currency === "CRC" ? "₡0" : "$0";
+  return v.toLocaleString(localeFor(currency), {
     style: "currency",
     currency,
     notation: "compact",
@@ -30,8 +37,8 @@ export function compactMoney(n: number | string | null | undefined, currency = "
 }
 
 export function num(n: number | string | null | undefined): string {
-  const v = typeof n === "string" ? parseFloat(n) : n ?? 0;
-  return (v as number).toLocaleString("es-CR");
+  const v = stripNegativeZero(typeof n === "string" ? parseFloat(n) : n ?? 0);
+  return v.toLocaleString("es-CR");
 }
 
 /** Recibe una tasa 0–1 y la muestra como porcentaje (ej. 0.23 → "23.0%"). */

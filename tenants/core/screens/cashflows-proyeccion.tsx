@@ -36,7 +36,7 @@ export async function CashflowsProyeccionScreen({ project }: { project?: string 
   }
 
   const { summary, proyeccion } = report;
-  const projects = uniqueProjects(report.accounts);
+  const projects = uniqueProjects(report.accounts, report.allProjects);
 
   const weeklyBars = proyeccion.weeks.map((w) => ({
     name: `S${w.week}`,

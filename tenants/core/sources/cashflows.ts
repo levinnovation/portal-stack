@@ -218,6 +218,10 @@ export type CashflowsReport = {
   deuda: DeudaSection;
   cuentasFx: CuentasFxSection;
   proyectos: ProyectoRollup[];
+  /** Canonical union of every project name across movements + AR, returned
+   * unconditionally (unlike `proyectos`, which the agent only computes on the
+   * unfiltered "todos los proyectos" call) — see `uniqueProjects`. */
+  allProjects: string[];
   anomalies: AnomaliesSection;
 };
 
@@ -579,15 +583,19 @@ export async function getCashflowsReport(
     deuda: mapDeudaSection(result.deuda),
     cuentasFx: mapCuentasFxSection(result.cuentas_fx),
     proyectos: asRecordArray(result.proyectos).map(mapProyectoRollup),
+    allProjects: Array.isArray(result.all_projects) ? result.all_projects.map(asStr).filter(Boolean) : [],
     anomalies: mapAnomaliesSection(result.anomalies),
   };
 }
 
-/** `accounts` is always loaded unfiltered (see `_load_existing_accounts`), so
- * it's the one section every treasury screen can use to populate the
- * `?project=` dropdown regardless of the current filter. */
-export function uniqueProjects(accounts: TrustAccount[]): string[] {
-  return Array.from(new Set(accounts.map((a) => a.project).filter(Boolean))).sort();
+/** Union of the accounts-table project names (Cuentas Fideicomiso, always
+ * loaded unfiltered) with `allProjects` (movements + AR, also unconditional).
+ * The two tables use different labels for a few projects (e.g. accounts'
+ * "Cosmo" vs movements/AR's "Cosmopolitan Tower") — without this union the
+ * filter dropdown was missing 6 of 11 real projects, breaking their
+ * `/proyectos` → "Ver detalle" drill-down links entirely. */
+export function uniqueProjects(accounts: TrustAccount[], allProjects: string[] = []): string[] {
+  return Array.from(new Set([...accounts.map((a) => a.project), ...allProjects].filter(Boolean))).sort();
 }
 
 /**
