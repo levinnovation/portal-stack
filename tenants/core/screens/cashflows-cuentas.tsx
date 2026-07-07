@@ -21,7 +21,7 @@ export async function CashflowsCuentasScreen({ project }: { project?: string }) 
   }
 
   const { cuentasFx } = report;
-  const projects = uniqueProjects(report.accounts);
+  const projects = uniqueProjects(report.accounts, report.allProjects);
   const fxSeries = cuentasFx.tipoCambioDiario.length
     ? [{ key: "fx", label: "Tipo de cambio venta (CRC/USD)", data: cuentasFx.tipoCambioDiario.map((p) => ({ t: p.dia, v: p.valor })) }]
     : [];

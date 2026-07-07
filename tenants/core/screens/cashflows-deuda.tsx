@@ -23,7 +23,7 @@ export async function CashflowsDeudaScreen({ project }: { project?: string }) {
   }
 
   const { deuda } = report;
-  const projects = uniqueProjects(report.accounts);
+  const projects = uniqueProjects(report.accounts, report.allProjects);
 
   return (
     <div className="space-y-6">

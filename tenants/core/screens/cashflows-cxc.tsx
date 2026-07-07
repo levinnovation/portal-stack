@@ -45,7 +45,7 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
   }
 
   const { summary, cxc } = report;
-  const projects = uniqueProjects(report.accounts);
+  const projects = uniqueProjects(report.accounts, report.allProjects);
   const agingByProject = withAgingLabels(cxc.agingByProject);
   const agingByTipoPago = withAgingLabels(cxc.agingByTipoPago);
   const agingKeys = AGING_ORDER.map((b) => AGING_LABEL[b]);
