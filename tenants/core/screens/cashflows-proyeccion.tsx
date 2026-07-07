@@ -90,13 +90,42 @@ export async function CashflowsProyeccionScreen({ project }: { project?: string 
           icon={AlarmClockOff}
           status={proyeccion.runwayWeeksP10 !== null && proyeccion.runwayWeeksP10 <= 6 ? "red" : proyeccion.runwayWeeksP10 !== null ? "amber" : "green"}
           hint="primera semana donde la curva ponderada por riesgo cruza cero"
+          aiExplain={{
+            description: "Primera semana (de las próximas 13) en que la caja acumulada ponderada por riesgo de atraso cruza cero — señal temprana de estrés de liquidez.",
+            formula: "runway = min(w) donde cumulative_p10[w] < 0; \"13+ semanas\" si nunca cruza en el horizonte",
+            data: { runwayWeeksP10: proyeccion.runwayWeeksP10, startingCashUsd: proyeccion.startingCashUsd },
+          }}
         />
-        <KpiCard label="Caja inicial" value={money(proyeccion.startingCashUsd)} icon={ArrowDownToLine} />
-        <KpiCard label="Salida semanal promedio" value={money(proyeccion.avgWeeklyOutflowUsd)} icon={CalendarClock} hint="trailing 3 meses ÷ 4.33" />
+        <KpiCard
+          label="Caja inicial"
+          value={money(proyeccion.startingCashUsd)}
+          icon={ArrowDownToLine}
+          aiExplain={{
+            description: "Punto de partida de la proyección de 13 semanas: caja neta acumulada hasta la fecha del último corte (no es saldo bancario de apertura real).",
+            formula: "cumulative_net_curve en el último punto disponible",
+            data: { startingCashUsd: proyeccion.startingCashUsd },
+          }}
+        />
+        <KpiCard
+          label="Salida semanal promedio"
+          value={money(proyeccion.avgWeeklyOutflowUsd)}
+          icon={CalendarClock}
+          hint="trailing 3 meses ÷ 4.33"
+          aiExplain={{
+            description: "Ritmo de salida de caja usado para proyectar las 13 semanas: egreso mensual promedio de los últimos 3 meses, convertido a base semanal.",
+            formula: "avg_weekly_outflow = |promedio egresos mensuales, trailing 3 meses| / 4.33",
+            data: { avgWeeklyOutflowUsd: proyeccion.avgWeeklyOutflowUsd },
+          }}
+        />
         <KpiCard
           label="Forecast neto 3m (P50)"
           value={summary.forecastNet3mP50 === null ? "—" : money(summary.forecastNet3mP50)}
           icon={TrendingUp}
+          aiExplain={{
+            description: "Proyección de neto acumulado a 3 meses (mediana, P50) usando tendencia lineal + componente estacional sobre el histórico mensual de neto.",
+            formula: "p50 = slope × t + intercept + estacional[mes], acumulado a 3 meses desde el último mes con datos",
+            data: { forecastNet3mP50: summary.forecastNet3mP50 },
+          }}
         />
       </div>
 

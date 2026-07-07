@@ -72,12 +72,72 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="AR total" value={money(cxc.kpis.arTotalUsd)} icon={Receipt} />
-        <KpiCard label="AR vencido" value={money(cxc.kpis.arVencidoUsd)} icon={AlertTriangle} status={cxc.kpis.arVencidoUsd > 0 ? "amber" : "green"} hint={fmtPct(cxc.kpis.arVencidoPct)} />
-        <KpiCard label="AR vencido 90+" value={money(cxc.kpis.arVencido90Usd)} icon={ShieldAlert} status={cxc.kpis.arVencido90Usd > 0 ? "red" : "green"} />
-        <KpiCard label="AR ponderado por riesgo" value={money(summary.arRiskWeightedUsd)} icon={ShieldAlert} hint="cobro esperado tras descuento de riesgo" />
-        <KpiCard label="DSO aprox." value={cxc.dsoDays === null ? "—" : dias(cxc.dsoDays)} icon={Clock} />
-        <KpiCard label="Concentración (HHI)" value={cxc.kpis.hhi === null ? "—" : String(cxc.kpis.hhi)} icon={PieChart} status={cxc.kpis.hhi !== null && cxc.kpis.hhi > 2500 ? "amber" : "green"} hint={`${cxc.kpis.openLines} cuotas abiertas`} />
+        <KpiCard
+          label="AR total"
+          value={money(cxc.kpis.arTotalUsd)}
+          icon={Receipt}
+          aiExplain={{
+            description: "Saldo abierto total de cuotas de Pagos (Quickbase) en el periodo/proyecto filtrado — cartera pendiente de cobro.",
+            formula: "Σ saldo_usd de todas las cuotas abiertas",
+            data: { arTotalUsd: cxc.kpis.arTotalUsd, openLines: cxc.kpis.openLines },
+          }}
+        />
+        <KpiCard
+          label="AR vencido"
+          value={money(cxc.kpis.arVencidoUsd)}
+          icon={AlertTriangle}
+          status={cxc.kpis.arVencidoUsd > 0 ? "amber" : "green"}
+          hint={fmtPct(cxc.kpis.arVencidoPct)}
+          aiExplain={{
+            description: "Cuánto del AR abierto ya pasó su fecha estimada de cobro (cualquier bucket de antigüedad distinto de 'corriente').",
+            formula: "ar_vencido = Σ saldo_usd donde aging_bucket ≠ 'corriente'; ar_vencido_pct = ar_vencido / ar_total × 100",
+            data: { arVencidoUsd: cxc.kpis.arVencidoUsd, arVencidoPct: cxc.kpis.arVencidoPct, arTotalUsd: cxc.kpis.arTotalUsd },
+          }}
+        />
+        <KpiCard
+          label="AR vencido 90+"
+          value={money(cxc.kpis.arVencido90Usd)}
+          icon={ShieldAlert}
+          status={cxc.kpis.arVencido90Usd > 0 ? "red" : "green"}
+          aiExplain={{
+            description: "Cartera con más de 90 días de atraso — el tramo de mayor riesgo de incobrabilidad.",
+            formula: "Σ saldo_usd donde aging_bucket = '90+'",
+            data: { arVencido90Usd: cxc.kpis.arVencido90Usd, arTotalUsd: cxc.kpis.arTotalUsd },
+          }}
+        />
+        <KpiCard
+          label="AR ponderado por riesgo"
+          value={money(summary.arRiskWeightedUsd)}
+          icon={ShieldAlert}
+          hint="cobro esperado tras descuento de riesgo"
+          aiExplain={{
+            description: "Estimado de cobro esperado descontando la probabilidad de atraso de cada cuota según su bucket de antigüedad (más conservador que el AR nominal).",
+            formula: "Σ saldo_usd × (1 − risk_weight(aging_bucket)); risk_weight: corriente=0.05, 1-30=0.15, 31-60=0.35, 61-90=0.55, 90+=0.85",
+            data: { arRiskWeightedUsd: summary.arRiskWeightedUsd, arTotalUsd: cxc.kpis.arTotalUsd },
+          }}
+        />
+        <KpiCard
+          label="DSO aprox."
+          value={cxc.dsoDays === null ? "—" : dias(cxc.dsoDays)}
+          icon={Clock}
+          aiExplain={{
+            description: "Days Sales Outstanding aproximado: cuántos días de facturación planificada representa el AR abierto actual, usando el plan de pagos de ingresos como proxy de facturación mensual (no existe un monto de 'venta reconocida' mensual separado en Quickbase).",
+            formula: "dso_days = ar_total_usd / (promedio del plan de pagos de ingreso, últimos 6 meses) × 30",
+            data: { dsoDays: cxc.dsoDays, arTotalUsd: cxc.kpis.arTotalUsd },
+          }}
+        />
+        <KpiCard
+          label="Concentración (HHI)"
+          value={cxc.kpis.hhi === null ? "—" : String(cxc.kpis.hhi)}
+          icon={PieChart}
+          status={cxc.kpis.hhi !== null && cxc.kpis.hhi > 2500 ? "amber" : "green"}
+          hint={`${cxc.kpis.openLines} cuotas abiertas`}
+          aiExplain={{
+            description: "Índice Herfindahl-Hirschman sobre el saldo abierto por cliente (agregando todas sus negociaciones): mide qué tan concentrada está la cartera en pocos clientes. >2500 alta concentración, 1500-2500 moderada, <1500 diversificada.",
+            formula: "HHI = Σ (saldo_cliente / saldo_total)² × 10000",
+            data: { hhi: cxc.kpis.hhi, openLines: cxc.kpis.openLines },
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:[&>*]:min-w-0">
@@ -121,8 +181,9 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
           description="Clientes por saldo abierto, con % acumulado"
           aiExplain={{
             kind: "chart",
-            description: "Barras de saldo por cliente ordenadas de mayor a menor, línea de % acumulado sobre el total de AR.",
-            formula: "cumulative[i] = Σ saldo[0..i] / Σ saldo total",
+            description:
+              "Barras de saldo por cliente (agregando todas sus negociaciones/unidades) ordenadas de mayor a menor, línea de % acumulado sobre el total de AR. 'Otros' agrupa a los clientes fuera del top-15 más la cartera sin cliente identificado (nombre vacío o '—') — nunca aparece como un deudor con nombre propio.",
+            formula: "cumulative[i] = Σ saldo[0..i] / (Σ saldo top-N + saldo sin cliente identificado)",
             data: cxc.paretoClientes,
           }}
         >
@@ -137,8 +198,9 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
           description="Qué % del AR total está en los 5 clientes más grandes"
           aiExplain={{
             kind: "chart",
-            description: "Los 5 clientes con mayor saldo abierto vs. el resto de la cartera.",
-            formula: "top5 = 5 clientes por saldo_usd descendente; Otros = AR total − Σ top5",
+            description:
+              "Los 5 clientes (por nombre real, agregando todas sus negociaciones) con mayor saldo abierto vs. el resto de la cartera. 'Otros' incluye tanto a los clientes fuera del top-5 como a la cartera sin cliente identificado.",
+            formula: "top5 = 5 clientes por saldo_usd descendente (agregado por cliente); Otros = AR total − Σ top5",
             data: cxc.concentracionTop5,
           }}
         >
@@ -152,11 +214,12 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
 
       <SectionCard
         title="Plan de pagos vs. recibos — recuperación mensual"
-        description="Recibos cobrados por mes vs. % de recuperación sobre lo planificado (Flujo de Cajas, Quickbase)"
+        description="Recibos cobrados por mes (ingresos reales del agente) vs. % de recuperación sobre el plan de pagos (Pagos, Quickbase)"
         aiExplain={{
           kind: "chart",
-          description: "Barra: total de recibos cobrados en el mes. Línea: % de lo planificado que efectivamente se cobró.",
-          formula: "recuperacion_pct = (Σ Total Recibos / Σ Total Plan de Pagos) × 100, por mes",
+          description:
+            "Barra: total de recibos de ingreso cobrados en el mes (movimientos reales del agente, fuente Recibos de Quickbase). Línea: % de lo planificado en el plan de pagos de ingresos (Pagos, Quickbase) que efectivamente se cobró. Ya no usa la tabla 'Flujo de Cajas' de Quickbase, que está abandonada para los periodos actuales (plan y recibos en null desde 2023).",
+          formula: "recuperacion_pct = (Σ recibos de ingreso del mes / Σ plan de pagos de ingreso del mes) × 100, por mes",
           data: cxc.recuperacion,
         }}
       >
@@ -170,7 +233,7 @@ export async function CashflowsCxcScreen({ project }: { project?: string }) {
             leftMoneyFormat
           />
         ) : (
-          <EmptyState message="Sin datos de Flujo de Cajas" />
+          <EmptyState message="Sin recibos o plan de pagos registrados en este periodo" />
         )}
       </SectionCard>
 
