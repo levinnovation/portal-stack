@@ -56,10 +56,48 @@ export async function CashflowsCxpScreen({ project }: { project?: string }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Gasto del mes" value={money(cxp.kpis.gastoMesActualUsd)} icon={CircleDollarSign} />
-        <KpiCard label="% top proveedor" value={fmtPct(cxp.kpis.pctTopProveedor)} icon={PieChart} status={cxp.kpis.pctTopProveedor !== null && cxp.kpis.pctTopProveedor > 40 ? "amber" : "green"} />
-        <KpiCard label="Proveedores activos (12m)" value={String(cxp.kpis.proveedoresActivos)} icon={Users} />
-        <KpiCard label="Presupuesto restante" value={cxp.kpis.presupuestoRestanteUsd === null ? "—" : money(cxp.kpis.presupuestoRestanteUsd)} icon={BarChart3} hint="del año, partidas costo/gasto" />
+        <KpiCard
+          label="Gasto del mes"
+          value={money(cxp.kpis.gastoMesActualUsd)}
+          icon={CircleDollarSign}
+          aiExplain={{
+            description: "Gasto bancario total (costo directo + gasto operativo + financiamiento) del mes actual, excluyendo traslados/CXC-CXP.",
+            formula: "Σ |amount_usd| del mes actual donde categoría.flow_type ∈ {costo, gasto, financiamiento}",
+            data: { gastoMesActualUsd: cxp.kpis.gastoMesActualUsd },
+          }}
+        />
+        <KpiCard
+          label="% top proveedor"
+          value={fmtPct(cxp.kpis.pctTopProveedor)}
+          icon={PieChart}
+          status={cxp.kpis.pctTopProveedor !== null && cxp.kpis.pctTopProveedor > 40 ? "amber" : "green"}
+          aiExplain={{
+            description: "Qué porcentaje del gasto de los últimos 12 meses se concentra en el proveedor con mayor gasto acumulado — dependencia de un solo proveedor.",
+            formula: "pct_top_proveedor = gasto_proveedor_top1 / gasto_total_12m × 100",
+            data: { pctTopProveedor: cxp.kpis.pctTopProveedor, paretoProveedores: cxp.paretoProveedores.slice(0, 3) },
+          }}
+        />
+        <KpiCard
+          label="Proveedores activos (12m)"
+          value={String(cxp.kpis.proveedoresActivos)}
+          icon={Users}
+          aiExplain={{
+            description: "Cantidad de proveedores distintos con al menos un movimiento de gasto en los últimos 12 meses.",
+            formula: "count(distinct proveedor) en movimientos de costo/gasto/financiamiento, últimos 12 meses",
+            data: { proveedoresActivos: cxp.kpis.proveedoresActivos },
+          }}
+        />
+        <KpiCard
+          label="Presupuesto restante"
+          value={cxp.kpis.presupuestoRestanteUsd === null ? "—" : money(cxp.kpis.presupuestoRestanteUsd)}
+          icon={BarChart3}
+          hint="del año, partidas costo/gasto"
+          aiExplain={{
+            description: "Cuánto presupuesto anual (partidas de costo/gasto) queda sin ejecutar, comparando lo planificado del año contra lo realmente gastado a la fecha.",
+            formula: "presupuesto_restante = Σ planned_amount_usd (año, costo/gasto) − Σ actual_amount_usd (año, costo/gasto)",
+            data: { presupuestoRestanteUsd: cxp.kpis.presupuestoRestanteUsd },
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:[&>*]:min-w-0">
