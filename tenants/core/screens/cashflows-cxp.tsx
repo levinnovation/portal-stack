@@ -28,7 +28,7 @@ export async function CashflowsCxpScreen({ project }: { project?: string }) {
   }
 
   const { cxp } = report;
-  const projects = uniqueProjects(report.accounts);
+  const projects = uniqueProjects(report.accounts, report.allProjects);
   const presupuestoData = cxp.presupuestoVsEjecutado.flatMap((r) => [
     { name: `${r.name} (plan)`, value: r.plan },
     { name: `${r.name} (real)`, value: r.actual },

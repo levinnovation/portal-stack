@@ -24,7 +24,7 @@ export async function CashflowsFlujoScreen({ project }: { project?: string }) {
   }
 
   const { summary, flujo, anomalies } = report;
-  const projects = uniqueProjects(report.accounts);
+  const projects = uniqueProjects(report.accounts, report.allProjects);
   const compositionData = flujo.monthlySeries.map((m) => ({ name: m.name, Ingresos: m.ingresos, Egresos: m.egresos }));
 
   return (
