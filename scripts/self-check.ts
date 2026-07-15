@@ -19,6 +19,7 @@ const checks = [
   "src/lib/blocks/normalize-layout.self-check.ts",
   "src/lib/datasets/parse-inline.self-check.ts",
   "src/lib/integrations/credentials.self-check.ts",
+  "src/lib/email/catalog.self-check.ts",
   "scripts/nav-slugs.self-check.ts",
   "scripts/agent-config.self-check.ts",
   "scripts/blocks-datasets.self-check.ts",

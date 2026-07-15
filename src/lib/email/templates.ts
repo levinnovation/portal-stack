@@ -131,3 +131,25 @@ export function renderNewDocument(brand: EmailBrand, p: NewDocumentProps): strin
   `;
   return shell(brand, `Nuevo documento — ${brand.brand}`, body);
 }
+
+/**
+ * Built-in renderer seam. Catalog entries can replace these only when they
+ * contain a rendered HTML snapshot; a renderer URL alone never disrupts the
+ * existing transactional messages.
+ */
+export type BuiltInEmailTemplateSlug = "payment-due" | "distribution-received" | "new-document";
+
+export function renderBuiltInEmailTemplate(
+  slug: BuiltInEmailTemplateSlug,
+  brand: EmailBrand,
+  props: PaymentDueProps | DistributionReceivedProps | NewDocumentProps,
+): string {
+  switch (slug) {
+    case "payment-due":
+      return renderPaymentDue(brand, props as PaymentDueProps);
+    case "distribution-received":
+      return renderDistributionReceived(brand, props as DistributionReceivedProps);
+    case "new-document":
+      return renderNewDocument(brand, props as NewDocumentProps);
+  }
+}
