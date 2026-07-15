@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAgentAdmin } from "@/lib/agents/require-agent-admin";
+import { formatLabel } from "@tenants/core/lib/ad-formats";
 import { getInteligenciaData } from "@tenants/core/sources/inteligencia";
 import { resolveRun } from "@tenants/core/lib/inteligencia-run";
 
@@ -17,6 +18,15 @@ function fmtMoney(n: number): string {
 }
 function fmtPct(n: number): string {
   return `${((n || 0) * 100).toFixed(1)}%`;
+}
+
+function fmtMix(mix?: Partial<Record<string, number>> | null): string {
+  if (!mix || !Object.keys(mix).length) return "";
+  return Object.entries(mix)
+    .filter(([, s]) => Number.isFinite(s) && (s as number) > 0)
+    .sort((a, b) => (b[1] as number) - (a[1] as number))
+    .map(([f, s]) => `${formatLabel(f)} ${Math.round((s as number) * 100)}%`)
+    .join(", ");
 }
 
 export async function GET(req: NextRequest) {
@@ -83,11 +93,24 @@ export async function GET(req: NextRequest) {
   if (sections.includes("campanas")) {
     lines.push(`## Pauta por campaña`);
     if (data.campaigns.length) {
-      lines.push(`| Campaña | Inversión | Reservas | Costo/Reserva | Acción |`);
-      lines.push(`| --- | --- | --- | --- | --- |`);
-      data.campaigns.forEach((c) =>
-        lines.push(`| ${c.name} | ${fmtMoney(c.spend)} | ${c.reservations} | ${fmtMoney(c.costPerReservation)} | ${c.action} |`)
-      );
+      const hasFormat = data.campaigns.some((c) => c.displayFormat || c.primaryFormat);
+      if (hasFormat) {
+        lines.push(`| Campaña | Formato | Mix | Inversión | Reservas | Costo/Reserva | Acción |`);
+        lines.push(`| --- | --- | --- | --- | --- | --- | --- |`);
+        data.campaigns.forEach((c) => {
+          const fmt = formatLabel(c.displayFormat ?? c.primaryFormat);
+          const mix = fmtMix(c.formatMix);
+          lines.push(
+            `| ${c.name} | ${fmt} | ${mix || "—"} | ${fmtMoney(c.spend)} | ${c.reservations} | ${fmtMoney(c.costPerReservation)} | ${c.action} |`,
+          );
+        });
+      } else {
+        lines.push(`| Campaña | Inversión | Reservas | Costo/Reserva | Acción |`);
+        lines.push(`| --- | --- | --- | --- | --- |`);
+        data.campaigns.forEach((c) =>
+          lines.push(`| ${c.name} | ${fmtMoney(c.spend)} | ${c.reservations} | ${fmtMoney(c.costPerReservation)} | ${c.action} |`)
+        );
+      }
     } else {
       lines.push(`Sin campañas en el periodo.`);
     }

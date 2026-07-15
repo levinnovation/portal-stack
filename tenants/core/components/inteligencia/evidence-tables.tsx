@@ -11,11 +11,15 @@
  * define their columns here, where functions are allowed.
  */
 
+import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
+import { CampaignAdsDialog } from "@tenants/core/components/inteligencia/campaign-ads-dialog";
 import { CommandControl } from "@tenants/core/components/inteligencia/command-control";
+import { FormatBadge } from "@tenants/core/components/inteligencia/format-badge";
+import { formatLabel } from "@tenants/core/lib/ad-formats";
 import { num, pct } from "@tenants/core/lib/format";
 import type {
   Kri,
@@ -118,7 +122,10 @@ const ACTION_COLORS: Record<string, string> = {
   pause: "text-rose-400",
   adjust: "text-amber-400",
 };
-type CampaignRow = InteligenciaSnapshot["campaigns"][number];
+type CampaignRow = InteligenciaSnapshot["campaigns"][number] & {
+  /** Spanish label for sort / search / CSV. */
+  formato: string;
+};
 
 /** Meta Ads Manager deep link for a campaign id (resolves the ad account for the
  * logged-in user). Boosted IG/FB posts open at their campaign in Ads Manager. */
@@ -128,7 +135,14 @@ function metaCampaignUrl(campaignId?: string): string | null {
   return `https://www.facebook.com/adsmanager/manage/ads?selected_campaign_ids=${encodeURIComponent(id)}`;
 }
 
-export function CampaignTable({ data, run }: { data: CampaignRow[]; run: string }) {
+export function CampaignTable({ data, run }: { data: InteligenciaSnapshot["campaigns"]; run: string }) {
+  const [drillDown, setDrillDown] = useState<CampaignRow | null>(null);
+
+  const rows: CampaignRow[] = data.map((c) => ({
+    ...c,
+    formato: formatLabel(c.displayFormat ?? c.primaryFormat),
+  }));
+
   const cols: ColumnDef<CampaignRow>[] = [
     {
       key: "name",
@@ -152,6 +166,20 @@ export function CampaignTable({ data, run }: { data: CampaignRow[]; run: string 
           </a>
         );
       },
+    },
+    {
+      key: "formato",
+      header: "Formato",
+      sortable: true,
+      className: "whitespace-nowrap",
+      render: (_v, r) => (
+        <FormatBadge
+          format={r.displayFormat ?? r.primaryFormat}
+          formatMix={r.formatMix}
+          onClick={() => setDrillDown(r)}
+          title={`Ver anuncios de ${r.name}`}
+        />
+      ),
     },
     { key: "spend", header: "Spend", align: "right", format: "money", sortable: true },
     { key: "qualified", header: "Calificados", align: "right", format: "num", sortable: true },
@@ -195,15 +223,30 @@ export function CampaignTable({ data, run }: { data: CampaignRow[]; run: string 
     },
   ];
   return (
-    <DataTable
-      columns={cols}
-      data={data}
-      defaultSort="spend"
-      searchKeys={["name"]}
-      searchPlaceholder="Buscar campaña…"
-      csvFilename={`campanas-${run}.csv`}
-      rowKey={(r) => r.name}
-    />
+    <>
+      <DataTable
+        columns={cols}
+        data={rows}
+        defaultSort="spend"
+        searchKeys={["name", "formato"]}
+        searchPlaceholder="Buscar campaña…"
+        csvFilename={`campanas-${run}.csv`}
+        rowKey={(r) => r.campaignId || r.name}
+        className="min-w-0"
+      />
+      {drillDown ? (
+        <CampaignAdsDialog
+          open={!!drillDown}
+          onOpenChange={(open) => {
+            if (!open) setDrillDown(null);
+          }}
+          run={run}
+          campaignId={drillDown.campaignId}
+          campaignName={drillDown.name}
+          campaignDisplayFormat={drillDown.displayFormat ?? drillDown.primaryFormat}
+        />
+      ) : null}
+    </>
   );
 }
 

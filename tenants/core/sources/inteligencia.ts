@@ -1,7 +1,15 @@
 import "server-only";
 
+import {
+  type AdFormat,
+  type DisplayFormat,
+  pickCampaignFormatFields,
+  normalizeAdFormat,
+} from "@tenants/core/lib/ad-formats";
 import { env, requireEnv } from "@tenants/core/lib/env";
 import { crcToUsd, getCrcPerUsd } from "@tenants/core/lib/fx";
+
+export type { AdFormat, DisplayFormat } from "@tenants/core/lib/ad-formats";
 
 export type InteligenciaRunType =
   | "today"
@@ -84,9 +92,11 @@ export type PostMetric = {
   adId: string;
   adName: string;
   campaignName: string;
+  /** Meta campaign id when Agent 13 persists it; used for drill-down scoping. */
+  campaignId?: string;
   permalink?: string | null;
   source: "FB" | "IG" | string;
-  format: "reel" | "photo" | "carousel" | "other";
+  format: AdFormat;
   impressions: number;
   clicks: number;
   reach: number;
@@ -252,6 +262,13 @@ export type InteligenciaSnapshot = {
     roas?: number;
     action: "scale" | "pause" | "adjust";
     reason: string;
+    /** Dominant creative format (spend-weighted). Absent until Agent 13 backfill. */
+    primaryFormat?: AdFormat;
+    /** `mixed` when 2nd format ≥ 20% of weighted delivery; else primary. */
+    displayFormat?: DisplayFormat;
+    /** Per-format shares ~0..1 (spend → impressions → count weighting). */
+    formatMix?: Partial<Record<AdFormat, number>>;
+    creativeCount?: number;
   }[];
   kris: Kri[];
   predictions: Predictions;
@@ -319,7 +336,20 @@ function normalizeFromApi(raw: unknown, runType: InteligenciaRunType): Inteligen
           ? (data.sourceHeatmap as SourceHeatmap)
           : undefined,
     campaigns: Array.isArray(data.campaigns)
-      ? (data.campaigns as InteligenciaSnapshot["campaigns"])
+      ? (data.campaigns as Record<string, unknown>[]).map((c) => {
+          const base = c as unknown as InteligenciaSnapshot["campaigns"][number];
+          const formatFields = pickCampaignFormatFields(c);
+          const campaignIdRaw = c.campaignId ?? c.campaign_id;
+          return {
+            ...base,
+            name: String(c.name ?? base.name ?? ""),
+            campaignId:
+              campaignIdRaw != null && String(campaignIdRaw).trim()
+                ? String(campaignIdRaw)
+                : base.campaignId,
+            ...formatFields,
+          };
+        })
       : [],
     kris: Array.isArray(data.kris) ? (data.kris as Kri[]) : [],
     predictions:
@@ -492,7 +522,11 @@ export async function triggerEtlRun(runType: InteligenciaRunType): Promise<EtlRu
 
 export type EtlJobStatus = { status: "running" | "success" | "failed" | "unknown"; result?: unknown; error?: string };
 
-export async function getInteligenciaPosts(runType: InteligenciaRunType, limit = 50): Promise<PostMetric[]> {
+export async function getInteligenciaPosts(
+  runType: InteligenciaRunType,
+  limit = 50,
+  opts?: { campaignId?: string; campaignName?: string },
+): Promise<PostMetric[]> {
   const baseUrl = requireEnv("INTELIGENCIA_API_URL").replace(/\/$/, "");
   const apiKey = requireEnv("INTELIGENCIA_API_KEY");
   const params = new URLSearchParams({
@@ -500,6 +534,7 @@ export async function getInteligenciaPosts(runType: InteligenciaRunType, limit =
     workspace_id: inteligenciaWorkspaceId(),
     limit: String(limit),
   });
+  if (opts?.campaignId) params.set("campaign_id", opts.campaignId);
   const res = await fetch(`${baseUrl}/api/v1/inteligencia/posts?${params}`, {
     headers: { "X-API-Key": apiKey },
     next: { revalidate: 300 },
@@ -511,29 +546,58 @@ export async function getInteligenciaPosts(runType: InteligenciaRunType, limit =
   // Meta bills CORE's account in colones, so per-ad/post spend & CPM arrive in
   // CRC; convert to USD at the daily rate so the whole UI is consistently USD.
   const crcPerUsd = await getCrcPerUsd();
-  return posts.map((p) => ({
-    id: String(p.id ?? ""),
-    postId: String(p.postId ?? p.post_id ?? ""),
-    adId: String(p.adId ?? p.ad_id ?? ""),
-    adName: String(p.adName ?? p.ad_name ?? ""),
-    campaignName: String(p.campaignName ?? p.campaign_name ?? ""),
-    permalink: (p.permalink as string | null | undefined) ?? null,
-    source: String(p.source ?? "FB") as PostMetric["source"],
-    format: String(p.format ?? "other") as PostMetric["format"],
-    impressions: Number(p.impressions ?? 0),
-    clicks: Number(p.clicks ?? 0),
-    reach: Number(p.reach ?? 0),
-    spend: crcToUsd(Number(p.spend ?? 0), crcPerUsd),
-    frequency: Number(p.frequency ?? 0),
-    ctr: Number(p.ctr ?? 0),
-    cpm: crcToUsd(Number(p.cpm ?? 0), crcPerUsd),
-    reactions: Number(p.reactions ?? 0),
-    comments: Number(p.comments ?? 0),
-    shares: Number(p.shares ?? 0),
-    engagements: Number(p.engagements ?? 0),
-    engagementRate: Number(p.engagementRate ?? p.engagement_rate ?? 0),
-    qualifiedLeads: p.qualifiedLeads != null ? Number(p.qualifiedLeads) : null,
-  }));
+  let result: PostMetric[] = posts.map((p) => {
+    const campaignIdRaw = p.campaignId ?? p.campaign_id;
+    const campaignId =
+      campaignIdRaw != null && String(campaignIdRaw).trim()
+        ? String(campaignIdRaw)
+        : undefined;
+    return {
+      id: String(p.id ?? ""),
+      postId: String(p.postId ?? p.post_id ?? ""),
+      adId: String(p.adId ?? p.ad_id ?? ""),
+      adName: String(p.adName ?? p.ad_name ?? ""),
+      campaignName: String(p.campaignName ?? p.campaign_name ?? ""),
+      ...(campaignId ? { campaignId } : {}),
+      permalink: (p.permalink as string | null | undefined) ?? null,
+      source: String(p.source ?? "FB") as PostMetric["source"],
+      format: (normalizeAdFormat(p.format) ?? "other") as AdFormat,
+      impressions: Number(p.impressions ?? 0),
+      clicks: Number(p.clicks ?? 0),
+      reach: Number(p.reach ?? 0),
+      spend: crcToUsd(Number(p.spend ?? 0), crcPerUsd),
+      frequency: Number(p.frequency ?? 0),
+      ctr: Number(p.ctr ?? 0),
+      cpm: crcToUsd(Number(p.cpm ?? 0), crcPerUsd),
+      reactions: Number(p.reactions ?? 0),
+      comments: Number(p.comments ?? 0),
+      shares: Number(p.shares ?? 0),
+      engagements: Number(p.engagements ?? 0),
+      engagementRate: Number(p.engagementRate ?? p.engagement_rate ?? 0),
+      qualifiedLeads:
+        p.qualifiedLeads != null
+          ? Number(p.qualifiedLeads)
+          : p.qualified_leads != null
+            ? Number(p.qualified_leads)
+            : null,
+    };
+  });
+
+  // Client-side scope fallback when Agent 13 ignores campaign_id or fields are absent.
+  if (opts?.campaignId || opts?.campaignName) {
+    const id = opts.campaignId?.trim();
+    const name = opts.campaignName?.trim().toLowerCase();
+    const byId = id ? result.filter((p) => (p.campaignId || "").trim() === id) : [];
+    if (byId.length) {
+      result = byId;
+    } else if (name) {
+      result = result.filter((p) => p.campaignName.toLowerCase() === name);
+    } else if (id && result.some((p) => p.campaignId)) {
+      result = [];
+    }
+  }
+
+  return result;
 }
 
 function normalizeLeadImpact(raw: unknown): LeadImpact {

@@ -19,7 +19,7 @@ export const GLOSSARY = {
   cacScatter: "Dispersión de eficiencia por campaña. Eje X = costo por lead calificado (CPQL), eje Y = costo por reserva (CPR). Abajo-izquierda = más eficiente.",
   recommendations: "Recomendación prescriptiva por campaña (escalar/pausar/ajustar) según su costo por reserva vs. el umbral objetivo y si hay reservas atribuidas.",
   kris: "Indicadores de riesgo (KRIs) en vivo. Cada uno compara un valor contra un umbral y se colorea verde/ámbar/rojo según severidad.",
-  campaignTable: "KPIs por campaña de Meta Ads. Clic en el nombre para abrir la campaña en Meta Ads Manager. Spend, CPQL, CPR, CTR, frecuencia y ROAS por campaña; exportable a CSV.",
+  campaignTable: "KPIs por campaña de Meta Ads. Columna Formato = rollup creativo (Reel/Video/Foto/Carrusel/Historia/Dinámico/Otro o Mixto). Mixto cuando el 2º formato ≥ 20% del delivery ponderado por spend (fallback: impresiones → nº de creatividades). Clic en el badge abre anuncios/posts de la campaña. Clic en el nombre abre Meta Ads Manager. Spend, CPQL, CPR, CTR, frecuencia y ROAS; exportable a CSV.",
   whatIf: "Simulador what-if: estima el cambio en reservas al reasignar presupuesto, asumiendo el costo por reserva actual constante. Fórmula: reservas ≈ spend simulado ÷ CPR base.",
   repLeaderboard: "Ranking de reservas por asesor (rep). Fórmula: Σ reservas atribuidas a cada owner de HubSpot en el período.",
   repShowUp: "Citas vs. show-up por asesor. Barras = citas; línea = tasa de asistencia (reservas ÷ citas) por rep.",

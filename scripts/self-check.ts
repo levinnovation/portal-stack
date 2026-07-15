@@ -28,6 +28,7 @@ const checks = [
   "tenants/core/lib/fx.self-check.ts",
   "tenants/core/lib/forecast-insights.self-check.ts",
   "tenants/core/lib/root-causes.self-check.ts",
+  "tenants/core/lib/ad-formats.self-check.ts",
   "tenants/core/agents-nav.self-check.ts",
 ];
 
