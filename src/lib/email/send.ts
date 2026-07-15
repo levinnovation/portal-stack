@@ -7,12 +7,12 @@
  */
 import "server-only";
 import { getPayloadClient } from "@/lib/payload";
+import { getEmailTemplate, interpolateEmailHtml, resolveEmailTemplateBinding } from "@/lib/email/catalog";
 import { getTenant } from "@/lib/tenant";
 import {
-  renderDistributionReceived,
-  renderNewDocument,
-  renderPaymentDue,
+  renderBuiltInEmailTemplate,
   type EmailBrand,
+  type BuiltInEmailTemplateSlug,
   type DistributionReceivedProps,
   type NewDocumentProps,
   type PaymentDueProps,
@@ -55,12 +55,28 @@ async function brandFromTenant(): Promise<EmailBrand> {
   };
 }
 
+async function resolveEmailHtml(
+  slug: BuiltInEmailTemplateSlug,
+  brand: EmailBrand,
+  props: PaymentDueProps | DistributionReceivedProps | NewDocumentProps,
+): Promise<string> {
+  try {
+    const template = await getEmailTemplate(slug);
+    if (template?.active && template.render?.html && (await resolveEmailTemplateBinding(template))) {
+      return interpolateEmailHtml(template.render.html, { brand: brand.brand, ...props });
+    }
+  } catch {
+    // The database catalog is optional until the Maizzle renderer is deployed.
+  }
+  return renderBuiltInEmailTemplate(slug, brand, props);
+}
+
 export async function sendPaymentDue(to: string, props: PaymentDueProps) {
   const brand = await brandFromTenant();
   return sendEmail({
     to,
     subject: `Pago próximo — ${brand.brand}`,
-    html: renderPaymentDue(brand, props),
+    html: await resolveEmailHtml("payment-due", brand, props),
   });
 }
 
@@ -69,7 +85,7 @@ export async function sendDistributionReceived(to: string, props: DistributionRe
   return sendEmail({
     to,
     subject: `Distribución recibida — ${brand.brand}`,
-    html: renderDistributionReceived(brand, props),
+    html: await resolveEmailHtml("distribution-received", brand, props),
   });
 }
 
@@ -78,6 +94,6 @@ export async function sendNewDocument(to: string, props: NewDocumentProps) {
   return sendEmail({
     to,
     subject: `Nuevo documento: ${props.documentName}`,
-    html: renderNewDocument(brand, props),
+    html: await resolveEmailHtml("new-document", brand, props),
   });
 }

@@ -129,6 +129,7 @@ export const coreTenant: TenantConfig = {
         { to: "/portal/admin/excel", label: "Carga Excel", icon: "Upload" },
         { to: "/portal/admin/quickbase", label: "QuickBase", icon: "RefreshCw" },
         { to: "/portal/admin/reports", label: "Reportes", icon: "BarChart3" },
+        { to: "/portal/admin/email-templates", label: "Plantillas de email", icon: "Mail", kind: "custom" },
         { to: "/portal/admin/audit", label: "Auditoría", icon: "ShieldCheck" },
       ],
     },

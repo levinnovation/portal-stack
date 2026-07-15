@@ -21,6 +21,7 @@ import { Dashboards } from "./collections/Dashboards";
 import { AIChats } from "./collections/AIChats";
 import { AIMessages } from "./collections/AIMessages";
 import { CreativeAssets } from "./collections/CreativeAssets";
+import { EmailTemplateBindings, EmailTemplates } from "./collections/EmailTemplates";
 
 import { getTenantCollectionsSync, getTenantId } from "./lib/tenant-registry";
 
@@ -48,6 +49,8 @@ function buildCollections(): CollectionConfig[] {
     AIChats,
     AIMessages,
     CreativeAssets,
+    EmailTemplates,
+    EmailTemplateBindings,
   ];
   const tenantId = getTenantId();
   const verticalCollections = getTenantCollectionsSync(tenantId);
