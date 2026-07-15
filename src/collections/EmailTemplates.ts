@@ -1,7 +1,9 @@
-import type { CollectionConfig } from "payload";
+import type { Access, CollectionConfig } from "payload";
 
-const adminOnly = ({ req }: { req: { user?: { role?: string } | null } }) =>
+const adminOnly: Access = ({ req }) =>
   req.user?.role === "admin" || req.user?.role === "superadmin";
+
+const superadminOnly: Access = ({ req }) => req.user?.role === "superadmin";
 
 /**
  * Maizzle-native email template catalog.
@@ -13,7 +15,7 @@ const adminOnly = ({ req }: { req: { user?: { role?: string } | null } }) =>
 export const EmailTemplates: CollectionConfig = {
   slug: "email-templates",
   admin: { useAsTitle: "name", group: "Platform", defaultColumns: ["name", "slug", "tenantId", "active", "updatedAt"] },
-  access: { read: adminOnly, create: adminOnly, update: adminOnly, delete: ({ req }) => req.user?.role === "superadmin" },
+  access: { read: adminOnly, create: adminOnly, update: adminOnly, delete: superadminOnly },
   fields: [
     { name: "tenantId", type: "text", required: true, index: true, admin: { description: "Workspace / tenant scope (for example: core)" } },
     { name: "slug", type: "text", required: true, index: true, admin: { description: "Stable Maizzle template slug, e.g. payment-due" } },
@@ -62,7 +64,7 @@ export const EmailTemplates: CollectionConfig = {
 export const EmailTemplateBindings: CollectionConfig = {
   slug: "email-template-bindings",
   admin: { useAsTitle: "useCase", group: "Platform", defaultColumns: ["tenantId", "agentSlug", "useCase", "template", "active"] },
-  access: { read: adminOnly, create: adminOnly, update: adminOnly, delete: ({ req }) => req.user?.role === "superadmin" },
+  access: { read: adminOnly, create: adminOnly, update: adminOnly, delete: superadminOnly },
   fields: [
     { name: "tenantId", type: "text", required: true, index: true, admin: { description: "Workspace / tenant scope." } },
     { name: "agentSlug", type: "text", index: true, admin: { description: "Optional external-agent ID. Empty means workspace default." } },
