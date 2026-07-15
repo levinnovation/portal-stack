@@ -14,7 +14,9 @@ export async function GET(req: Request) {
     const runType = (searchParams.get("run_type") || "weekly") as InteligenciaRunType;
     const limitRaw = Number(searchParams.get("limit"));
     const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 50;
-    const posts = await getInteligenciaPosts(runType, limit);
+    const campaignId = searchParams.get("campaign_id")?.trim() || undefined;
+    const campaignName = searchParams.get("campaign_name")?.trim() || undefined;
+    const posts = await getInteligenciaPosts(runType, limit, { campaignId, campaignName });
     return NextResponse.json({ posts });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 502 });

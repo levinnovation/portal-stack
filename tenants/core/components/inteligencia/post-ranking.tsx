@@ -16,18 +16,14 @@ import { ExternalLink } from "lucide-react";
 
 import { CHART_COLORS, TOOLTIP_STYLE } from "@/components/portal/charts/palette";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { FormatBadge } from "@tenants/core/components/inteligencia/format-badge";
+import { FORMAT_ICONS, FORMAT_LABELS, type DisplayFormat, formatLabel } from "@tenants/core/lib/ad-formats";
 import { num } from "@tenants/core/lib/format";
 import type { PostMetric } from "@tenants/core/sources/inteligencia";
 
 const SOURCE_COLORS: Record<string, string> = {
   FB: "#60a5fa",
   IG: "#e879f9",
-};
-const FORMAT_ICONS: Record<string, string> = {
-  reel: "🎬",
-  photo: "📷",
-  carousel: "🎠",
-  other: "📄",
 };
 
 type SortKey = "engagements" | "reach" | "spend" | "ctr" | "engagementRate";
@@ -51,15 +47,7 @@ function SourceBadge({ source }: { source: string }) {
   );
 }
 
-function FormatBadge({ format }: { format: string }) {
-  return (
-    <span className="inline-flex items-center gap-0.5 rounded-full border border-border bg-secondary/30 px-2 py-0.5 text-[10px] text-muted-foreground">
-      {FORMAT_ICONS[format] ?? "📄"} {format}
-    </span>
-  );
-}
-
-type PostRow = PostMetric & { rank: number };
+type PostRow = PostMetric & { rank: number; formato: string };
 
 const POST_COLUMNS: ColumnDef<PostRow>[] = [
   { key: "rank", header: "#", sortable: false, align: "right", render: (v) => <span className="text-muted-foreground">{String(v)}</span> },
@@ -94,8 +82,8 @@ const POST_COLUMNS: ColumnDef<PostRow>[] = [
     render: (v) => <SourceBadge source={String(v)} />,
   },
   {
-    key: "format", header: "Formato", sortable: true,
-    render: (v) => <FormatBadge format={String(v)} />,
+    key: "formato", header: "Formato", sortable: true,
+    render: (_v, r) => <FormatBadge format={r.format} />,
   },
   { key: "engagements", header: "Engagements", align: "right", format: "num", sortable: true },
   { key: "reach", header: "Alcance", align: "right", format: "num", sortable: true },
@@ -115,7 +103,11 @@ export function PostRanking({ posts }: { posts: PostMetric[] }) {
   const sorted = [...posts].sort((a, b) => b[sortKey] - a[sortKey]);
   const top20 = sorted.slice(0, 20);
 
-  const postTableData: PostRow[] = sorted.map((p, i) => ({ ...p, rank: i + 1 }));
+  const postTableData: PostRow[] = sorted.map((p, i) => ({
+    ...p,
+    rank: i + 1,
+    formato: formatLabel(p.format),
+  }));
 
   const scatterData = top20.map((p) => ({
     x: p.reach > 0 ? Math.round((p.spend / p.reach) * 1000) : 0, // CPM-reach proxy
@@ -164,7 +156,7 @@ export function PostRanking({ posts }: { posts: PostMetric[] }) {
                   <div style={TOOLTIP_STYLE.contentStyle} className="max-w-[200px]">
                     <p className="mb-1 font-semibold leading-tight">{d.name}</p>
                     <p className="text-muted-foreground">
-                      {d.source} · {d.format}
+                      {d.source} · {formatLabel(d.format)}
                     </p>
                     <p>Engagements: <b>{d.engagements}</b></p>
                     <p>ER: <b>{d.y}%</b></p>
@@ -189,8 +181,9 @@ export function PostRanking({ posts }: { posts: PostMetric[] }) {
             </span>
           ))}
           {formatGroups.map((fmt) => (
-            <span key={fmt} className="flex items-center gap-1">
-              {FORMAT_ICONS[fmt] ?? "📄"} {fmt}
+            <span key={fmt} className="flex items-center gap-1 whitespace-nowrap">
+              {FORMAT_ICONS[fmt as DisplayFormat] ?? "📄"}{" "}
+              {FORMAT_LABELS[fmt as DisplayFormat] ?? formatLabel(fmt)}
             </span>
           ))}
         </div>
@@ -219,7 +212,7 @@ export function PostRanking({ posts }: { posts: PostMetric[] }) {
         columns={POST_COLUMNS}
         data={postTableData}
         defaultSort="engagements"
-        searchKeys={["adName", "campaignName", "source", "format"]}
+        searchKeys={["adName", "campaignName", "source", "formato", "format"]}
         searchPlaceholder="Buscar anuncio…"
         csvFilename="meta-posts.csv"
         pageSize={25}

@@ -13,6 +13,7 @@ import { CreativeStudio } from "@tenants/core/components/inteligencia/meta/creat
 import { ConversionsPanel } from "@tenants/core/components/inteligencia/meta/conversions-panel";
 import { CommandHistory } from "@tenants/core/components/inteligencia/command-history";
 import { getInteligenciaDataOrNull, type InteligenciaRunType } from "@tenants/core/sources/inteligencia";
+import { FORMAT_MIX_FORMULA, formatLabel } from "@tenants/core/lib/ad-formats";
 import { GLOSSARY } from "@tenants/core/lib/inteligencia-glossary";
 import { WindowEmptyState } from "@tenants/core/components/inteligencia/window-empty-state";
 
@@ -26,6 +27,19 @@ export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunTyp
   if (!data) return <WindowEmptyState title="Inteligencia · Pauta" subtitle={`Eficiencia por campaña (${run})`} run={run} />;
   const spend = data.campaigns.reduce((acc, c) => acc + c.spend, 0);
   const reservations = data.campaigns.reduce((acc, c) => acc + c.reservations, 0);
+
+  const formatExplainData = data.campaigns.slice(0, 40).map((c) => ({
+    name: c.name,
+    displayFormat: c.displayFormat ?? null,
+    primaryFormat: c.primaryFormat ?? null,
+    formatLabel: formatLabel(c.displayFormat ?? c.primaryFormat),
+    formatMix: c.formatMix ?? null,
+    creativeCount: c.creativeCount ?? null,
+    spend: c.spend,
+    reservations: c.reservations,
+    ctr: c.ctr ?? null,
+    action: c.action,
+  }));
 
   return (
     <div className="space-y-6">
@@ -76,7 +90,7 @@ export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunTyp
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {data.campaigns.map((campaign) => (
             <RecommendationCard
-              key={campaign.name}
+              key={campaign.campaignId || campaign.name}
               action={campaign.action}
               title={campaign.name}
               reason={campaign.reason}
@@ -108,8 +122,15 @@ export async function InteligenciaPautaScreen({ run }: { run: InteligenciaRunTyp
       {/* Campaigns detail table */}
       <SectionCard
         title="Tabla de campañas"
-        description="KPIs por campaña — clic en el nombre abre la campaña en Meta Ads Manager"
+        description="KPIs por campaña — Formato es rollup creativo; clic en el badge abre anuncios/posts"
         info={GLOSSARY.campaignTable}
+        aiExplain={{
+          kind: "table",
+          description:
+            "Mezcla de formatos creativos por campaña (Reel, Video, Foto, Carrusel, Historia, Dinámico, Otro o Mixto) junto con spend, reservas y CTR. Interpreta la distribución de formatos y su correlación descriptiva con performance; no inventes causalidad ni atribuyas lift sin evidencia.",
+          formula: FORMAT_MIX_FORMULA,
+          data: formatExplainData,
+        }}
       >
         {data.campaigns.length ? (
           <CampaignTable data={data.campaigns} run={run} />
